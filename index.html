@@ -838,6 +838,7 @@ let selectedRows = new Set();
   ROLE PASSWORDS
 ═══════════════════════════════════════════*/
 const ROLE_PASSWORDS = {
+  management: 'management123',
   finance:    'finance123',
   production: 'production123',
   design:     'design123',
@@ -913,11 +914,6 @@ function showDbSetup() {
 }
 function selectLoginRole(role) {
   if (!localStorage.getItem('sb_url')) { showDbSetup(); return; }
-  if (role === 'management') {
-    currentRole = 'management';
-    localStorage.setItem('sb_role', 'management');
-    launchApp(); return;
-  }
   pendingRole = role;
   const meta = ROLE_META[role];
   document.getElementById('pwRoleIcon').textContent = meta.icon;
