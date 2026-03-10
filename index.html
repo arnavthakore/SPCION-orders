@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SPICON · Order Management System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/*═══════════════════════════════════════════
+  RESET & TOKENS
+═══════════════════════════════════════════*/
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Surfaces */
+  --bg:       #f0f2f5;
+  --bg2:      #e8ebf0;
+  --white:    #ffffff;
+  --card:     #ffffff;
+
+  /* Borders */
+  --bdr:      #dde2ea;
+  --bdr2:     #c8d0db;
+
+  /* Text */
+  --t1:       #0d1b2a;
+  --t2:       #2d3f54;
+  --t3:       #5a6e84;
+  --t4:       #8fa0b4;
+  --t5:       #b8c5d1;
+
+  /* Brand */
+  --blue:     #1a56db;
+  --blue-h:   #1440b0;
+  --blue-lt:  #eff4ff;
+  --blue-md:  #c7d9ff;
+
+  /* Stage colours */
+  --c-design:   #7c3aed; --c-design-lt: #f5f0ff;
+  --c-raw:      #b45309; --c-raw-lt:    #fef9ee;
+  --c-fab:      #c2410c; --c-fab-lt:    #fff4ee;
+  --c-asm:      #be185d; --c-asm-lt:    #fff0f6;
+  --c-qa:       #0e7490; --c-qa-lt:     #f0fbff;
+  --c-dispatch: #d97706; --c-dispatch-lt:#fffbeb;
+  --c-ship:     #1d4ed8; --c-ship-lt:   #eff4ff;
+  --c-del:      #047857; --c-del-lt:    #f0fdf6;
+  --c-payrec:   #059669; --c-payrec-lt: #ecfdf5;
+  --c-hold:     #dc2626; --c-hold-lt:   #fef2f2;
+
+  /* Semantic */
+  --green:    #059669; --green-lt: #ecfdf5; --green-md: #a7f3d0;
+  --amber:    #d97706; --amber-lt: #fffbeb; --amber-md: #fde68a;
+  --red:      #dc2626; --red-lt:   #fef2f2; --red-md:   #fecaca;
+  --teal:     #0891b2; --teal-lt:  #ecfeff;
+
+  /* Effects */
+  --sh-xs: 0 1px 2px rgba(0,0,0,.05);
+  --sh-sm: 0 2px 8px rgba(0,0,0,.07);
+  --sh-md: 0 6px 20px rgba(0,0,0,.09);
+  --sh-lg: 0 16px 48px rgba(0,0,0,.13);
+
+  --r:    6px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+
+  --font:    'Sora', sans-serif;
+  --mono:    'JetBrains Mono', monospace;
+  --display: 'Fraunces', serif;
+}
+
+html{font-size:14px}
+body{background:var(--bg);color:var(--t1);font-family:var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
+
+/*═══════════════════════════════════════════
+  SETUP SCREEN
+═══════════════════════════════════════════*/
+#setup{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(145deg,#eef2ff 0%,#f8faff 50%,#f0fdf4 100%);
+  padding:24px;
+}
+.setup-wrap{width:100%;max-width:560px}
+.setup-card{background:var(--white);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden}
+.setup-top{
+  background:linear-gradient(135deg,var(--blue) 0%,#2d6ef0 100%);
+  padding:36px 36px 28px;color:#fff;position:relative;overflow:hidden
+}
+.setup-top::after{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.07)
+}
+.setup-top::before{
+  content:'';position:absolute;right:40px;bottom:-60px;
+  width:140px;height:140px;border-radius:50%;
+  background:rgba(255,255,255,.05)
+}
+.setup-logo{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:1px;position:relative;z-index:1}
+.setup-tagline{font-size:12px;opacity:.75;margin-top:4px;font-family:var(--mono);letter-spacing:.5px;position:relative;z-index:1}
+.setup-body{padding:32px}
+.setup-intro{font-size:13px;color:var(--t3);line-height:1.8;margin-bottom:24px}
+.step{display:flex;gap:14px;margin-bottom:18px}
+.step-n{width:26px;height:26px;background:var(--blue-lt);color:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-body{}
+.step-t{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px}
+.step-d{font-size:12px;color:var(--t3);line-height:1.7}
+.step-a{display:inline-block;color:var(--blue);font-size:12px;font-weight:500;margin-top:4px;text-decoration:none}
+.step-a:hover{text-decoration:underline}
+.sql-block{
+  background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:12px 14px;font-family:var(--mono);font-size:10px;color:var(--t2);
+  line-height:1.9;white-space:pre;overflow-x:auto;margin-top:8px;
+  max-height:200px;overflow-y:auto
+}
+.sep{height:1px;background:var(--bdr);margin:22px 0}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.flbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3)}
+.finput{
+  border:1.5px solid var(--bdr2);border-radius:var(--r);padding:10px 13px;
+  font-family:var(--mono);font-size:12px;color:var(--t1);background:var(--white);
+  outline:none;width:100%;transition:border-color .15s,box-shadow .15s
+}
+.finput:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.finput::placeholder{color:var(--t5)}
+select.finput option{background:#fff}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 22px;border:none;border-radius:var(--r);font-family:var(--font);
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s
+}
+.btn-blue{background:var(--blue);color:#fff;width:100%}
+.btn-blue:hover{background:var(--blue-h);transform:translateY(-1px);box-shadow:var(--sh-md)}
+.btn-blue:disabled{background:var(--t4);cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:transparent;border:1.5px solid var(--bdr2);color:var(--t3);padding:9px 18px}
+.btn-ghost:hover{background:var(--bg);color:var(--t1)}
+.btn-sm{padding:7px 14px;font-size:12px}
+.setup-err{background:var(--red-lt);border:1px solid var(--red-md);border-radius:var(--r);
+  padding:10px 14px;font-size:12px;color:var(--red);margin-top:10px;display:none}
+
+/*═══════════════════════════════════════════
+  ROLE PICKER
+═══════════════════════════════════════════*/
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.role-card{
+  border:1.5px solid var(--bdr);border-radius:var(--r-lg);padding:14px 16px;
+  cursor:pointer;transition:all .15s;background:var(--white)
+}
+.role-card:hover{border-color:var(--blue-md);background:var(--blue-lt)}
+.role-card.selected{border-color:var(--blue);background:var(--blue-lt);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.role-icon{font-size:22px;margin-bottom:6px}
+.role-name{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:2px}
+.role-desc{font-size:11px;color:var(--t3);line-height:1.5}
+
+/*═══════════════════════════════════════════
+  MAIN APP
+═══════════════════════════════════════════*/
+#app{display:none}
+
+/* ── HEADER ─────────────────────────────── */
+.hdr{
+  position:sticky;top:0;z-index:200;height:58px;
+  background:var(--white);border-bottom:1px solid var(--bdr);
+  box-shadow:var(--sh-xs);padding:0 24px;
+  display:flex;align-items:center;justify-content:space-between
+}
+.hdr-left{display:flex;align-items:center;gap:20px}
+.hdr-logo{font-family:var(--display);font-size:21px;font-weight:700;color:var(--blue);letter-spacing:.5px}
+.hdr-logo small{font-family:var(--mono);font-size:10px;color:var(--t4);font-weight:400;margin-left:8px;letter-spacing:.5px}
+.hdr-kpis{display:flex;gap:28px;padding-left:20px;border-left:1px solid var(--bdr)}
+.hkpi{display:flex;flex-direction:column}
+.hkpi-v{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--t1);line-height:1}
+.hkpi-v.green{color:var(--green)}
+.hkpi-v.red{color:var(--red)}
+.hkpi-l{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-top:3px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.role-badge{
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;
+  background:var(--blue-lt);color:var(--blue);cursor:pointer;
+  border:1px solid var(--blue-md);transition:all .12s
+}
+.role-badge:hover{background:var(--blue-md)}
+
+/* ── LAYOUT ─────────────────────────────── */
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 58px)}
+
+/* ── SIDEBAR ─────────────────────────────── */
+.sidebar{
+  background:var(--white);border-right:1px solid var(--bdr);
+  padding:16px 0;position:sticky;top:58px;
+  height:calc(100vh - 58px);overflow-y:auto
+}
+.nav-sec-title{
+  font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+  color:var(--t4);padding:6px 18px 4px
+}
+.nitem{
+  display:flex;align-items:center;gap:9px;padding:8px 18px;
+  cursor:pointer;transition:all .12s;color:var(--t3);
+  font-size:12.5px;font-weight:500;border-left:3px solid transparent;
+  line-height:1.3
+}
+.nitem:hover{background:var(--bg);color:var(--t1)}
+.nitem.active{background:var(--blue-lt);color:var(--blue);border-left-color:var(--blue)}
+.nitem .ni{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.nbadge{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:600;
+  padding:1px 7px;border-radius:20px;background:var(--bg2);color:var(--t3)}
+.nitem.active .nbadge{background:var(--blue-md);color:var(--blue)}
+.ndiv{height:1px;background:var(--bdr);margin:8px 14px}
+
+/* ── MAIN ────────────────────────────────── */
+.main{overflow:hidden}
+.page{display:none;padding:26px 28px;animation:fadeIn .15s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ── PAGE HEADER ──────────────────────────── */
+.pg-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.pg-title{font-family:var(--display);font-size:22px;font-weight:700;color:var(--t1)}
+.pg-sub{font-size:12px;color:var(--t3);margin-top:3px}
+.pg-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+
+/* ── KPI GRID ─────────────────────────────── */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px}
+.kpi{
+  background:var(--card);border:1px solid var(--bdr);border-radius:var(--r-lg);
+  padding:16px 18px;box-shadow:var(--sh-xs);transition:box-shadow .15s;position:relative;overflow:hidden
+}
+.kpi:hover{box-shadow:var(--sh-sm)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.k-blue::before{background:var(--blue)}
+.kpi.k-green::before{background:var(--green)}
+.kpi.k-amber::before{background:var(--amber)}
+.kpi.k-red::before{background:var(--red)}
+.kpi.k-teal::before{background:var(--teal)}
+.kpi.k-purple::before{background:var(--c-design)}
+.kpi-ico{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin-bottom:4px}
+.kpi-val{font-family:var(--mono);font-size:19px;font-weight:600;line-height:1;color:var(--t1)}
+.kpi-sub{font-size:10px;color:var(--t4);margin-top:5px}
+
+/* ── DASH PANELS ──────────────────────────── */
+.dash-row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:16px;margin-bottom:22px}
+.dp{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.dp-head{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.dp-title{font-size:12px;font-weight:700;color:var(--t1)}
+.dp-sub{font-size:10px;color:var(--t4)}
+.dp-body{padding:14px 18px}
+
+/* customer bar */
+.cbar-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bdr)}
+.cbar-row:last-child{border-bottom:none}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cname{font-size:11px;font-weight:500;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbar-wrap{width:70px;height:4px;background:var(--bg2);border-radius:2px;flex-shrink:0}
+.cbar-fill{height:100%;border-radius:2px}
+.camt{font-family:var(--mono);font-size:10px;color:var(--t3);min-width:62px;text-align:right}
+
+/* stage list */
+.srow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)}
+.srow:last-child{border-bottom:none}
+.srow-ct{font-family:var(--mono);font-size:11px;color:var(--t3)}
+
+/* payment milestone list on dashboard */
+.pmrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bdr)}
+.pmrow:last-child{border-bottom:none}
+.pmrow-l{font-size:11px;font-weight:500;color:var(--t2)}
+.pmrow-r{font-family:var(--mono);font-size:11px;font-weight:600}
+
+/* ── TOOLBAR ──────────────────────────────── */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.srch{position:relative}
+.srch input{
+  border:1.5px solid var(--bdr2);border-radius:var(--r);
+  padding:8px 12px 8px 33px;font-size:12.5px;color:var(--t1);
+  background:var(--white);outline:none;width:270px;transition:all .15s
+}
+.srch input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.08)}
+.srch input::placeholder{color:var(--t5)}
+.srch-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t4);font-size:14px;pointer-events:none}
+.chip{
+  padding:6px 14px;border-radius:20px;border:1.5px solid var(--bdr2);
+  background:var(--white);color:var(--t3);font-size:11.5px;font-weight:500;
+  cursor:pointer;transition:all .12s
+}
+.chip:hover{background:var(--bg2);color:var(--t1)}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ml{margin-left:auto}
+.ct-lbl{font-family:var(--mono);font-size:11px;color:var(--t4)}
+
+/* ── TABLE ────────────────────────────────── */
+.tcard{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-xs)}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:1200px}
+thead tr{background:var(--bg2);border-bottom:2px solid var(--bdr)}
+th{
+  padding:9px 13px;text-align:left;font-size:9.5px;font-weight:700;
+  letter-spacing:.8px;text-transform:uppercase;color:var(--t3);
+  white-space:nowrap;cursor:pointer;user-select:none;transition:color .12s
+}
+th:hover{color:var(--blue)}
+th.sorted-asc::after{content:' ▲';color:var(--blue)}
+th.sorted-desc::after{content:' ▼';color:var(--blue)}
+tbody tr{border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f8faff}
+tbody tr.sel{background:var(--blue-lt);border-left:3px solid var(--blue)}
+td{padding:11px 13px;font-size:12.5px;vertical-align:middle}
+.td-sl{font-family:var(--mono);font-size:11px;color:var(--t4);font-weight:500}
+.td-po{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:500}
+.td-cust{font-weight:600;color:var(--t1);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.td-desc{color:var(--t2);max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.td-amt{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--t1)}
+.td-amt.g{color:var(--green)}
+.td-dt{font-family:var(--mono);font-size:10.5px;color:var(--t3)}
+.td-sm{font-size:11px;color:var(--t3);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ibt{
+  width:28px;height:28px;border-radius:var(--r);border:1px solid var(--bdr);
+  background:var(--bg2);color:var(--t3);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;font-size:13px;transition:all .12s
+}
+.ibt:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.ibt.del:hover{background:var(--red);border-color:var(--red)}
+
+/* ── BADGES ───────────────────────────────── */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap
+}
+.bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* Stage badges */
+.bs-design   {background:var(--c-design-lt);color:var(--c-design)}
+.bs-raw      {background:var(--c-raw-lt);color:var(--c-raw)}
+.bs-fab      {background:var(--c-fab-lt);color:var(--c-fab)}
+.bs-asm      {background:var(--c-asm-lt);color:var(--c-asm)}
+.bs-qa       {background:var(--c-qa-lt);color:var(--c-qa)}
+.bs-dispatch {background:var(--c-dispatch-lt);color:var(--c-dispatch)}
+.bs-ship     {background:var(--c-ship-lt);color:var(--c-ship)}
+.bs-del      {background:var(--c-del-lt);color:var(--c-del)}
+.bs-payrec   {background:var(--c-payrec-lt);color:var(--c-payrec)}
+.bs-hold     {background:var(--c-hold-lt);color:var(--c-hold)}
+
+.bdot-design  {background:var(--c-design)}
+.bdot-raw     {background:var(--c-raw)}
+.bdot-fab     {background:var(--c-fab);animation:pulse 1.4s infinite}
+.bdot-asm     {background:var(--c-asm);animation:pulse 1.4s infinite}
+.bdot-qa      {background:var(--c-qa)}
+.bdot-dispatch{background:var(--c-dispatch)}
+.bdot-ship    {background:var(--c-ship);animation:pulse 1.4s infinite}
+.bdot-del     {background:var(--c-del)}
+.bdot-payrec  {background:var(--c-payrec)}
+.bdot-hold    {background:var(--c-hold);animation:pulse .8s infinite}
+
+/* Payment badges */
+.bp-paid    {background:var(--green-lt);color:var(--green)}
+.bp-partial {background:var(--amber-lt);color:var(--amber)}
+.bp-pending {background:var(--red-lt);color:var(--red)}
+.bp-none    {background:var(--bg2);color:var(--t4)}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── PROGRESS BAR ─────────────────────────── */
+.pbar{height:7px;background:var(--bdr);border-radius:4px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .5s ease}
+.pbar-fill.warn{background:linear-gradient(90deg,var(--red),var(--amber))}
+
+/* ── DRAWER ───────────────────────────────── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,27,42,.25);backdrop-filter:blur(3px);z-index:300}
+.overlay.open{display:block}
+.drawer{
+  position:fixed;top:0;right:-620px;width:600px;height:100%;
+  background:var(--white);border-left:1px solid var(--bdr);
+  box-shadow:var(--sh-lg);z-index:301;
+  display:flex;flex-direction:column;transition:right .25s cubic-bezier(.4,0,.2,1);
+}
+.drawer.open{right:0}
+
+.dwr-top{
+  padding:20px 24px 14px;border-bottom:1px solid var(--bdr);
+  background:linear-gradient(to right,#f8faff,#fff);flex-shrink:0
+}
+.dwr-meta{font-family:var(--mono);font-size:10px;color:var(--blue);font-weight:600;letter-spacing:1px;margin-bottom:5px}
+.dwr-name{font-family:var(--display);font-size:20px;font-weight:700;color:var(--t1);margin-bottom:3px}
+.dwr-desc{font-size:12px;color:var(--t3);margin-bottom:12px}
+.dwr-badges{display:flex;gap:7px;flex-wrap:wrap}
+.dwr-close{
+  position:absolute;top:16px;right:18px;width:30px;height:30px;
+  border-radius:var(--r);border:1px solid var(--bdr);background:var(--white);
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s
+}
+.dwr-close:hover{background:var(--red-lt);color:var(--red);border-color:var(--red-md)}
+
+/* Drawer tabs */
+.dwr-tabs{display:flex;border-bottom:1px solid var(--bdr);background:var(--white);flex-shrink:0;overflow-x:auto}
+.dtab{
+  padding:11px 18px;font-size:12px;font-weight:600;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap
+}
+.dtab:hover{color:var(--blue)}
+.dtab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.dwr-body{flex:1;overflow-y:auto;padding:20px 24px}
+.dpanel{display:none}
+.dpanel.on{display:block}
+
+/* Sections inside drawer */
+.dsec{margin-bottom:22px}
+.dsec-t{
+  font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--t4);padding-bottom:8px;border-bottom:1px solid var(--bdr);margin-bottom:12px
+}
+
+/* Pipeline inside drawer */
+.pipeline{display:flex;align-items:flex-start;overflow-x:auto;padding-bottom:12px;gap:0}
+.pstep{display:flex;flex-direction:column;align-items:center;flex:1;min-width:62px;position:relative}
+.pstep:not(:last-child)::after{
+  content:'';position:absolute;top:14px;left:calc(50% + 15px);
+  width:calc(100% - 30px);height:2px;background:var(--bdr2)
+}
+.pstep.done:not(:last-child)::after{background:var(--green)}
+.pstep.active:not(:last-child)::after{background:linear-gradient(90deg,var(--blue),var(--bdr2))}
+.pdot{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--bdr2);
+  background:var(--white);display:flex;align-items:center;justify-content:center;
+  font-size:11px;position:relative;z-index:1;transition:all .2s;color:var(--t4)
+}
+.pstep.done .pdot{background:var(--green);border-color:var(--green);color:#fff}
+.pstep.active .pdot{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 4px rgba(26,86,219,.12)}
+.pstep.skip .pdot{opacity:.3}
+.plbl{font-size:8.5px;font-weight:600;text-align:center;margin-top:5px;color:var(--t4);text-transform:uppercase;letter-spacing:.3px;line-height:1.3}
+.pstep.done .plbl{color:var(--green)}
+.pstep.active .plbl{color:var(--blue)}
+.pdate{font-family:var(--mono);font-size:8px;color:var(--t4);text-align:center;margin-top:2px}
+
+/* Info grid */
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:1px}
+.irow{display:flex;flex-direction:column;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.irow.full{grid-column:1/-1}
+.irow:last-child,.irow.full:last-child{border-bottom:none}
+.ilbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:3px}
+.ival{font-size:12.5px;color:var(--t1);font-weight:500;line-height:1.5}
+.ival.mono{font-family:var(--mono);font-size:12px}
+.ival.green{color:var(--green)}.ival.red{color:var(--red)}.ival.blue{color:var(--blue)}.ival.amber{color:var(--amber)}
+
+/* Payment milestone rows */
+.pm-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid var(--bdr)
+}
+.pm-row:last-child{border-bottom:none}
+.pm-left{display:flex;align-items:center;gap:10px}
+.pm-ic{
+  width:32px;height:32px;border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0
+}
+.pm-name{font-size:12.5px;font-weight:600;color:var(--t1)}
+.pm-pct{font-size:11px;color:var(--t3);margin-top:1px}
+.pm-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.pm-amt{font-family:var(--mono);font-size:12px;font-weight:600}
+.pm-stat{display:flex;align-items:center;gap:5px}
+.pm-check{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700}
+.pm-check.done{background:var(--green-lt);color:var(--green)}
+.pm-check.pending{background:var(--red-lt);color:var(--red)}
+.pm-check.na{background:var(--bg2);color:var(--t4)}
+.pm-dt{font-family:var(--mono);font-size:10px;color:var(--t4)}
+
+/* PBG indicator */
+.pbg-box{
+  background:linear-gradient(135deg,var(--amber-lt),#fff);
+  border:1px solid var(--amber-md);border-radius:var(--r-lg);
+  padding:14px 16px;margin-top:12px
+}
+.pbg-title{font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pbg-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0}
+.pbg-lbl{color:var(--t3)}
+.pbg-val{font-family:var(--mono);font-weight:600;color:var(--t1)}
+
+/* Stage update footer */
+.dwr-footer{
+  border-top:1px solid var(--bdr);padding:14px 24px;background:var(--bg);flex-shrink:0
+}
+.dwr-footer-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--t4);margin-bottom:9px}
+.stage-btns{display:flex;flex-wrap:wrap;gap:6px}
+.sbtn{
+  padding:5px 12px;border-radius:20px;border:1.5px solid var(--bdr2);
+  background:var(--white);font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .12s;color:var(--t3)
+}
+.sbtn:hover{transform:translateY(-1px);box-shadow:var(--sh-xs)}
+.sbtn.cur{box-shadow:var(--sh-sm)}
+.sbtn.s-design:hover,.sbtn.s-design.cur    {background:var(--c-design-lt);color:var(--c-design);border-color:var(--c-design)}
+.sbtn.s-raw:hover,.sbtn.s-raw.cur          {background:var(--c-raw-lt);color:var(--c-raw);border-color:var(--c-raw)}
+.sbtn.s-fab:hover,.sbtn.s-fab.cur          {background:var(--c-fab-lt);color:var(--c-fab);border-color:var(--c-fab)}
+.sbtn.s-asm:hover,.sbtn.s-asm.cur          {background:var(--c-asm-lt);color:var(--c-asm);border-color:var(--c-asm)}
+.sbtn.s-qa:hover,.sbtn.s-qa.cur            {background:var(--c-qa-lt);color:var(--c-qa);border-color:var(--c-qa)}
+.sbtn.s-dispatch:hover,.sbtn.s-dispatch.cur{background:var(--c-dispatch-lt);color:var(--c-dispatch);border-color:var(--c-dispatch)}
+.sbtn.s-ship:hover,.sbtn.s-ship.cur        {background:var(--c-ship-lt);color:var(--c-ship);border-color:var(--c-ship)}
+.sbtn.s-del:hover,.sbtn.s-del.cur          {background:var(--c-del-lt);color:var(--c-del);border-color:var(--c-del)}
+.sbtn.s-payrec:hover,.sbtn.s-payrec.cur    {background:var(--c-payrec-lt);color:var(--c-payrec);border-color:var(--c-payrec)}
+.sbtn.s-hold:hover,.sbtn.s-hold.cur        {background:var(--c-hold-lt);color:var(--c-hold);border-color:var(--c-hold)}
+
+/* ── MODAL ────────────────────────────────── */
+.moverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(13,27,42,.45);backdrop-filter:blur(4px);
+  z-index:400;align-items:center;justify-content:center;padding:20px
+}
+.moverlay.open{display:flex}
+.modal{
+  background:var(--white);border-radius:var(--r-xl);box-shadow:var(--sh-lg);
+  width:100%;max-width:700px;max-height:92vh;overflow-y:auto;
+  animation:slideUp .2s ease
+}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hd{
+  padding:18px 24px;border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;background:var(--white);z-index:1
+}
+.modal-title{font-family:var(--display);font-size:19px;font-weight:700;color:var(--t1)}
+.modal-body{padding:22px 24px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ffull{grid-column:1/-1}
+.fhead{
+  grid-column:1/-1;font-size:10px;font-weight:700;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--t3);
+  padding-top:14px;padding-bottom:5px;border-bottom:1px solid var(--bdr);
+  margin-top:4px
+}
+.fhead:first-child{padding-top:0;margin-top:0}
+.modal-ft{
+  padding:14px 24px;border-top:1px solid var(--bdr);
+  display:flex;justify-content:flex-end;gap:8px;
+  position:sticky;bottom:0;background:var(--white);z-index:1
+}
+
+/* ── TOAST ────────────────────────────────── */
+.toast-tray{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{
+  background:var(--white);border:1px solid var(--bdr);
+  border-left:4px solid var(--green);border-radius:var(--r-lg);
+  padding:12px 16px;font-size:12.5px;color:var(--t1);
+  max-width:320px;box-shadow:var(--sh-lg);animation:slideUp .2s ease
+}
+.toast.err{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--blue)}
+
+/* ── EMPTY / LOADING ──────────────────────── */
+.empty{padding:52px;text-align:center}
+.empty-ico{font-size:38px;margin-bottom:12px;opacity:.25}
+.empty-t{font-size:14px;font-weight:600;color:var(--t3);margin-bottom:4px}
+.empty-s{font-size:12px;color:var(--t4)}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--bdr2);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading{display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px;color:var(--t3);font-size:13px}
+
+/* ── SCROLLBAR ────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--blue)}
+
+/* ── ROLE-BASED VIEW HIDING ───────────────── */
+body.role-production .finance-only{display:none!important}
+body.role-production .sales-only{display:none!important}
+body.role-finance .production-only{display:none!important}
+body.role-sales .production-only{display:none!important}
+
+@media(max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .kpi-row{grid-template-columns:repeat(3,1fr)}
+  .dash-row{grid-template-columns:1fr 1fr}
+  .drawer{width:100%;right:-100%}
+  .hdr-kpis{display:none}
+}
+</style>
+</head>
+<body>
+
+<!--═══════════════════════════════════════════
+    SETUP SCREEN
+═══════════════════════════════════════════-->
+<div id="setup">
+<div class="setup-wrap">
+
+  <!-- STEP 1: Role picker -->
+  <div id="step-role">
+    <div class="setup-card">
+      <div class="setup-top">
+        <div class="setup-logo">SPICON</div>
+        <div class="setup-tagline">Order Management System · Metro & Tunneling Equipment</div>
+      </div>
+      <div class="setup-body">
+        <p class="setup-intro">Welcome. Select your role to customise your view of the system.</p>
+        <div class="role-grid">
+          <div class="role-card" onclick="selectRole('management',this)">
+            <div class="role-icon">👔</div>
+            <div class="role-name">Management</div>
+            <div class="role-desc">Full access — all stages, financials, pipeline overview</div>
+          </div>
+          <div class="role-card" onclick="selectRole('sales',this)">
+            <div class="role-icon">📋</div>
+            <div class="role-name">Sales / Contracts</div>
+            <div class="role-desc">PO details, order status, customer tracking</div>
+          </div>
+          <div class="role-card" onclick="selectRole('finance',this)">
+            <div class="role-icon">💰</div>
+            <div class="role-name">Finance / Accounts</div>
+            <div class="role-desc">Invoices, payments, milestones, PBG tracking</div>
+          </div>
+          <div class="role-card" onclick="selectRole('production',this)">
+            <div class="role-icon">⚙️</div>
+            <div class="role-name">Production / Shop Floor</div>
+            <div class="role-desc">Stage tracking, milestone dates, dispatch status</div>
+          </div>
+        </div>
+        <button class="btn btn-blue" id="roleNextBtn" onclick="goToConnect()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Supabase connect -->
+  <div id="step-connect" style="display:none">
+    <div class="setup-card">
+      <div class="setup-top">
+        <div class="setup-logo">SPICON</div>
+        <div class="setup-tagline">Connect your database</div>
+      </div>
+      <div class="setup-body">
+        <div class="step">
+          <div class="step-n">1</div>
+          <div class="step-body">
+            <div class="step-t">Create a free Supabase project</div>
+            <div class="step-d">Sign up at supabase.com → New Project (name it anything, e.g. "spicon-orders")</div>
+            <a class="step-a" href="https://supabase.com" target="_blank">→ supabase.com</a>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">2</div>
+          <div class="step-body">
+            <div class="step-t">Run this SQL in your project's SQL Editor</div>
+            <div class="sql-block">CREATE TABLE IF NOT EXISTS orders (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  sl integer, customer text, po_number text,
+  po_date date, description text,
+  ex_works numeric DEFAULT 0,
+  order_amount numeric DEFAULT 0,
+  payment_terms text, delivery_date text,
+  status text DEFAULT 'Design',
+  notes text,
+  -- Invoice fields
+  inv_number text, inv_date date,
+  inv_amount numeric DEFAULT 0,
+  -- Payment milestone amounts
+  pm_advance_pct numeric DEFAULT 0,
+  pm_advance_amt numeric DEFAULT 0,
+  pm_advance_received numeric DEFAULT 0,
+  pm_advance_date date,
+  pm_invoice_amt numeric DEFAULT 0,
+  pm_invoice_received numeric DEFAULT 0,
+  pm_invoice_date date,
+  pm_fat_pct numeric DEFAULT 0,
+  pm_fat_amt numeric DEFAULT 0,
+  pm_fat_received numeric DEFAULT 0,
+  pm_fat_date date,
+  pm_dispatch_pct numeric DEFAULT 0,
+  pm_dispatch_amt numeric DEFAULT 0,
+  pm_dispatch_received numeric DEFAULT 0,
+  pm_dispatch_date date,
+  pm_delivery_pct numeric DEFAULT 0,
+  pm_delivery_amt numeric DEFAULT 0,
+  pm_delivery_received numeric DEFAULT 0,
+  pm_delivery_date date,
+  pbg_required boolean DEFAULT false,
+  pbg_amount numeric DEFAULT 0,
+  pbg_validity_months integer DEFAULT 12,
+  pbg_expiry_date date,
+  pbg_returned boolean DEFAULT false,
+  -- Production milestone dates
+  design_start date, design_done date,
+  raw_material_date date,
+  fabrication_start date, fabrication_done date,
+  assembly_start date, assembly_done date,
+  qa_start date, qa_done date,
+  dispatch_ready_date date,
+  shipped_date date, delivered_date date,
+  payment_received_date date,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all" ON orders FOR ALL
+  USING (true) WITH CHECK (true);</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-n">3</div>
+          <div class="step-body">
+            <div class="step-t">Get your Project URL and anon key</div>
+            <div class="step-d">Settings → API → copy Project URL and <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">anon</code> public key</div>
+          </div>
+        </div>
+        <div class="sep"></div>
+        <div class="fg">
+          <label class="flbl">Supabase Project URL</label>
+          <input class="finput" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co">
+        </div>
+        <div class="fg">
+          <label class="flbl">Supabase Anon Key</label>
+          <input class="finput" id="sb-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIs...">
+        </div>
+        <button class="btn btn-blue" id="connectBtn" onclick="doConnect()">Connect & Launch</button>
+        <div class="setup-err" id="setupErr"></div>
+        <div style="margin-top:12px;text-align:center">
+          <button class="btn-ghost btn btn-sm" onclick="document.getElementById('step-connect').style.display='none';document.getElementById('step-role').style.display='block'">← Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!--═══════════════════════════════════════════
+    MAIN APP
+═══════════════════════════════════════════-->
+<div id="app">
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">SPICON <small>Order Intelligence · FY 25-26</small></div>
+    <div class="hdr-kpis" id="hdrKpis"></div>
+  </div>
+  <div class="hdr-right">
+    <div class="role-badge" id="roleBadge" onclick="switchRole()">👔 Management</div>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    <button class="btn btn-blue btn-sm" onclick="openNewModal()">+ New Order</button>
+  </div>
+</header>
+
+<div class="layout">
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="nav-sec-title">Menu</div>
+  <div class="nitem active" id="nav-dash" onclick="showPage('dash',this)"><span class="ni">◈</span>Dashboard</div>
+  <div class="nitem" id="nav-orders" onclick="showPage('orders',this)"><span class="ni">≡</span>All Orders<span class="nbadge" id="nb-all">0</span></div>
+
+  <div class="ndiv"></div>
+  <div class="nav-sec-title">Production Stage</div>
+  <div class="nitem" onclick="navF('stage','Design',this)"><span class="ni">✏</span>Design / Engg<span class="nbadge" id="nb-design">0</span></div>
+  <div class="nitem" onclick="navF('stage','Raw Material',this)"><span class="ni">🧱</span>Raw Material<span class="nbadge" id="nb-raw">0</span></div>
+  <div class="nitem" onclick="navF('stage','Fabrication',this)"><span class="ni">⚙</span>Fabrication<span class="nbadge" id="nb-fab">0</span></div>
+  <div class="nitem" onclick="navF('stage','Assembly',this)"><span class="ni">🔧</span>Assembly<span class="nbadge" id="nb-asm">0</span></div>
+  <div class="nitem" onclick="navF('stage','QA/Testing',this)"><span class="ni">🔬</span>QA / FAT<span class="nbadge" id="nb-qa">0</span></div>
+  <div class="nitem" onclick="navF('stage','Dispatch Ready',this)"><span class="ni">📦</span>Dispatch Ready<span class="nbadge" id="nb-dispatch">0</span></div>
+  <div class="nitem" onclick="navF('stage','Shipped',this)"><span class="ni">🚛</span>Shipped<span class="nbadge" id="nb-ship">0</span></div>
+  <div class="nitem" onclick="navF('stage','Delivered',this)"><span class="ni">✅</span>Delivered<span class="nbadge" id="nb-del">0</span></div>
+  <div class="nitem" onclick="navF('stage','Payment Received',this)"><span class="ni">💰</span>Payment Received<span class="nbadge" id="nb-payrec">0</span></div>
+  <div class="nitem" onclick="navF('stage','On Hold',this)"><span class="ni">⚠</span>On Hold<span class="nbadge" id="nb-hold">0</span></div>
+
+  <div class="ndiv"></div>
+  <div class="nav-sec-title">Payment Filter</div>
+  <div class="nitem" onclick="navF('pay','Pending',this)"><span class="ni">○</span>Pending Payment</div>
+  <div class="nitem" onclick="navF('pay','Partial',this)"><span class="ni">◑</span>Partial Payment</div>
+  <div class="nitem" onclick="navF('pay','Paid',this)"><span class="ni">●</span>Fully Paid</div>
+  <div class="nitem" onclick="navF('pay','PBG',this)"><span class="ni">🏦</span>PBG Active</div>
+
+  <div class="ndiv"></div>
+  <div class="nav-sec-title">Customers</div>
+  <div class="nitem" onclick="navF('cust','Afcons',this)"><span class="ni">▸</span>Afcons</div>
+  <div class="nitem" onclick="navF('cust','Larsen',this)"><span class="ni">▸</span>L&T</div>
+  <div class="nitem" onclick="navF('cust','J Kumar',this)"><span class="ni">▸</span>J. Kumar</div>
+  <div class="nitem" onclick="navF('cust','ITD',this)"><span class="ni">▸</span>ITD Cementation</div>
+  <div class="nitem" onclick="navF('cust','Megha',this)"><span class="ni">▸</span>Megha Engg</div>
+  <div class="nitem" onclick="navF('cust','HCC',this)"><span class="ni">▸</span>HCC</div>
+</nav>
+
+<!-- CONTENT -->
+<div class="main">
+
+<!-- ══ DASHBOARD ══ -->
+<div class="page active" id="page-dash">
+  <div class="pg-hdr">
+    <div><div class="pg-title">Dashboard</div><div class="pg-sub" id="dashSub">—</div></div>
+    <div class="pg-actions">
+      <button class="btn btn-ghost btn-sm" onclick="loadData()">↻ Refresh</button>
+    </div>
+  </div>
+  <div class="kpi-row" id="kpiRow"></div>
+  <div class="dash-row">
+    <div class="dp"><div class="dp-head"><span class="dp-title">Customer Split</span><span class="dp-sub">by order value</span></div><div class="dp-body" id="dcust"></div></div>
+    <div class="dp"><div class="dp-head"><span class="dp-title">Production Pipeline</span><span class="dp-sub">active orders</span></div><div class="dp-body" id="dpipe"></div></div>
+    <div class="dp"><div class="dp-head"><span class="dp-title">Payment Status</span><span class="dp-sub">collection summary</span></div><div class="dp-body" id="dpay"></div></div>
+    <div class="dp finance-only"><div class="dp-head"><span class="dp-title">PBG Tracker</span><span class="dp-sub">active guarantees</span></div><div class="dp-body" id="dpbg"></div></div>
+  </div>
+  <div class="tcard">
+    <div style="padding:13px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between">
+      <span style="font-weight:700;font-size:13px">Recent Orders</span>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.getElementById('nav-orders'))">View All →</button>
+    </div>
+    <div class="tscroll"><table>
+      <thead><tr><th>SL</th><th>Customer</th><th>Description</th><th>PO Date</th><th>Order Amt</th><th>Invoiced</th><th>Stage</th><th>Payment</th></tr></thead>
+      <tbody id="recentBody"><tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══ ORDERS ══ -->
+<div class="page" id="page-orders">
+  <div class="pg-hdr">
+    <div><div class="pg-title">All Orders</div><div class="pg-sub" id="ordersSub">—</div></div>
+  </div>
+  <div class="toolbar">
+    <div class="srch"><span class="srch-ic">⌕</span><input type="text" id="srchInput" placeholder="Search PO, customer, description…" oninput="renderTable()"></div>
+    <button class="chip on" id="chip-all" onclick="setChip('all',this)">All</button>
+    <button class="chip" id="chip-active" onclick="setChip('active',this)">Active</button>
+    <button class="chip" id="chip-inv" onclick="setChip('invoiced',this)">Invoiced</button>
+    <button class="chip" id="chip-due" onclick="setChip('due',this)">Payment Due</button>
+    <button class="chip" id="chip-pbg" onclick="setChip('pbg',this)">PBG Active</button>
+    <span class="ml ct-lbl" id="ctLbl"></span>
+  </div>
+  <div class="tcard"><div class="tscroll">
+    <table id="mainTbl">
+      <thead><tr>
+        <th onclick="sortBy('sl')">SL</th>
+        <th onclick="sortBy('po_number')">PO Number</th>
+        <th onclick="sortBy('customer')">Customer</th>
+        <th>Description</th>
+        <th onclick="sortBy('po_date')">PO Date</th>
+        <th onclick="sortBy('ex_works')">Ex-Works</th>
+        <th onclick="sortBy('order_amount')">Order Amt</th>
+        <th onclick="sortBy('inv_amount')" class="finance-only">Inv Amt</th>
+        <th class="finance-only">Inv No</th>
+        <th class="finance-only" onclick="sortBy('inv_date')">Inv Date</th>
+        <th>Payment Terms</th>
+        <th>Delivery</th>
+        <th onclick="sortBy('status')">Stage</th>
+        <th>Payment</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="mainBody"><tr><td colspan="15"><div class="loading"><div class="spinner"></div>Loading…</div></td></tr></tbody>
+    </table>
+  </div></div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dwr-top" id="dwrTop"></div>
+  <div class="dwr-tabs">
+    <div class="dtab on" onclick="dTab('overview',this)">Overview</div>
+    <div class="dtab" onclick="dTab('production',this)">Production</div>
+    <div class="dtab finance-only" onclick="dTab('payment',this)">Payment</div>
+    <div class="dtab finance-only" onclick="dTab('pbg',this)">PBG</div>
+    <div class="dtab" onclick="dTab('docs',this)">Documents</div>
+  </div>
+  <div class="dwr-body" id="dwrBody"></div>
+  <div class="dwr-footer production-only" id="dwrFooter">
+    <div class="dwr-footer-t">Update Production Stage</div>
+    <div class="stage-btns" id="stageBtns"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="moverlay" id="modal" onclick="handleMBg(event)">
+<div class="modal">
+  <div class="modal-hd">
+    <div class="modal-title" id="modalTitle">New Order</div>
+    <button class="ibt" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+  <div class="fgrid">
+    <div class="fhead">Purchase Order</div>
+    <div class="fg"><label class="flbl">Customer *</label><input class="finput" id="f_customer" placeholder="e.g. Afcons - CIDCO"></div>
+    <div class="fg"><label class="flbl">PO Number</label><input class="finput" id="f_po_number" placeholder="e.g. 4500635234"></div>
+    <div class="fg"><label class="flbl">PO Date</label><input class="finput" type="date" id="f_po_date"></div>
+    <div class="fg"><label class="flbl">Delivery Date / Schedule</label><input class="finput" id="f_delivery_date" placeholder="e.g. 15-03-2026 or 8 weeks from PO"></div>
+    <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="f_description" placeholder="e.g. 12T Locomotive Spares"></div>
+    <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="f_ex_works" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Order Amount incl GST (INR)</label><input class="finput" type="number" id="f_order_amount" placeholder="0"></div>
+    <div class="fg ffull"><label class="flbl">Payment Terms</label><input class="finput" id="f_payment_terms" placeholder="e.g. 30 Days Credit from Invoice"></div>
+
+    <div class="fhead">Invoice</div>
+    <div class="fg"><label class="flbl">Invoice Number(s)</label><input class="finput" id="f_inv_number" placeholder="e.g. SPIAIL252603A"></div>
+    <div class="fg"><label class="flbl">Invoice Date</label><input class="finput" type="date" id="f_inv_date"></div>
+    <div class="fg"><label class="flbl">Invoice Amount (INR)</label><input class="finput" type="number" id="f_inv_amount" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Current Stage</label>
+      <select class="finput" id="f_status">
+        <option value="Design">Design / Engineering</option>
+        <option value="Raw Material">Raw Material Procurement</option>
+        <option value="Fabrication">Fabrication / Manufacturing</option>
+        <option value="Assembly">Assembly</option>
+        <option value="QA/Testing">QA / Testing & FAT</option>
+        <option value="Dispatch Ready">Dispatch Ready</option>
+        <option value="Shipped">Shipped / In Transit</option>
+        <option value="Delivered">Delivered & Installed</option>
+        <option value="Payment Received">Payment Received</option>
+        <option value="On Hold">On Hold</option>
+      </select>
+    </div>
+
+    <div class="fhead">Payment Milestones</div>
+    <div class="fg"><label class="flbl">Advance % of Contract</label><input class="finput" type="number" id="f_pm_advance_pct" placeholder="e.g. 20"></div>
+    <div class="fg"><label class="flbl">Advance Received (INR)</label><input class="finput" type="number" id="f_pm_advance_received" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Against Invoice (INR)</label><input class="finput" type="number" id="f_pm_invoice_received" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Against FAT (INR)</label><input class="finput" type="number" id="f_pm_fat_received" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Against Dispatch (INR)</label><input class="finput" type="number" id="f_pm_dispatch_received" placeholder="0"></div>
+    <div class="fg"><label class="flbl">Against Delivery (INR)</label><input class="finput" type="number" id="f_pm_delivery_received" placeholder="0"></div>
+
+    <div class="fhead">Performance Bank Guarantee (PBG)</div>
+    <div class="fg"><label class="flbl">PBG Required?</label>
+      <select class="finput" id="f_pbg_required">
+        <option value="false">No</option>
+        <option value="true">Yes</option>
+      </select>
+    </div>
+    <div class="fg"><label class="flbl">PBG Amount (INR)</label><input class="finput" type="number" id="f_pbg_amount" placeholder="0"></div>
+    <div class="fg"><label class="flbl">PBG Validity (months)</label><input class="finput" type="number" id="f_pbg_validity_months" value="12" placeholder="12"></div>
+    <div class="fg"><label class="flbl">PBG Expiry Date</label><input class="finput" type="date" id="f_pbg_expiry_date"></div>
+    <div class="fg"><label class="flbl">PBG Returned?</label>
+      <select class="finput" id="f_pbg_returned">
+        <option value="false">No</option>
+        <option value="true">Yes</option>
+      </select>
+    </div>
+
+    <div class="fhead">Production Milestone Dates</div>
+    <div class="fg"><label class="flbl">Design Started</label><input class="finput" type="date" id="f_design_start"></div>
+    <div class="fg"><label class="flbl">Design Approved</label><input class="finput" type="date" id="f_design_done"></div>
+    <div class="fg"><label class="flbl">Raw Material Ordered</label><input class="finput" type="date" id="f_raw_material_date"></div>
+    <div class="fg"><label class="flbl">Fabrication Started</label><input class="finput" type="date" id="f_fabrication_start"></div>
+    <div class="fg"><label class="flbl">Fabrication Complete</label><input class="finput" type="date" id="f_fabrication_done"></div>
+    <div class="fg"><label class="flbl">Assembly Started</label><input class="finput" type="date" id="f_assembly_start"></div>
+    <div class="fg"><label class="flbl">Assembly Complete</label><input class="finput" type="date" id="f_assembly_done"></div>
+    <div class="fg"><label class="flbl">QA / FAT Started</label><input class="finput" type="date" id="f_qa_start"></div>
+    <div class="fg"><label class="flbl">QA / FAT Cleared</label><input class="finput" type="date" id="f_qa_done"></div>
+    <div class="fg"><label class="flbl">Dispatch Ready Date</label><input class="finput" type="date" id="f_dispatch_ready_date"></div>
+    <div class="fg"><label class="flbl">Shipped Date</label><input class="finput" type="date" id="f_shipped_date"></div>
+    <div class="fg"><label class="flbl">Delivered Date</label><input class="finput" type="date" id="f_delivered_date"></div>
+    <div class="fg"><label class="flbl">Payment Received Date</label><input class="finput" type="date" id="f_payment_received_date"></div>
+
+    <div class="fg ffull"><label class="flbl">Notes / Special Requirements</label>
+      <input class="finput" id="f_notes" placeholder="FAT required, partial delivery, special specs, retention clause…">
+    </div>
+  </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-blue" style="width:auto;padding:10px 24px" id="saveBtn" onclick="saveOrder()">Save Order</button>
+  </div>
+</div>
+</div>
+
+<div class="toast-tray" id="toastTray"></div>
+
+<script>
+/*═══════════════════════════════════════════
+  GLOBALS
+═══════════════════════════════════════════*/
+let SB = null;
+let allOrders = [];
+let activeFilter = null;
+let chipMode = 'all';
+let sortKey = 'sl';
+let sortDir = 1;
+let selectedId = null;
+let editId = null;
+let curTab = 'overview';
+let currentRole = 'management';
+
+/*═══════════════════════════════════════════
+  SETUP
+═══════════════════════════════════════════*/
+function selectRole(role, el) {
+  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  currentRole = role;
+  document.getElementById('roleNextBtn').disabled = false;
+}
+
+function goToConnect() {
+  if (!currentRole) return;
+  document.getElementById('step-role').style.display = 'none';
+  document.getElementById('step-connect').style.display = 'block';
+}
+
+async function doConnect() {
+  const url = document.getElementById('sb-url').value.trim();
+  const key = document.getElementById('sb-key').value.trim();
+  const errEl = document.getElementById('setupErr');
+  const btn = document.getElementById('connectBtn');
+  if (!url || !key) { showErr('Please enter both URL and anon key'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-top-color:#fff"></div> Connecting…';
+  errEl.style.display = 'none';
+  try {
+    const { createClient } = window.supabase;
+    SB = createClient(url, key);
+    const { error } = await SB.from('orders').select('id').limit(1);
+    if (error) throw error;
+    localStorage.setItem('sb_url', url);
+    localStorage.setItem('sb_key', key);
+    localStorage.setItem('sb_role', currentRole);
+    launch();
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'Connect & Launch';
+    showErr('Connection failed: ' + (e.message || 'Check URL/key and make sure you ran the SQL setup.'));
+  }
+}
+
+function showErr(msg) {
+  const el = document.getElementById('setupErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function launch() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  applyRole(currentRole);
+  loadData();
+  SB.channel('orders')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadData())
+    .subscribe();
+}
+
+// Auto-connect on reload
+window.addEventListener('DOMContentLoaded', () => {
+  const url = localStorage.getItem('sb_url');
+  const key = localStorage.getItem('sb_key');
+  const role = localStorage.getItem('sb_role');
+  if (url && key) {
+    document.getElementById('sb-url').value = url;
+    document.getElementById('sb-key').value = key;
+    if (role) { currentRole = role; }
+    const { createClient } = window.supabase;
+    SB = createClient(url, key);
+    launch();
+  }
+});
+
+/*═══════════════════════════════════════════
+  ROLE MANAGEMENT
+═══════════════════════════════════════════*/
+const ROLE_LABELS = {
+  management: '👔 Management',
+  sales: '📋 Sales / Contracts',
+  finance: '💰 Finance',
+  production: '⚙️ Production'
+};
+
+function applyRole(role) {
+  currentRole = role;
+  document.body.className = 'role-' + role;
+  const badge = document.getElementById('roleBadge');
+  if (badge) badge.textContent = ROLE_LABELS[role] || role;
+  // Management sees everything
+  if (role === 'management') document.body.className = '';
+}
+
+function switchRole() {
+  // Cycle through roles for demo
+  const roles = ['management','sales','finance','production'];
+  const idx = roles.indexOf(currentRole);
+  const next = roles[(idx + 1) % roles.length];
+  applyRole(next);
+  localStorage.setItem('sb_role', next);
+  toast('Switched to ' + ROLE_LABELS[next] + ' view', 'info');
+}
+
+/*═══════════════════════════════════════════
+  DATA
+═══════════════════════════════════════════*/
+async function loadData() {
+  try {
+    const { data, error } = await SB.from('orders').select('*').order('sl', { ascending: true });
+    if (error) throw error;
+    allOrders = data || [];
+    renderAll();
+  } catch(e) {
+    toast('Failed to load: ' + e.message, 'err');
+  }
+}
+
+/*═══════════════════════════════════════════
+  HELPERS
+═══════════════════════════════════════════*/
+const fmt = n => (+n > 0) ? '₹' + Number(n).toLocaleString('en-IN', {maximumFractionDigits:0}) : '—';
+const fmtCr = n => {
+  if (!n || +n <= 0) return '—';
+  if (+n >= 1e7) return '₹' + (+n/1e7).toFixed(2) + ' Cr';
+  if (+n >= 1e5) return '₹' + (+n/1e5).toFixed(1) + ' L';
+  return '₹' + Math.round(+n).toLocaleString('en-IN');
+};
+const fmtD = s => { if(!s) return '—'; try { return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}); } catch{return s;} };
+const today = () => new Date().toISOString().split('T')[0];
+
+const STAGES = [
+  { key:'Design',           label:'Design',     icon:'✏', cls:'bs-design',   dot:'bdot-design',   btn:'s-design',   mStart:'design_start',         mDone:'design_done'       },
+  { key:'Raw Material',     label:'Raw Matl',   icon:'🧱',cls:'bs-raw',      dot:'bdot-raw',      btn:'s-raw',      mStart:'raw_material_date',     mDone:null                },
+  { key:'Fabrication',      label:'Fabrication',icon:'⚙', cls:'bs-fab',      dot:'bdot-fab',      btn:'s-fab',      mStart:'fabrication_start',     mDone:'fabrication_done'  },
+  { key:'Assembly',         label:'Assembly',   icon:'🔧',cls:'bs-asm',      dot:'bdot-asm',      btn:'s-asm',      mStart:'assembly_start',        mDone:'assembly_done'     },
+  { key:'QA/Testing',       label:'QA/FAT',     icon:'🔬',cls:'bs-qa',       dot:'bdot-qa',       btn:'s-qa',       mStart:'qa_start',             mDone:'qa_done'           },
+  { key:'Dispatch Ready',   label:'Dispatch',   icon:'📦',cls:'bs-dispatch', dot:'bdot-dispatch', btn:'s-dispatch', mStart:'dispatch_ready_date',  mDone:null                },
+  { key:'Shipped',          label:'Shipped',    icon:'🚛',cls:'bs-ship',     dot:'bdot-ship',     btn:'s-ship',     mStart:'shipped_date',         mDone:null                },
+  { key:'Delivered',        label:'Delivered',  icon:'✅',cls:'bs-del',      dot:'bdot-del',      btn:'s-del',      mStart:'delivered_date',       mDone:null                },
+  { key:'Payment Received', label:'Paid',       icon:'💰',cls:'bs-payrec',   dot:'bdot-payrec',   btn:'s-payrec',   mStart:'payment_received_date',mDone:null                },
+];
+const HOLD = { key:'On Hold', label:'On Hold', icon:'⚠', cls:'bs-hold', dot:'bdot-hold', btn:'s-hold' };
+
+function sBadge(status) {
+  const s = STAGES.find(x => x.key === status) || (status === 'On Hold' ? HOLD : null);
+  if (!s) return `<span class="badge bs-hold"><span class="bdot bdot-hold"></span>${status||'?'}</span>`;
+  return `<span class="badge ${s.cls}"><span class="bdot ${s.dot}"></span>${s.label}</span>`;
+}
+
+function totalReceived(o) {
+  return (+o.pm_advance_received||0) + (+o.pm_invoice_received||0) +
+         (+o.pm_fat_received||0) + (+o.pm_dispatch_received||0) + (+o.pm_delivery_received||0);
+}
+
+function payBadge(o) {
+  const inv = +o.inv_amount||0;
+  const rec = totalReceived(o);
+  if (!inv) return { cls:'bp-none', lbl:'No Invoice' };
+  if (rec >= inv) return { cls:'bp-paid', lbl:'Paid' };
+  if (rec > 0)    return { cls:'bp-partial', lbl:'Partial' };
+  return { cls:'bp-pending', lbl:'Pending' };
+}
+
+const CUST_COLORS = ['#2563eb','#059669','#d97706','#7c3aed','#dc2626','#0891b2','#ea580c','#be123c','#0f766e'];
+
+/*═══════════════════════════════════════════
+  RENDER ALL
+═══════════════════════════════════════════*/
+function renderAll() {
+  renderDash();
+  renderTable();
+  updateNavBadges();
+  if (selectedId) {
+    const o = allOrders.find(x => x.id === selectedId);
+    if (o) renderDrawer(o);
+  }
+}
+
+/*═══════════════════════════════════════════
+  DASHBOARD
+═══════════════════════════════════════════*/
+function renderDash() {
+  const O = allOrders;
+  const totalPO = O.reduce((s,o)=>s+(+o.order_amount||0),0);
+  const totalInv = O.reduce((s,o)=>s+(+o.inv_amount||0),0);
+  const totalRec = O.reduce((s,o)=>s+totalReceived(o),0);
+  const out = totalInv - totalRec;
+  const active = O.filter(o=>o.status!=='Delivered'&&o.status!=='Payment Received').length;
+  const pbgActive = O.filter(o=>o.pbg_required&&!o.pbg_returned).length;
+
+  document.getElementById('dashSub').textContent = `${O.length} orders · Updated ${new Date().toLocaleTimeString()}`;
+
+  // Header KPIs
+  document.getElementById('hdrKpis').innerHTML = `
+    <div class="hkpi"><div class="hkpi-v">${fmtCr(totalPO)}</div><div class="hkpi-l">Order Book</div></div>
+    <div class="hkpi"><div class="hkpi-v green">${fmtCr(totalRec)}</div><div class="hkpi-l">Received</div></div>
+    <div class="hkpi finance-only"><div class="hkpi-v red">${fmtCr(out)}</div><div class="hkpi-l">Outstanding</div></div>
+  `;
+
+  // KPI cards
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi k-blue"><div class="kpi-ico" style="background:var(--blue-lt);color:var(--blue)">₹</div><div class="kpi-lbl">Order Book</div><div class="kpi-val">${fmtCr(totalPO)}</div><div class="kpi-sub">${O.length} POs</div></div>
+    <div class="kpi k-teal finance-only"><div class="kpi-ico" style="background:var(--teal-lt);color:var(--teal)">🧾</div><div class="kpi-lbl">Invoiced</div><div class="kpi-val">${fmtCr(totalInv)}</div><div class="kpi-sub">${totalPO>0?Math.round(totalInv/totalPO*100):0}% of PO value</div></div>
+    <div class="kpi k-green"><div class="kpi-ico" style="background:var(--green-lt);color:var(--green)">✓</div><div class="kpi-lbl">Received</div><div class="kpi-val" style="color:var(--green)">${fmtCr(totalRec)}</div><div class="kpi-sub">${totalInv>0?Math.round(totalRec/totalInv*100):0}% of invoiced</div></div>
+    <div class="kpi k-red finance-only"><div class="kpi-ico" style="background:var(--red-lt);color:var(--red)">!</div><div class="kpi-lbl">Outstanding</div><div class="kpi-val" style="color:var(--red)">${fmtCr(out)}</div><div class="kpi-sub">Invoiced not received</div></div>
+    <div class="kpi k-purple production-only"><div class="kpi-ico" style="background:var(--c-design-lt);color:var(--c-design)">⚙</div><div class="kpi-lbl">Active Orders</div><div class="kpi-val" style="color:var(--c-design)">${active}</div><div class="kpi-sub">${O.length-active} completed</div></div>
+    <div class="kpi k-amber finance-only"><div class="kpi-ico" style="background:var(--amber-lt);color:var(--amber)">🏦</div><div class="kpi-lbl">PBG Active</div><div class="kpi-val" style="color:var(--amber)">${pbgActive}</div><div class="kpi-sub">guarantees to release</div></div>
+  `;
+
+  // Customer split
+  const cm={};O.forEach(o=>{const k=(o.customer||'?').split(' - ')[0].split('/')[0].trim();cm[k]=(cm[k]||0)+(+o.order_amount||0);});
+  const ca=Object.entries(cm).sort((a,b)=>b[1]-a[1]).slice(0,7);const cmx=ca[0]?.[1]||1;
+  document.getElementById('dcust').innerHTML=ca.map(([k,v],i)=>`<div class="cbar-row"><div class="cdot" style="background:${CUST_COLORS[i]}"></div><div class="cname">${k}</div><div class="cbar-wrap"><div class="cbar-fill" style="width:${Math.round(v/cmx*100)}%;background:${CUST_COLORS[i]}"></div></div><div class="camt">${fmtCr(v)}</div></div>`).join('');
+
+  // Pipeline
+  const sm={};[...STAGES,HOLD].forEach(s=>sm[s.key]=0);O.forEach(o=>{if(sm[o.status]!==undefined)sm[o.status]++;});
+  document.getElementById('dpipe').innerHTML=[...STAGES,HOLD].map(s=>`<div class="srow"><div>${sBadge(s.key)}</div><div class="srow-ct">${sm[s.key]||0}</div></div>`).join('');
+
+  // Payment
+  const paid=O.filter(o=>totalReceived(o)>=(+o.inv_amount||0)&&(+o.inv_amount||0)>0);
+  const part=O.filter(o=>totalReceived(o)>0&&totalReceived(o)<(+o.inv_amount||0));
+  const pend=O.filter(o=>totalReceived(o)===0&&(+o.inv_amount||0)>0);
+  const noinv=O.filter(o=>!(+o.inv_amount));
+  document.getElementById('dpay').innerHTML=[
+    {l:'Fully Paid',cls:'bp-paid',a:paid},{l:'Partial',cls:'bp-partial',a:part},
+    {l:'Pending',cls:'bp-pending',a:pend},{l:'No Invoice',cls:'bp-none',a:noinv}
+  ].map(r=>`<div class="pmrow"><div class="pmrow-l"><span class="badge ${r.cls}">${r.l}</span></div><div><span class="pmrow-r">${r.a.length} orders</span><br><span style="font-family:var(--mono);font-size:10px;color:var(--t4)">${fmtCr(r.a.reduce((s,o)=>s+(+o.inv_amount||0),0))}</span></div></div>`).join('');
+
+  // PBG
+  const pbg=O.filter(o=>o.pbg_required);
+  document.getElementById('dpbg').innerHTML = pbg.length ? pbg.slice(0,6).map(o=>{
+    const exp=o.pbg_expiry_date?new Date(o.pbg_expiry_date):null;
+    const daysLeft=exp?Math.round((exp-new Date())/864e5):null;
+    const expired=daysLeft!==null&&daysLeft<0;
+    const warn=daysLeft!==null&&daysLeft<60&&!expired;
+    return `<div class="pmrow"><div class="pmrow-l" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:500">${o.customer}</div><div style="text-align:right"><span class="pmrow-r">${fmt(o.pbg_amount)}</span><br><span style="font-family:var(--mono);font-size:10px;color:${expired?'var(--red)':warn?'var(--amber)':'var(--t4)'}">${expired?'EXPIRED':daysLeft!==null?daysLeft+' days left':'—'}</span></div></div>`;
+  }).join('')+'':
+  `<div style="padding:20px;text-align:center;color:var(--t4);font-size:12px">No PBG orders</div>`;
+
+  // Recent
+  const recent=[...O].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,10);
+  document.getElementById('recentBody').innerHTML=recent.length?recent.map(o=>{
+    const pb=payBadge(o);
+    return `<tr onclick="openDrawer('${o.id}')">
+      <td class="td-sl">${o.sl||'—'}</td>
+      <td><div class="td-cust">${o.customer}</div></td>
+      <td><div class="td-desc">${o.description}</div></td>
+      <td class="td-dt">${fmtD(o.po_date)}</td>
+      <td class="td-amt">${fmt(o.order_amount)}</td>
+      <td class="td-amt g finance-only">${+o.inv_amount>0?fmt(o.inv_amount):'—'}</td>
+      <td>${sBadge(o.status)}</td>
+      <td><span class="badge ${pb.cls}">${pb.lbl}</span></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="8"><div class="empty"><div class="empty-ico">📋</div><div class="empty-t">No orders yet</div><div class="empty-s">Click "+ New Order" to add your first</div></div></td></tr>`;
+}
+
+/*═══════════════════════════════════════════
+  TABLE
+═══════════════════════════════════════════*/
+function getFiltered() {
+  let list = [...allOrders];
+  const q = (document.getElementById('srchInput')?.value||'').toLowerCase();
+  if (q) list=list.filter(o=>(o.po_number||'').toLowerCase().includes(q)||(o.customer||'').toLowerCase().includes(q)||(o.description||'').toLowerCase().includes(q)||(o.inv_number||'').toLowerCase().includes(q));
+  if (activeFilter) {
+    if (activeFilter.t==='stage') list=list.filter(o=>o.status===activeFilter.v);
+    if (activeFilter.t==='cust')  list=list.filter(o=>(o.customer||'').toLowerCase().includes(activeFilter.v.toLowerCase()));
+    if (activeFilter.t==='pay') {
+      if (activeFilter.v==='Paid')    list=list.filter(o=>totalReceived(o)>=(+o.inv_amount||0)&&(+o.inv_amount||0)>0);
+      if (activeFilter.v==='Partial') list=list.filter(o=>totalReceived(o)>0&&totalReceived(o)<(+o.inv_amount||0));
+      if (activeFilter.v==='Pending') list=list.filter(o=>totalReceived(o)===0&&(+o.inv_amount||0)>0);
+      if (activeFilter.v==='PBG')     list=list.filter(o=>o.pbg_required&&!o.pbg_returned);
+    }
+  }
+  if (chipMode==='active')   list=list.filter(o=>o.status!=='Delivered'&&o.status!=='Payment Received');
+  if (chipMode==='invoiced') list=list.filter(o=>(+o.inv_amount)>0);
+  if (chipMode==='due')      list=list.filter(o=>totalReceived(o)<(+o.inv_amount||0)&&(+o.inv_amount||0)>0);
+  if (chipMode==='pbg')      list=list.filter(o=>o.pbg_required&&!o.pbg_returned);
+  list.sort((a,b)=>{let av=a[sortKey],bv=b[sortKey];if(typeof av==='string'){av=av.toLowerCase();bv=(bv||'').toLowerCase();}return av<bv?-sortDir:av>bv?sortDir:0;});
+  return list;
+}
+
+function renderTable() {
+  const list = getFiltered();
+  const ctEl = document.getElementById('ctLbl');
+  const subEl = document.getElementById('ordersSub');
+  if(ctEl) ctEl.textContent = list.length + ' orders';
+  if(subEl) subEl.textContent = `${list.length} of ${allOrders.length} orders`;
+  const body = document.getElementById('mainBody');
+  if (!list.length) { body.innerHTML=`<tr><td colspan="15"><div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">No orders found</div></div></td></tr>`;return; }
+  body.innerHTML=list.map(o=>{
+    const pb=payBadge(o);
+    const inv=o.inv_number||'';
+    return `<tr class="${selectedId===o.id?'sel':''}" onclick="openDrawer('${o.id}')">
+      <td class="td-sl">${o.sl||'—'}</td>
+      <td class="td-po" title="${o.po_number||''}">${(o.po_number||'—').length>20?(o.po_number||'').slice(0,20)+'…':(o.po_number||'—')}</td>
+      <td><div class="td-cust" title="${o.customer}">${o.customer}</div></td>
+      <td><div class="td-desc" title="${o.description}">${o.description}</div></td>
+      <td class="td-dt">${fmtD(o.po_date)}</td>
+      <td class="td-amt">${fmt(o.ex_works)}</td>
+      <td class="td-amt">${fmt(o.order_amount)}</td>
+      <td class="td-amt g finance-only">${+o.inv_amount>0?fmt(o.inv_amount):'—'}</td>
+      <td class="td-po finance-only" style="font-size:10px" title="${inv}">${inv.length>14?inv.slice(0,14)+'…':inv||'—'}</td>
+      <td class="td-dt finance-only">${fmtD(o.inv_date)}</td>
+      <td class="td-sm" title="${o.payment_terms||''}">${o.payment_terms||'—'}</td>
+      <td class="td-dt">${o.delivery_date||'—'}</td>
+      <td>${sBadge(o.status)}</td>
+      <td><span class="badge ${pb.cls}">${pb.lbl}</span></td>
+      <td><button class="ibt" onclick="event.stopPropagation();openEdit('${o.id}')" title="Edit">✎</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function sortBy(key) {
+  if(sortKey===key) sortDir*=-1; else{sortKey=key;sortDir=1;}
+  document.querySelectorAll('th').forEach(t=>{t.classList.remove('sorted-asc','sorted-desc');});
+  const ths=document.querySelectorAll('#mainTbl th');
+  ths.forEach(t=>{if(t.getAttribute('onclick')==="sortBy('"+key+"')"){t.classList.add(sortDir===1?'sorted-asc':'sorted-desc');}});
+  renderTable();
+}
+
+/*═══════════════════════════════════════════
+  NAV
+═══════════════════════════════════════════*/
+function updateNavBadges() {
+  document.getElementById('nb-all').textContent=allOrders.length;
+  [['design','Design'],['raw','Raw Material'],['fab','Fabrication'],['asm','Assembly'],['qa','QA/Testing'],['dispatch','Dispatch Ready'],['ship','Shipped'],['del','Delivered'],['payrec','Payment Received'],['hold','On Hold']].forEach(([k,v])=>{
+    const el=document.getElementById('nb-'+k);if(el)el.textContent=allOrders.filter(o=>o.status===v).length;
+  });
+}
+
+function navF(type, val, el) {
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  showPage('orders', document.getElementById('nav-orders'));
+  activeFilter={t:type,v:val};
+  chipMode='all';
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  document.getElementById('chip-all')?.classList.add('on');
+  renderTable();
+}
+
+function setChip(val, el) {
+  chipMode=val;activeFilter=null;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderTable();
+}
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id)?.classList.add('active');
+  if(el&&el!==document.getElementById('nav-'+id))el.classList.add('active');
+  if(id==='orders'){activeFilter=null;chipMode='all';document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));document.getElementById('chip-all')?.classList.add('on');renderTable();}
+}
+
+/*═══════════════════════════════════════════
+  DRAWER
+═══════════════════════════════════════════*/
+function openDrawer(id) {
+  const o=allOrders.find(x=>x.id===id);if(!o)return;
+  selectedId=id;curTab='overview';
+  renderDrawer(o);
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  renderTable();
+}
+
+function renderDrawer(o) {
+  const pb=payBadge(o);
+  const rec=totalReceived(o);
+  const inv=+o.inv_amount||0;
+  const pct=inv>0?Math.min(100,Math.round(rec/inv*100)):0;
+  const out=inv-rec;
+
+  // Head
+  document.getElementById('dwrTop').innerHTML=`
+    <div class="dwr-meta">SL ${o.sl||'—'} · ${o.po_number||'No PO#'}</div>
+    <div class="dwr-name">${o.customer}</div>
+    <div class="dwr-desc">${o.description}</div>
+    <div class="dwr-badges">${sBadge(o.status)}<span class="badge ${pb.cls}">${pb.lbl}</span>${o.pbg_required&&!o.pbg_returned?'<span class="badge" style="background:var(--amber-lt);color:var(--amber)">🏦 PBG Active</span>':''}</div>
+    <button class="dwr-close" onclick="closeDrawer()">✕</button>
+  `;
+
+  // Stage buttons
+  const sbEl=document.getElementById('stageBtns');
+  if(sbEl) sbEl.innerHTML=[...STAGES,HOLD].map(s=>`<button class="sbtn ${s.btn} ${o.status===s.key?'cur':''}" onclick="updateStage('${o.id}','${s.key}')">${s.icon} ${s.key==='Payment Received'?'Paid':s.label}</button>`).join('');
+
+  // Pipeline (for production tab)
+  const curIdx=STAGES.findIndex(s=>s.key===o.status);
+  const pipeHtml=STAGES.map((s,i)=>{
+    const isDone=i<curIdx||(o.status==='Payment Received');
+    const isActive=i===curIdx&&o.status!=='On Hold';
+    const cls=isDone?'done':isActive?'active':'skip';
+    const dateVal=o[s.mStart]?fmtD(o[s.mStart]):'';
+    return `<div class="pstep ${cls}"><div class="pdot">${isDone?'✓':s.icon}</div><div class="plbl">${s.label}</div><div class="pdate">${dateVal}</div></div>`;
+  }).join('');
+
+  // Payment milestones
+  const PM=[
+    {label:'Advance / Mobilisation',icon:'🏁',pct:o.pm_advance_pct,amt:o.pm_advance_received,date:o.pm_advance_date,color:'var(--c-design)'},
+    {label:'Against Invoice',icon:'🧾',pct:null,amt:o.pm_invoice_received,date:o.pm_invoice_date,color:'var(--blue)'},
+    {label:'Against FAT',icon:'🔬',pct:o.pm_fat_pct,amt:o.pm_fat_received,date:o.pm_fat_date,color:'var(--c-qa)'},
+    {label:'Against Dispatch',icon:'📦',pct:o.pm_dispatch_pct,amt:o.pm_dispatch_received,date:o.pm_dispatch_date,color:'var(--c-dispatch)'},
+    {label:'Against Delivery',icon:'✅',pct:o.pm_delivery_pct,amt:o.pm_delivery_received,date:o.pm_delivery_date,color:'var(--c-del)'},
+  ];
+  const pmHtml=PM.map(p=>{
+    const got=+(p.amt)||0;const done=got>0;
+    return `<div class="pm-row">
+      <div class="pm-left">
+        <div class="pm-ic" style="background:${p.color}18;color:${p.color}">${p.icon}</div>
+        <div><div class="pm-name">${p.label}</div><div class="pm-pct">${p.pct?p.pct+'% of contract · ':''} ${p.date?'Received: '+fmtD(p.date):'Not received yet'}</div></div>
+      </div>
+      <div class="pm-right">
+        <div class="pm-amt" style="color:${done?'var(--green)':'var(--t4)'}">${done?fmt(got):'—'}</div>
+        <div class="pm-stat">
+          <div class="pm-check ${done?'done':'pending'}">${done?'✓':'○'}</div>
+          <span style="font-size:10px;color:var(--t3)">${done?'Received':'Pending'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // PBG
+  const pbgExpiry=o.pbg_expiry_date?new Date(o.pbg_expiry_date):null;
+  const daysLeft=pbgExpiry?Math.round((pbgExpiry-new Date())/864e5):null;
+  const pbgHtml=o.pbg_required?`
+    <div class="pbg-box">
+      <div class="pbg-title">🏦 Performance Bank Guarantee</div>
+      <div class="pbg-row"><span class="pbg-lbl">PBG Amount</span><span class="pbg-val">${fmt(o.pbg_amount)}</span></div>
+      <div class="pbg-row"><span class="pbg-lbl">Validity</span><span class="pbg-val">${o.pbg_validity_months||12} months</span></div>
+      <div class="pbg-row"><span class="pbg-lbl">Expiry Date</span><span class="pbg-val">${fmtD(o.pbg_expiry_date)}</span></div>
+      <div class="pbg-row"><span class="pbg-lbl">Days Remaining</span><span class="pbg-val" style="color:${daysLeft<0?'var(--red)':daysLeft<60?'var(--amber)':'var(--green)'}">${daysLeft!==null?(daysLeft<0?'EXPIRED':daysLeft+' days'):'—'}</span></div>
+      <div class="pbg-row"><span class="pbg-lbl">Status</span><span class="pbg-val">${o.pbg_returned?'<span style="color:var(--green)">✓ Returned</span>':'<span style="color:var(--amber)">⏳ Not yet returned</span>'}</span></div>
+    </div>`:'<div style="padding:20px;text-align:center;color:var(--t4);font-size:13px">No PBG required for this order</div>';
+
+  // Tab panels
+  document.getElementById('dwrBody').innerHTML = `
+    <div class="dpanel ${curTab==='overview'?'on':''}" id="dp-overview">
+      <div class="dsec">
+        <div class="dsec-t">Order Information</div>
+        <div class="igrid">
+          <div class="irow"><div class="ilbl">PO Date</div><div class="ival mono">${fmtD(o.po_date)}</div></div>
+          <div class="irow"><div class="ilbl">Delivery</div><div class="ival">${o.delivery_date||'—'}</div></div>
+          <div class="irow"><div class="ilbl">Ex-Works</div><div class="ival mono">${fmt(o.ex_works)}</div></div>
+          <div class="irow"><div class="ilbl">Order Amt (incl GST)</div><div class="ival mono blue">${fmt(o.order_amount)}</div></div>
+          <div class="irow full"><div class="ilbl">Payment Terms</div><div class="ival" style="font-size:12px;line-height:1.7">${o.payment_terms||'—'}</div></div>
+          ${o.notes?`<div class="irow full"><div class="ilbl">Notes</div><div class="ival" style="font-size:12px;color:var(--t3);line-height:1.7">${o.notes}</div></div>`:''}
+        </div>
+      </div>
+      <div class="dsec finance-only">
+        <div class="dsec-t">Payment Summary</div>
+        <div class="igrid">
+          <div class="irow"><div class="ilbl">Invoice Amount</div><div class="ival mono">${inv>0?fmt(inv):'—'}</div></div>
+          <div class="irow"><div class="ilbl">Total Received</div><div class="ival mono green">${fmt(rec)}</div></div>
+          <div class="irow"><div class="ilbl">Outstanding</div><div class="ival mono ${out>0?'red':'green'}">${out>0?fmt(out):'—'}</div></div>
+          <div class="irow"><div class="ilbl">Collection</div><div class="ival mono amber">${pct}%</div></div>
+        </div>
+        <div class="pbar" style="margin-top:14px"><div class="pbar-fill ${pct<30&&inv>0?'warn':''}" style="width:${pct}%"></div></div>
+        <div style="font-size:10px;color:var(--t4);margin-top:5px;font-family:var(--mono)">${pct}% of invoiced amount collected</div>
+      </div>
+    </div>
+
+    <div class="dpanel ${curTab==='production'?'on':''}" id="dp-production">
+      <div class="dsec">
+        <div class="dsec-t">Production Pipeline</div>
+        <div class="pipeline">${pipeHtml}</div>
+        ${o.status==='On Hold'?'<div style="margin-top:10px"><span class="badge bs-hold">⚠ This order is currently On Hold</span></div>':''}
+      </div>
+      <div class="dsec">
+        <div class="dsec-t">Milestone Dates</div>
+        <div class="igrid">
+          ${[['Design Start','design_start'],['Design Approved','design_done'],['Raw Material','raw_material_date'],['Fab Start','fabrication_start'],['Fab Complete','fabrication_done'],['Assembly Start','assembly_start'],['Assembly Done','assembly_done'],['QA Start','qa_start'],['QA Cleared','qa_done'],['Dispatch Ready','dispatch_ready_date'],['Shipped','shipped_date'],['Delivered','delivered_date'],['Payment Received','payment_received_date']].map(([l,f])=>`<div class="irow"><div class="ilbl">${l}</div><div class="ival mono ${o[f]?'green':'red'}">${fmtD(o[f])}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="dpanel ${curTab==='payment'?'on':''}" id="dp-payment">
+      <div class="dsec">
+        <div class="dsec-t">Payment Milestones</div>
+        ${pmHtml}
+      </div>
+    </div>
+
+    <div class="dpanel ${curTab==='pbg'?'on':''}" id="dp-pbg">
+      <div class="dsec">
+        <div class="dsec-t">Performance Bank Guarantee</div>
+        ${pbgHtml}
+      </div>
+    </div>
+
+    <div class="dpanel ${curTab==='docs'?'on':''}" id="dp-docs">
+      <div class="dsec">
+        <div class="dsec-t">Invoice Details</div>
+        <div class="igrid">
+          <div class="irow full"><div class="ilbl">Invoice Number(s)</div><div class="ival mono blue">${o.inv_number||'No invoice raised yet'}</div></div>
+          <div class="irow"><div class="ilbl">Invoice Date</div><div class="ival mono">${fmtD(o.inv_date)}</div></div>
+          <div class="irow"><div class="ilbl">Invoice Amount</div><div class="ival mono green">${inv>0?fmt(inv):'—'}</div></div>
+        </div>
+      </div>
+      <div class="dsec">
+        <div class="dsec-t">Actions</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="openEdit('${o.id}')">✎ Edit Order</button>
+          <button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);border:1px solid var(--red-md)" onclick="if(confirm('Delete this order permanently?'))delOrder('${o.id}')">🗑 Delete</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Re-sync active tab visual
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.dtab')[['overview','production','payment','pbg','docs'].indexOf(curTab)]?.classList.add('on');
+}
+
+function dTab(name, el) {
+  curTab=name;
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.dpanel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('dp-'+name)?.classList.add('on');
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  selectedId=null;renderTable();
+}
+
+async function updateStage(id, newStatus) {
+  const o=allOrders.find(x=>x.id===id);if(!o)return;
+  const update={status:newStatus,updated_at:new Date().toISOString()};
+  const s=STAGES.find(x=>x.key===newStatus);
+  if(s?.mStart&&!o[s.mStart])update[s.mStart]=today();
+  try{const{error}=await SB.from('orders').update(update).eq('id',id);if(error)throw error;toast('Stage → '+newStatus);}
+  catch(e){toast('Update failed: '+e.message,'err');}
+}
+
+/*═══════════════════════════════════════════
+  MODAL
+═══════════════════════════════════════════*/
+const FFIELDS=['customer','po_number','po_date','delivery_date','description','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date'];
+
+function clearModal(){FFIELDS.forEach(f=>{const el=document.getElementById('f_'+f);if(el)el.value='';});document.getElementById('f_status').value='Design';document.getElementById('f_pbg_required').value='false';document.getElementById('f_pbg_returned').value='false';document.getElementById('f_pbg_validity_months').value='12';}
+
+function openNewModal(){editId=null;document.getElementById('modalTitle').textContent='New Order';clearModal();document.getElementById('modal').classList.add('open');}
+
+function openEdit(id){
+  const o=allOrders.find(x=>x.id===id);if(!o)return;
+  editId=id;document.getElementById('modalTitle').textContent='Edit Order';clearModal();
+  FFIELDS.forEach(f=>{const el=document.getElementById('f_'+f);if(el&&o[f]!=null)el.value=o[f];});
+  document.getElementById('f_pbg_required').value=o.pbg_required?'true':'false';
+  document.getElementById('f_pbg_returned').value=o.pbg_returned?'true':'false';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function handleMBg(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+async function saveOrder(){
+  const cust=document.getElementById('f_customer').value.trim();
+  const desc=document.getElementById('f_description').value.trim();
+  if(!cust||!desc){toast('Customer and description are required','err');return;}
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true;btn.innerHTML='<div class="spinner" style="border-top-color:#fff;width:14px;height:14px;border-width:2px"></div> Saving…';
+  const data={};
+  FFIELDS.forEach(f=>{
+    const el=document.getElementById('f_'+f);if(!el)return;
+    const v=el.value.trim();
+    if(el.type==='number')data[f]=v?parseFloat(v):0;
+    else if(el.type==='date')data[f]=v||null;
+    else data[f]=v||null;
+  });
+  data.pbg_required=document.getElementById('f_pbg_required').value==='true';
+  data.pbg_returned=document.getElementById('f_pbg_returned').value==='true';
+  data.updated_at=new Date().toISOString();
+  try{
+    let error;
+    if(editId){({error}=await SB.from('orders').update(data).eq('id',editId));}
+    else{const mx=allOrders.length?Math.max(...allOrders.map(o=>+o.sl||0)):0;data.sl=mx+1;({error}=await SB.from('orders').insert([data]));}
+    if(error)throw error;
+    closeModal();toast(editId?'Order updated ✓':'Order created ✓');await loadData();
+  }catch(e){toast('Save failed: '+e.message,'err');}
+  finally{btn.disabled=false;btn.innerHTML='Save Order';}
+}
+
+async function delOrder(id){
+  try{const{error}=await SB.from('orders').delete().eq('id',id);if(error)throw error;closeDrawer();toast('Order deleted');await loadData();}
+  catch(e){toast('Delete failed: '+e.message,'err');}
+}
+
+/*═══════════════════════════════════════════
+  EXPORT
+═══════════════════════════════════════════*/
+function exportCSV(){
+  const cols=['sl','customer','po_number','po_date','description','ex_works','order_amount','inv_number','inv_date','inv_amount','payment_terms','delivery_date','status','notes'];
+  const hdr=['SL','Customer','PO Number','PO Date','Description','Ex-Works','Order Amt','Inv No','Inv Date','Inv Amount','Payment Terms','Delivery','Status','Notes'];
+  const rows=allOrders.map(o=>cols.map(c=>{const v=o[c]!=null?o[c]:'';return typeof v==='string'&&v.includes(',')?('"'+v+'"'):v;}));
+  const csv=[hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=`SPICON_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast(`Exported ${allOrders.length} orders`);
+}
+
+/*═══════════════════════════════════════════
+  TOAST
+═══════════════════════════════════════════*/
+function toast(msg,type=''){
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');t.textContent=msg;
+  document.getElementById('toastTray').appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+</script>
+</body>
+</html>
