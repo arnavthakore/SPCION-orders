@@ -1726,44 +1726,6 @@ function renderDashboard() {
       <div class="kpi-sub">Spans two FYs ↗</div>
     </div>
   `;
-    <div class="kpi k-blue"  onclick="smartView('all',null)">
-      <div class="kpi-ico" style="background:var(--blue-lt)">📋</div>
-      <div class="kpi-lbl">Total Orders</div>
-      <div class="kpi-val">${active.length}</div>
-      <div class="kpi-sub">Active in system</div>
-    </div>
-    <div class="kpi k-blue finance-only" onclick="smartView('all',null)">
-      <div class="kpi-ico" style="background:var(--blue-lt)">📊</div>
-      <div class="kpi-lbl">Pipeline Value</div>
-      <div class="kpi-val">${fmtCr(totalAmt)}</div>
-      <div class="kpi-sub">Total order book</div>
-    </div>
-    <div class="kpi k-green finance-only" onclick="smartView('all',null)">
-      <div class="kpi-ico" style="background:var(--green-lt)">✅</div>
-      <div class="kpi-lbl">Collected</div>
-      <div class="kpi-val">${fmtCr(totalRec)}</div>
-      <div class="kpi-sub">${totalAmt ? Math.round(totalRec/totalAmt*100) : 0}% of order book</div>
-    </div>
-    <div class="kpi k-amber finance-only" onclick="smartView('pending_payment',null)">
-      <div class="kpi-ico" style="background:var(--amber-lt)">⏳</div>
-      <div class="kpi-lbl">Outstanding</div>
-      <div class="kpi-val">${fmtCr(totalPend)}</div>
-      <div class="kpi-sub">Balance to collect ↗</div>
-    </div>
-    <div class="kpi k-red" onclick="smartView('overdue',null)">
-      <div class="kpi-ico" style="background:var(--red-lt)">🔴</div>
-      <div class="kpi-lbl">Overdue</div>
-      <div class="kpi-val" style="color:${overdue.length>0?'var(--red)':'var(--t1)'}">${overdue.length}</div>
-      <div class="kpi-sub">Past delivery date ↗</div>
-    </div>
-    <div class="kpi k-amber" onclick="navF('stage','On Hold',null)">
-      <div class="kpi-ico" style="background:var(--amber-lt)">⚠</div>
-      <div class="kpi-lbl">On Hold</div>
-      <div class="kpi-val">${onHold.length}</div>
-      <div class="kpi-sub">Blocked orders</div>
-    </div>
-  `;
-
   // Customer split (FY filtered)
   const custMap = {};
   active.forEach(o => {
