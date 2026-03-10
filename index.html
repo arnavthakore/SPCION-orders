@@ -73,37 +73,59 @@ html{font-size:14px}
 body{background:var(--bg);color:var(--t1);font-family:var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
 
 /*═══════════════════════════════════════════
-  SETUP SCREEN
+  LOGIN SCREENS
 ═══════════════════════════════════════════*/
-#setup{
+#login-screen{
   min-height:100vh;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(145deg,#eef2ff 0%,#f8faff 50%,#f0fdf4 100%);
   padding:24px;
 }
-.setup-wrap{width:100%;max-width:560px}
-.setup-card{background:var(--white);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden}
-.setup-top{
-  background:linear-gradient(135deg,var(--blue) 0%,#2d6ef0 100%);
-  padding:36px 36px 28px;color:#fff;position:relative;overflow:hidden
+.login-wrap{width:100%;max-width:480px}
+
+/* Landing — who are you */
+.login-card{background:var(--white);border-radius:var(--r-xl);box-shadow:var(--sh-lg);overflow:hidden}
+.login-top{
+  background:linear-gradient(135deg,var(--blue) 0%,#2563eb 100%);
+  padding:32px 36px 24px;color:#fff;position:relative;overflow:hidden
 }
-.setup-top::after{
-  content:'';position:absolute;right:-40px;top:-40px;
-  width:200px;height:200px;border-radius:50%;
-  background:rgba(255,255,255,.07)
+.login-top::after{content:'';position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07)}
+.login-top::before{content:'';position:absolute;right:50px;bottom:-50px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.05)}
+.login-logo{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:1px;position:relative;z-index:1}
+.login-tag{font-size:11px;opacity:.7;margin-top:4px;font-family:var(--mono);letter-spacing:.5px;position:relative;z-index:1}
+.login-body{padding:28px 32px 32px}
+.login-heading{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--t3);margin-bottom:22px;line-height:1.6}
+
+/* Role selection cards */
+.role-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.role-card{
+  display:flex;align-items:center;gap:14px;
+  border:1.5px solid var(--bdr);border-radius:var(--r-lg);
+  padding:13px 16px;cursor:pointer;transition:all .15s;background:var(--white)
 }
-.setup-top::before{
-  content:'';position:absolute;right:40px;bottom:-60px;
-  width:140px;height:140px;border-radius:50%;
-  background:rgba(255,255,255,.05)
+.role-card:hover{border-color:var(--blue-md);background:var(--blue-lt);transform:translateX(2px)}
+.role-card.management-card{border-color:var(--blue-md);background:var(--blue-lt)}
+.role-icon{font-size:24px;flex-shrink:0}
+.role-info{flex:1}
+.role-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:2px}
+.role-desc{font-size:11px;color:var(--t3);line-height:1.4}
+.role-arrow{color:var(--t4);font-size:16px}
+
+/* Password screen */
+.pw-back{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);cursor:pointer;margin-bottom:20px;font-weight:500}
+.pw-back:hover{color:var(--blue-h)}
+.pw-role-badge{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--bg2);border-radius:var(--r-lg);margin-bottom:20px;
+  border:1px solid var(--bdr)
 }
-.setup-logo{font-family:var(--display);font-size:30px;font-weight:700;letter-spacing:1px;position:relative;z-index:1}
-.setup-tagline{font-size:12px;opacity:.75;margin-top:4px;font-family:var(--mono);letter-spacing:.5px;position:relative;z-index:1}
-.setup-body{padding:32px}
-.setup-intro{font-size:13px;color:var(--t3);line-height:1.8;margin-bottom:24px}
-.step{display:flex;gap:14px;margin-bottom:18px}
-.step-n{width:26px;height:26px;background:var(--blue-lt);color:var(--blue);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
-.step-body{}
+.pw-role-icon{font-size:22px}
+.pw-role-name{font-size:13px;font-weight:700;color:var(--t1)}
+.pw-role-access{font-size:11px;color:var(--t3);margin-top:1px}
+
+/* DB setup screen */
+.step{display:flex;gap:14px;margin-bottom:16px}
+.step-n{width:24px;height:24px;background:var(--blue-lt);color:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
 .step-t{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px}
 .step-d{font-size:12px;color:var(--t3);line-height:1.7}
 .step-a{display:inline-block;color:var(--blue);font-size:12px;font-weight:500;margin-top:4px;text-decoration:none}
@@ -112,9 +134,9 @@ body{background:var(--bg);color:var(--t1);font-family:var(--font);-webkit-font-s
   background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);
   padding:12px 14px;font-family:var(--mono);font-size:10px;color:var(--t2);
   line-height:1.9;white-space:pre;overflow-x:auto;margin-top:8px;
-  max-height:200px;overflow-y:auto
+  max-height:180px;overflow-y:auto
 }
-.sep{height:1px;background:var(--bdr);margin:22px 0}
+.sep{height:1px;background:var(--bdr);margin:20px 0}
 .fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
 .flbl{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3)}
 .finput{
@@ -138,20 +160,6 @@ select.finput option{background:#fff}
 .btn-sm{padding:7px 14px;font-size:12px}
 .setup-err{background:var(--red-lt);border:1px solid var(--red-md);border-radius:var(--r);
   padding:10px 14px;font-size:12px;color:var(--red);margin-top:10px;display:none}
-
-/*═══════════════════════════════════════════
-  ROLE PICKER
-═══════════════════════════════════════════*/
-.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
-.role-card{
-  border:1.5px solid var(--bdr);border-radius:var(--r-lg);padding:14px 16px;
-  cursor:pointer;transition:all .15s;background:var(--white)
-}
-.role-card:hover{border-color:var(--blue-md);background:var(--blue-lt)}
-.role-card.selected{border-color:var(--blue);background:var(--blue-lt);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
-.role-icon{font-size:22px;margin-bottom:6px}
-.role-name{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:2px}
-.role-desc{font-size:11px;color:var(--t3);line-height:1.5}
 
 /*═══════════════════════════════════════════
   MAIN APP
@@ -563,10 +571,31 @@ td{padding:11px 13px;font-size:12.5px;vertical-align:middle}
 ::-webkit-scrollbar-thumb:hover{background:var(--blue)}
 
 /* ── ROLE-BASED VIEW HIDING ───────────────── */
-body.role-production .finance-only{display:none!important}
-body.role-production .sales-only{display:none!important}
-body.role-finance .production-only{display:none!important}
-body.role-sales .production-only{display:none!important}
+/* Finance role — sees only financial data, no production details */
+body.role-finance .production-only{ display:none!important }
+body.role-finance .sales-only{ display:none!important }
+body.role-finance #nav-orders-prod{ display:none!important }
+
+/* Production role — sees only production stages, no financials */
+body.role-production .finance-only{ display:none!important }
+body.role-production .sales-only{ display:none!important }
+body.role-production #btn-new-order{ display:none!important }
+
+/* Sales role — sees PO/delivery info, limited financials */
+body.role-sales .finance-only{ display:none!important }
+body.role-sales .production-only{ display:none!important }
+body.role-sales #btn-delete-order{ display:none!important }
+
+/* Design role — sees only design stage orders */
+body.role-design .finance-only{ display:none!important }
+body.role-design .production-only{ display:none!important }
+body.role-design #btn-delete-order{ display:none!important }
+
+/* Management sees everything, delete button always shown */
+body.role-management #btn-delete-order{ display:inline-flex!important }
+
+/* Hide delete from all non-management by default */
+#btn-delete-order{ display:none }
 
 @media(max-width:1100px){
   .layout{grid-template-columns:1fr}
@@ -581,97 +610,141 @@ body.role-sales .production-only{display:none!important}
 <body>
 
 <!--═══════════════════════════════════════════
-    SETUP SCREEN
+    LOGIN SCREEN
 ═══════════════════════════════════════════-->
-<div id="setup">
-<div class="setup-wrap">
+<div id="login-screen">
+<div class="login-wrap">
 
-  <!-- STEP 1: Role picker -->
-  <div id="step-role">
-    <div class="setup-card">
-      <div class="setup-top">
-        <div class="setup-logo">SPICON</div>
-        <div class="setup-tagline">Order Management System · Metro & Tunneling Equipment</div>
+  <!-- PANEL 1: Role Selection -->
+  <div id="panel-roles">
+    <div class="login-card">
+      <div class="login-top">
+        <div class="login-logo">SPICON</div>
+        <div class="login-tag">Order Management System · FY 25-26</div>
       </div>
-      <div class="setup-body">
-        <p class="setup-intro">Welcome. Select your role to customise your view of the system.</p>
-        <div class="role-grid">
-          <div class="role-card" onclick="selectRole('management',this)">
+      <div class="login-body">
+        <div class="login-heading">Who are you signing in as?</div>
+        <div class="login-sub">Each role has access only to information relevant to their function.</div>
+        <div class="role-list">
+          <div class="role-card management-card" onclick="selectLoginRole('management')">
             <div class="role-icon">👔</div>
-            <div class="role-name">Management</div>
-            <div class="role-desc">Full access — all stages, financials, pipeline overview</div>
+            <div class="role-info">
+              <div class="role-name">Management</div>
+              <div class="role-desc">Full access — all orders, financials, delete orders, export data</div>
+            </div>
+            <div class="role-arrow">→</div>
           </div>
-          <div class="role-card" onclick="selectRole('sales',this)">
-            <div class="role-icon">📋</div>
-            <div class="role-name">Sales / Contracts</div>
-            <div class="role-desc">PO details, order status, customer tracking</div>
-          </div>
-          <div class="role-card" onclick="selectRole('finance',this)">
+          <div class="role-card" onclick="selectLoginRole('finance')">
             <div class="role-icon">💰</div>
-            <div class="role-name">Finance / Accounts</div>
-            <div class="role-desc">Invoices, payments, milestones, PBG tracking</div>
+            <div class="role-info">
+              <div class="role-name">Finance / Accounts</div>
+              <div class="role-desc">Invoices, payment milestones, PBG tracking, outstanding dues</div>
+            </div>
+            <div class="role-arrow">→</div>
           </div>
-          <div class="role-card" onclick="selectRole('production',this)">
+          <div class="role-card" onclick="selectLoginRole('production')">
             <div class="role-icon">⚙️</div>
-            <div class="role-name">Production / Shop Floor</div>
-            <div class="role-desc">Stage tracking, milestone dates, dispatch status</div>
+            <div class="role-info">
+              <div class="role-name">Production / Shop Floor</div>
+              <div class="role-desc">Stage tracking, milestone dates, dispatch — no financial data</div>
+            </div>
+            <div class="role-arrow">→</div>
+          </div>
+          <div class="role-card" onclick="selectLoginRole('design')">
+            <div class="role-icon">✏️</div>
+            <div class="role-info">
+              <div class="role-name">Design / Engineering</div>
+              <div class="role-desc">Design stage orders only — drawings, approvals, specifications</div>
+            </div>
+            <div class="role-arrow">→</div>
+          </div>
+          <div class="role-card" onclick="selectLoginRole('sales')">
+            <div class="role-icon">📋</div>
+            <div class="role-info">
+              <div class="role-name">Sales / Contracts</div>
+              <div class="role-desc">PO details, customer orders, delivery status — read only</div>
+            </div>
+            <div class="role-arrow">→</div>
           </div>
         </div>
-        <button class="btn btn-blue" id="roleNextBtn" onclick="goToConnect()" disabled>Continue →</button>
+        <!-- DB setup link for first-time -->
+        <div style="text-align:center;margin-top:8px">
+          <span style="font-size:11px;color:var(--t4)">First time? </span>
+          <span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:500" onclick="showDbSetup()">Connect your database →</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- STEP 2: Supabase connect -->
-  <div id="step-connect" style="display:none">
-    <div class="setup-card">
-      <div class="setup-top">
-        <div class="setup-logo">SPICON</div>
-        <div class="setup-tagline">Connect your database</div>
+  <!-- PANEL 2: Password Entry (for non-management roles) -->
+  <div id="panel-password" style="display:none">
+    <div class="login-card">
+      <div class="login-top">
+        <div class="login-logo">SPICON</div>
+        <div class="login-tag">Secure Sign In</div>
       </div>
-      <div class="setup-body">
+      <div class="login-body">
+        <div class="pw-back" onclick="showRoleSelect()">← Back to role selection</div>
+        <div class="pw-role-badge" id="pwRoleBadge">
+          <div class="pw-role-icon" id="pwRoleIcon">⚙️</div>
+          <div>
+            <div class="pw-role-name" id="pwRoleName">Production</div>
+            <div class="pw-role-access" id="pwRoleAccess">Production stages only</div>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="flbl">Password</label>
+          <input class="finput" type="password" id="rolePassword" placeholder="Enter your role password" onkeydown="if(event.key==='Enter')doRoleLogin()">
+        </div>
+        <button class="btn btn-blue" onclick="doRoleLogin()">Sign In</button>
+        <div class="setup-err" id="pwErr"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANEL 3: DB Setup (first time only) -->
+  <div id="panel-dbsetup" style="display:none">
+    <div class="login-card">
+      <div class="login-top">
+        <div class="login-logo">SPICON</div>
+        <div class="login-tag">Database Setup — One Time Only</div>
+      </div>
+      <div class="login-body">
+        <div class="pw-back" onclick="showRoleSelect()">← Back</div>
         <div class="step">
           <div class="step-n">1</div>
-          <div class="step-body">
+          <div>
             <div class="step-t">Create a free Supabase project</div>
-            <div class="step-d">Sign up at supabase.com → New Project (name it anything, e.g. "spicon-orders")</div>
+            <div class="step-d">Sign up at supabase.com → New Project</div>
             <a class="step-a" href="https://supabase.com" target="_blank">→ supabase.com</a>
           </div>
         </div>
         <div class="step">
           <div class="step-n">2</div>
-          <div class="step-body">
-            <div class="step-t">Run this SQL in your project's SQL Editor</div>
-            <div class="sql-block">CREATE TABLE IF NOT EXISTS orders (
+          <div>
+            <div class="step-t">Run this SQL in your SQL Editor</div>
+            <div class="sql-block">CREATE TABLE IF NOT EXISTS public.orders (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   sl integer, customer text, po_number text,
   po_date date, description text,
   ex_works numeric DEFAULT 0,
   order_amount numeric DEFAULT 0,
   payment_terms text, delivery_date text,
-  status text DEFAULT 'Design',
-  notes text,
-  -- Invoice fields
+  status text DEFAULT 'Design', notes text,
   inv_number text, inv_date date,
   inv_amount numeric DEFAULT 0,
-  -- Payment milestone amounts
   pm_advance_pct numeric DEFAULT 0,
-  pm_advance_amt numeric DEFAULT 0,
   pm_advance_received numeric DEFAULT 0,
   pm_advance_date date,
-  pm_invoice_amt numeric DEFAULT 0,
   pm_invoice_received numeric DEFAULT 0,
   pm_invoice_date date,
   pm_fat_pct numeric DEFAULT 0,
-  pm_fat_amt numeric DEFAULT 0,
   pm_fat_received numeric DEFAULT 0,
   pm_fat_date date,
   pm_dispatch_pct numeric DEFAULT 0,
-  pm_dispatch_amt numeric DEFAULT 0,
   pm_dispatch_received numeric DEFAULT 0,
   pm_dispatch_date date,
   pm_delivery_pct numeric DEFAULT 0,
-  pm_delivery_amt numeric DEFAULT 0,
   pm_delivery_received numeric DEFAULT 0,
   pm_delivery_date date,
   pbg_required boolean DEFAULT false,
@@ -679,7 +752,6 @@ body.role-sales .production-only{display:none!important}
   pbg_validity_months integer DEFAULT 12,
   pbg_expiry_date date,
   pbg_returned boolean DEFAULT false,
-  -- Production milestone dates
   design_start date, design_done date,
   raw_material_date date,
   fabrication_start date, fabrication_done date,
@@ -691,32 +763,30 @@ body.role-sales .production-only{display:none!important}
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "allow_all" ON orders FOR ALL
-  USING (true) WITH CHECK (true);</div>
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "allow_all" ON public.orders;
+CREATE POLICY "allow_all" ON public.orders
+  FOR ALL USING (true) WITH CHECK (true);</div>
           </div>
         </div>
         <div class="step">
           <div class="step-n">3</div>
-          <div class="step-body">
+          <div>
             <div class="step-t">Get your Project URL and anon key</div>
-            <div class="step-d">Settings → API → copy Project URL and <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">anon</code> public key</div>
+            <div class="step-d">Settings → API → copy Project URL and anon key</div>
           </div>
         </div>
         <div class="sep"></div>
         <div class="fg">
           <label class="flbl">Supabase Project URL</label>
-          <input class="finput" id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co">
+          <input class="finput" id="sb-url" placeholder="https://xxxx.supabase.co">
         </div>
         <div class="fg">
           <label class="flbl">Supabase Anon Key</label>
-          <input class="finput" id="sb-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIs...">
+          <input class="finput" type="password" id="sb-key" placeholder="eyJhbGci...">
         </div>
-        <button class="btn btn-blue" id="connectBtn" onclick="doConnect()">Connect & Launch</button>
+        <button class="btn btn-blue" id="connectBtn" onclick="doConnect()">Connect Database</button>
         <div class="setup-err" id="setupErr"></div>
-        <div style="margin-top:12px;text-align:center">
-          <button class="btn-ghost btn btn-sm" onclick="document.getElementById('step-connect').style.display='none';document.getElementById('step-role').style.display='block'">← Back</button>
-        </div>
       </div>
     </div>
   </div>
@@ -736,9 +806,10 @@ CREATE POLICY "allow_all" ON orders FOR ALL
     <div class="hdr-kpis" id="hdrKpis"></div>
   </div>
   <div class="hdr-right">
-    <div class="role-badge" id="roleBadge" onclick="switchRole()">👔 Management</div>
+    <div class="role-badge" id="roleBadge">👔 Management</div>
     <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
-    <button class="btn btn-blue btn-sm" onclick="openNewModal()">+ New Order</button>
+    <button class="btn btn-blue btn-sm" id="btn-new-order" onclick="openNewModal()">+ New Order</button>
+    <button class="btn btn-sm" style="background:var(--bg2);color:var(--t3);border:1px solid var(--bdr)" onclick="doLogout()">Sign Out</button>
   </div>
 </header>
 
@@ -751,16 +822,16 @@ CREATE POLICY "allow_all" ON orders FOR ALL
 
   <div class="ndiv"></div>
   <div class="nav-sec-title">Production Stage</div>
-  <div class="nitem" onclick="navF('stage','Design',this)"><span class="ni">✏</span>Design / Engg<span class="nbadge" id="nb-design">0</span></div>
-  <div class="nitem" onclick="navF('stage','Raw Material',this)"><span class="ni">🧱</span>Raw Material<span class="nbadge" id="nb-raw">0</span></div>
-  <div class="nitem" onclick="navF('stage','Fabrication',this)"><span class="ni">⚙</span>Fabrication<span class="nbadge" id="nb-fab">0</span></div>
-  <div class="nitem" onclick="navF('stage','Assembly',this)"><span class="ni">🔧</span>Assembly<span class="nbadge" id="nb-asm">0</span></div>
-  <div class="nitem" onclick="navF('stage','QA/Testing',this)"><span class="ni">🔬</span>QA / FAT<span class="nbadge" id="nb-qa">0</span></div>
-  <div class="nitem" onclick="navF('stage','Dispatch Ready',this)"><span class="ni">📦</span>Dispatch Ready<span class="nbadge" id="nb-dispatch">0</span></div>
-  <div class="nitem" onclick="navF('stage','Shipped',this)"><span class="ni">🚛</span>Shipped<span class="nbadge" id="nb-ship">0</span></div>
-  <div class="nitem" onclick="navF('stage','Delivered',this)"><span class="ni">✅</span>Delivered<span class="nbadge" id="nb-del">0</span></div>
-  <div class="nitem" onclick="navF('stage','Payment Received',this)"><span class="ni">💰</span>Payment Received<span class="nbadge" id="nb-payrec">0</span></div>
-  <div class="nitem" onclick="navF('stage','On Hold',this)"><span class="ni">⚠</span>On Hold<span class="nbadge" id="nb-hold">0</span></div>
+  <div class="nitem" id="nav-stage-design"   onclick="navF('stage','Design',this)"><span class="ni">✏</span>Design / Engg<span class="nbadge" id="nb-design">0</span></div>
+  <div class="nitem" id="nav-stage-raw"      onclick="navF('stage','Raw Material',this)"><span class="ni">🧱</span>Raw Material<span class="nbadge" id="nb-raw">0</span></div>
+  <div class="nitem" id="nav-stage-fab"      onclick="navF('stage','Fabrication',this)"><span class="ni">⚙</span>Fabrication<span class="nbadge" id="nb-fab">0</span></div>
+  <div class="nitem" id="nav-stage-asm"      onclick="navF('stage','Assembly',this)"><span class="ni">🔧</span>Assembly<span class="nbadge" id="nb-asm">0</span></div>
+  <div class="nitem" id="nav-stage-qa"       onclick="navF('stage','QA/Testing',this)"><span class="ni">🔬</span>QA / FAT<span class="nbadge" id="nb-qa">0</span></div>
+  <div class="nitem" id="nav-stage-dispatch" onclick="navF('stage','Dispatch Ready',this)"><span class="ni">📦</span>Dispatch Ready<span class="nbadge" id="nb-dispatch">0</span></div>
+  <div class="nitem" id="nav-stage-ship"     onclick="navF('stage','Shipped',this)"><span class="ni">🚛</span>Shipped<span class="nbadge" id="nb-ship">0</span></div>
+  <div class="nitem" id="nav-stage-del"      onclick="navF('stage','Delivered',this)"><span class="ni">✅</span>Delivered<span class="nbadge" id="nb-del">0</span></div>
+  <div class="nitem" id="nav-stage-payrec"   onclick="navF('stage','Payment Received',this)"><span class="ni">💰</span>Payment Received<span class="nbadge" id="nb-payrec">0</span></div>
+  <div class="nitem" id="nav-stage-hold"     onclick="navF('stage','On Hold',this)"><span class="ni">⚠</span>On Hold<span class="nbadge" id="nb-hold">0</span></div>
 
   <div class="ndiv"></div>
   <div class="nav-sec-title">Payment Filter</div>
@@ -977,27 +1048,120 @@ let curTab = 'overview';
 let currentRole = 'management';
 
 /*═══════════════════════════════════════════
-  SETUP
+  ROLE PASSWORDS — Change these to your own!
 ═══════════════════════════════════════════*/
-function selectRole(role, el) {
-  document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  currentRole = role;
-  document.getElementById('roleNextBtn').disabled = false;
+const ROLE_PASSWORDS = {
+  finance:    'finance123',
+  production: 'production123',
+  design:     'design123',
+  sales:      'sales123',
+};
+
+const ROLE_META = {
+  management: { icon:'👔', name:'Management',        access:'Full access · Can delete orders',           color:'var(--blue)'    },
+  finance:    { icon:'💰', name:'Finance / Accounts', access:'Invoices · Payments · PBG · No delete',    color:'var(--green)'   },
+  production: { icon:'⚙️', name:'Production',         access:'Stage tracking · Milestones · No financials',color:'var(--c-fab)' },
+  design:     { icon:'✏️', name:'Design / Engineering',access:'Design stage orders only',                color:'var(--c-design)'},
+  sales:      { icon:'📋', name:'Sales / Contracts',  access:'PO details · Delivery status · Read only', color:'var(--amber)'   },
+};
+
+/*═══════════════════════════════════════════
+  STAGE VISIBILITY PER ROLE
+  Each role can only see these order stages
+═══════════════════════════════════════════*/
+const ROLE_VISIBLE_STAGES = {
+  management: null, // null = all stages
+  finance:    null, // finance sees all for payment tracking
+  sales:      null, // sales sees all for status tracking
+  production: ['Raw Material','Fabrication','Assembly','QA/Testing','Dispatch Ready','Shipped','Delivered','On Hold'],
+  design:     ['Design','On Hold'],
+};
+
+/*═══════════════════════════════════════════
+  LOGIN FLOW
+═══════════════════════════════════════════*/
+let pendingRole = null;
+
+function showRoleSelect() {
+  document.getElementById('panel-roles').style.display = 'block';
+  document.getElementById('panel-password').style.display = 'none';
+  document.getElementById('panel-dbsetup').style.display = 'none';
+  pendingRole = null;
 }
 
-function goToConnect() {
-  if (!currentRole) return;
-  document.getElementById('step-role').style.display = 'none';
-  document.getElementById('step-connect').style.display = 'block';
+function showDbSetup() {
+  document.getElementById('panel-roles').style.display = 'none';
+  document.getElementById('panel-dbsetup').style.display = 'block';
 }
 
+function selectLoginRole(role) {
+  if (!localStorage.getItem('sb_url')) {
+    // No DB connected yet — send to setup
+    showDbSetup();
+    return;
+  }
+  if (role === 'management') {
+    // Management goes straight in — no password
+    currentRole = 'management';
+    localStorage.setItem('sb_role', 'management');
+    launchApp();
+    return;
+  }
+  // Show password screen for other roles
+  pendingRole = role;
+  const meta = ROLE_META[role];
+  document.getElementById('pwRoleIcon').textContent = meta.icon;
+  document.getElementById('pwRoleName').textContent = meta.name;
+  document.getElementById('pwRoleAccess').textContent = meta.access;
+  document.getElementById('rolePassword').value = '';
+  document.getElementById('pwErr').style.display = 'none';
+  document.getElementById('panel-roles').style.display = 'none';
+  document.getElementById('panel-password').style.display = 'block';
+  setTimeout(() => document.getElementById('rolePassword').focus(), 100);
+}
+
+function doRoleLogin() {
+  const pw = document.getElementById('rolePassword').value;
+  const errEl = document.getElementById('pwErr');
+  if (!pw) { showPwErr('Please enter your password'); return; }
+  if (pw !== ROLE_PASSWORDS[pendingRole]) {
+    showPwErr('Incorrect password. Please try again.');
+    document.getElementById('rolePassword').value = '';
+    document.getElementById('rolePassword').focus();
+    return;
+  }
+  currentRole = pendingRole;
+  localStorage.setItem('sb_role', currentRole);
+  launchApp();
+}
+
+function showPwErr(msg) {
+  const el = document.getElementById('pwErr');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function doLogout() {
+  localStorage.removeItem('sb_role');
+  currentRole = null;
+  // Hide app, show login
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  showRoleSelect();
+  // Close drawer/modal if open
+  closeDrawer();
+  closeModal();
+}
+
+/*═══════════════════════════════════════════
+  DB CONNECT (first time setup)
+═══════════════════════════════════════════*/
 async function doConnect() {
   const url = document.getElementById('sb-url').value.trim();
   const key = document.getElementById('sb-key').value.trim();
   const errEl = document.getElementById('setupErr');
   const btn = document.getElementById('connectBtn');
-  if (!url || !key) { showErr('Please enter both URL and anon key'); return; }
+  if (!url || !key) { showSetupErr('Please enter both URL and anon key'); return; }
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-top-color:#fff"></div> Connecting…';
   errEl.style.display = 'none';
@@ -1008,73 +1172,101 @@ async function doConnect() {
     if (error) throw error;
     localStorage.setItem('sb_url', url);
     localStorage.setItem('sb_key', key);
-    localStorage.setItem('sb_role', currentRole);
-    launch();
+    toast('Database connected ✓', 'info');
+    showRoleSelect();
   } catch(e) {
     btn.disabled = false;
-    btn.innerHTML = 'Connect & Launch';
-    showErr('Connection failed: ' + (e.message || 'Check URL/key and make sure you ran the SQL setup.'));
+    btn.innerHTML = 'Connect Database';
+    showSetupErr('Connection failed: ' + (e.message || 'Check your URL and key.'));
   }
 }
 
-function showErr(msg) {
+function showSetupErr(msg) {
   const el = document.getElementById('setupErr');
   el.textContent = msg;
   el.style.display = 'block';
 }
 
-function launch() {
-  document.getElementById('setup').style.display = 'none';
+function launchApp() {
+  // Init Supabase if not already
+  if (!SB) {
+    const url = localStorage.getItem('sb_url');
+    const key = localStorage.getItem('sb_key');
+    if (!url || !key) { showDbSetup(); return; }
+    const { createClient } = window.supabase;
+    SB = createClient(url, key);
+  }
+  document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   applyRole(currentRole);
   loadData();
-  SB.channel('orders')
+  // Realtime sync
+  SB.channel('orders-rt')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadData())
     .subscribe();
 }
 
-// Auto-connect on reload
+// Auto-login on page reload if previously authenticated
 window.addEventListener('DOMContentLoaded', () => {
   const url = localStorage.getItem('sb_url');
   const key = localStorage.getItem('sb_key');
   const role = localStorage.getItem('sb_role');
-  if (url && key) {
-    document.getElementById('sb-url').value = url;
-    document.getElementById('sb-key').value = key;
-    if (role) { currentRole = role; }
+  if (url && key && role) {
     const { createClient } = window.supabase;
     SB = createClient(url, key);
-    launch();
+    currentRole = role;
+    launchApp();
+  } else if (url && key) {
+    // DB connected but no role — show role selector
+    showRoleSelect();
   }
+  // else: show default login screen
 });
 
 /*═══════════════════════════════════════════
-  ROLE MANAGEMENT
+  ROLE APPLICATION
 ═══════════════════════════════════════════*/
-const ROLE_LABELS = {
-  management: '👔 Management',
-  sales: '📋 Sales / Contracts',
-  finance: '💰 Finance',
-  production: '⚙️ Production'
-};
-
 function applyRole(role) {
   currentRole = role;
+  // Reset body classes
   document.body.className = 'role-' + role;
+  // Update badge
+  const meta = ROLE_META[role] || ROLE_META.management;
   const badge = document.getElementById('roleBadge');
-  if (badge) badge.textContent = ROLE_LABELS[role] || role;
-  // Management sees everything
-  if (role === 'management') document.body.className = '';
+  if (badge) {
+    badge.textContent = meta.icon + ' ' + meta.name;
+    badge.style.background = meta.color + '18';
+    badge.style.color = meta.color;
+    badge.style.borderColor = meta.color + '44';
+  }
+  // Management gets full access
+  if (role === 'management') {
+    document.body.className = 'role-management';
+  }
+  // Update sidebar visibility
+  updateSidebarForRole(role);
 }
 
-function switchRole() {
-  // Cycle through roles for demo
-  const roles = ['management','sales','finance','production'];
-  const idx = roles.indexOf(currentRole);
-  const next = roles[(idx + 1) % roles.length];
-  applyRole(next);
-  localStorage.setItem('sb_role', next);
-  toast('Switched to ' + ROLE_LABELS[next] + ' view', 'info');
+function updateSidebarForRole(role) {
+  // Show/hide sidebar nav items based on role
+  const stageNavMap = {
+    'Design':         'nav-stage-design',
+    'Raw Material':   'nav-stage-raw',
+    'Fabrication':    'nav-stage-fab',
+    'Assembly':       'nav-stage-asm',
+    'QA/Testing':     'nav-stage-qa',
+    'Dispatch Ready': 'nav-stage-dispatch',
+    'Shipped':        'nav-stage-ship',
+    'Delivered':      'nav-stage-del',
+    'Payment Received':'nav-stage-payrec',
+    'On Hold':        'nav-stage-hold',
+  };
+  const visible = ROLE_VISIBLE_STAGES[role]; // null = all
+  Object.entries(stageNavMap).forEach(([stage, id]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = (!visible || visible.includes(stage)) ? '' : 'none';
+  });
 }
 
 /*═══════════════════════════════════════════
@@ -1084,7 +1276,9 @@ async function loadData() {
   try {
     const { data, error } = await SB.from('orders').select('*').order('sl', { ascending: true });
     if (error) throw error;
-    allOrders = data || [];
+    // Filter orders by role's visible stages
+    const visible = ROLE_VISIBLE_STAGES[currentRole];
+    allOrders = visible ? (data || []).filter(o => visible.includes(o.status)) : (data || []);
     renderAll();
   } catch(e) {
     toast('Failed to load: ' + e.message, 'err');
@@ -1479,7 +1673,7 @@ function renderDrawer(o) {
         <div class="dsec-t">Actions</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="openEdit('${o.id}')">✎ Edit Order</button>
-          <button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);border:1px solid var(--red-md)" onclick="if(confirm('Delete this order permanently?'))delOrder('${o.id}')">🗑 Delete</button>
+          <button id="btn-delete-order" class="btn btn-sm" style="background:var(--red-lt);color:var(--red);border:1px solid var(--red-md)" onclick="if(confirm('Delete this order permanently?'))delOrder('${o.id}')">🗑 Delete</button>
         </div>
       </div>
     </div>
