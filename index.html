@@ -551,7 +551,14 @@ td:first-child{padding-left:14px}
         <!-- DB setup link for first-time -->
         <div style="text-align:center;margin-top:8px">
           <span style="font-size:11px;color:var(--t4)">First time? </span>
-          <span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:500" onclick="showDbSetup()">Connect your database →</span>
+          <span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:500" onclick="showDbSetup()" id="dbConnectLink">First time? Connect your database →</span>
+          <script>
+            // Update link text based on whether credentials are saved
+            document.addEventListener('DOMContentLoaded', function() {
+              const lnk = document.getElementById('dbConnectLink');
+              if (lnk && localStorage.getItem('sb_url')) lnk.textContent = '⚙ Change database connection →';
+            });
+          </script>
         </div>
       </div>
     </div>
@@ -1171,11 +1178,27 @@ function showRoleSelect() {
   pendingRole = null;
 }
 function showDbSetup() {
+  // Pre-fill with saved credentials if they exist
+  const savedUrl = localStorage.getItem('sb_url');
+  const savedKey = localStorage.getItem('sb_key');
+  if (savedUrl) { const el = document.getElementById('sb-url'); if(el) el.value = savedUrl; }
+  if (savedKey) { const el = document.getElementById('sb-key'); if(el) el.value = savedKey; }
   document.getElementById('panel-roles').style.display = 'none';
   document.getElementById('panel-dbsetup').style.display = 'block';
 }
 function selectLoginRole(role) {
-  if (!localStorage.getItem('sb_url')) { showDbSetup(); return; }
+  // Try to initialise Supabase from saved credentials before blocking user
+  if (!SB) {
+    const url = localStorage.getItem('sb_url');
+    const key = localStorage.getItem('sb_key');
+    if (url && key) {
+      try {
+        const { createClient } = window.supabase;
+        SB = createClient(url, key);
+      } catch(e) { SB = null; }
+    }
+  }
+  if (!SB) { showDbSetup(); return; }
   pendingRole = role;
   const meta = ROLE_META[role];
   document.getElementById('pwRoleIcon').textContent = meta.icon;
@@ -1244,8 +1267,10 @@ function launchApp() {
     const url = localStorage.getItem('sb_url');
     const key = localStorage.getItem('sb_key');
     if (!url || !key) { showDbSetup(); return; }
-    const { createClient } = window.supabase;
-    SB = createClient(url, key);
+    try {
+      const { createClient } = window.supabase;
+      SB = createClient(url, key);
+    } catch(e) { showDbSetup(); return; }
   }
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -2679,10 +2704,20 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('load', () => {
   const savedRole = localStorage.getItem('sb_role');
   const sbUrl = localStorage.getItem('sb_url');
-  if (savedRole && sbUrl) {
+  const sbKey = localStorage.getItem('sb_key');
+  // Try to initialise Supabase client regardless of saved role
+  if (sbUrl && sbKey && !SB) {
+    try {
+      const { createClient } = window.supabase;
+      SB = createClient(sbUrl, sbKey);
+    } catch(e) { SB = null; }
+  }
+  // Auto-login if role was saved
+  if (savedRole && SB) {
     currentRole = savedRole;
     launchApp();
   } else {
+    // Always show role select — only redirect to DB setup when a role is actually clicked
     showRoleSelect();
   }
 });
