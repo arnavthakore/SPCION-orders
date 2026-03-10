@@ -94,6 +94,8 @@ body.role-production .finance-only,body.role-production .sales-only{display:none
 body.role-production #btn-new-order{display:none!important}
 body.role-sales .finance-only,body.role-sales .production-only{display:none!important}
 body.role-design .finance-only,body.role-design .production-only{display:none!important}
+body.role-management .management-only{display:inline-flex!important}
+.management-only{display:none}
 #btn-delete-order,#btn-archive-order{display:none}
 body.role-management #btn-delete-order,body.role-management #btn-archive-order{display:inline-flex!important}
 /* HEADER */
@@ -316,6 +318,67 @@ td:first-child{padding-left:14px}
 .overd-badge{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--red)}
 .archived-tag{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600;background:var(--bg2);color:var(--t4);border:1px solid var(--bdr)}
 .dup-warn{background:var(--amber-lt);border:1px solid var(--amber-md);border-radius:var(--r);padding:8px 12px;font-size:11.5px;color:var(--amber);margin-bottom:10px;grid-column:1/-1;display:none}
+
+/*═══════════════════════════════════════════
+  FINANCIAL YEAR STYLES
+═══════════════════════════════════════════*/
+/* FY Toggle */
+.fy-toggle{display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:20px;padding:3px;border:1px solid var(--bdr)}
+.fy-btn{padding:4px 14px;border-radius:16px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:all .15s;font-family:var(--font);white-space:nowrap}
+.fy-btn.active{background:var(--white);color:var(--blue);box-shadow:var(--sh-xs)}
+.fy-btn.new-fy.active{background:var(--blue);color:#fff}
+
+/* FY tag badge */
+.fy-tag{display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;font-size:9.5px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.fy-tag-old{background:#f0f4ff;color:#4f6edb;border:1px solid #c7d9ff}
+.fy-tag-new{background:#f0fdf4;color:#059669;border:1px solid #a7f3d0}
+
+/* Carry-forward indicator */
+.cf-row{border-left:3px solid var(--amber)!important}
+.cf-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:8px;font-size:9.5px;font-weight:700;background:var(--amber-lt);color:var(--amber);border:1px solid var(--amber-md)}
+
+/* FY Year-End Checklist */
+.fy-checklist{background:linear-gradient(135deg,#1e3a5f 0%,#0f2952 100%);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:18px;color:#fff;border:1px solid rgba(255,255,255,.1)}
+.fy-cl-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.fy-cl-title{font-family:var(--display);font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.fy-cl-subtitle{font-size:11px;opacity:.65;margin-top:2px;font-family:var(--mono)}
+.fy-cl-dismiss{font-size:11px;opacity:.7;cursor:pointer;border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:3px 10px;background:transparent;color:#fff;font-family:var(--font);font-weight:500}
+.fy-cl-dismiss:hover{opacity:1;background:rgba(255,255,255,.1)}
+.fy-cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:9px}
+.fy-cl-item{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:var(--r);padding:11px 14px;cursor:pointer;transition:all .15s}
+.fy-cl-item:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}
+.fy-cl-item.resolved{background:rgba(5,150,105,.2);border-color:rgba(5,150,105,.4)}
+.fy-cl-ct{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1}
+.fy-cl-lbl{font-size:11px;opacity:.9;margin-top:3px;font-weight:600;line-height:1.3}
+.fy-cl-sub{font-size:10px;opacity:.55;margin-top:2px}
+
+/* FY Payment breakdown panel */
+.fy-pay-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px}
+.fy-pay-card{background:var(--bg);border-radius:var(--r);padding:10px 12px;border:1px solid var(--bdr)}
+.fy-pay-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:4px}
+.fy-pay-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1)}
+.fy-pay-sub{font-size:10px;color:var(--t4);margin-top:2px}
+
+/* FY new year counter */
+.fy-new-counter{display:flex;align-items:center;gap:12px;background:var(--green-lt);border:1px solid var(--green-md);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;cursor:pointer}
+.fy-new-counter:hover{background:#d1fae5}
+.fy-nc-badge{font-family:var(--display);font-size:28px;font-weight:700;color:var(--green);line-height:1}
+.fy-nc-text{flex:1}
+.fy-nc-title{font-size:13px;font-weight:700;color:var(--green)}
+.fy-nc-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.fy-nc-arrow{font-size:18px;color:var(--green);opacity:.6}
+
+/* Invoice prefix banner */
+.inv-prefix-banner{background:var(--amber-lt);border:1px solid var(--amber-md);border-radius:var(--r-lg);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.inv-prefix-text{flex:1;font-size:12px;color:var(--t2)}
+.inv-prefix-text strong{color:var(--amber);font-weight:700}
+
+@media(max-width:768px){
+  .fy-toggle{gap:3px;padding:2px}
+  .fy-btn{padding:4px 10px;font-size:10.5px}
+  .fy-cl-grid{grid-template-columns:repeat(2,1fr)}
+  .fy-pay-grid{grid-template-columns:1fr}
+}
 
 /*═══════════════════════════════════════════
   MOBILE SIDEBAR OVERLAY
@@ -672,6 +735,12 @@ CREATE POLICY "allow_all" ON public.orders
   <div class="nitem" onclick="navF('pay','PBG',this)"><span class="ni">🏦</span>PBG Active</div>
 
   <div class="ndiv"></div>
+  <div class="nav-sec-title">Financial Year</div>
+  <div class="nitem" id="nav-fy-2526" onclick="navF('fy','25-26',this)"><span class="ni">📅</span>FY 2025–26<span class="nbadge" id="nb-fy2526">0</span></div>
+  <div class="nitem" id="nav-fy-2627" onclick="navF('fy','26-27',this)"><span class="ni">📅</span>FY 2026–27<span class="nbadge" id="nb-fy2627">0</span></div>
+  <div class="nitem" id="nav-fy-cf" onclick="navF('fy','carry',this)"><span class="ni">↕</span>Carry Forward<span class="nbadge" id="nb-fy-cf">0</span></div>
+
+  <div class="ndiv"></div>
   <div class="nav-sec-title">Customers</div>
   <div class="nitem" onclick="navF('cust','Afcons',this)"><span class="ni">▸</span>Afcons</div>
   <div class="nitem" onclick="navF('cust','Larsen',this)"><span class="ni">▸</span>L&T</div>
@@ -687,8 +756,21 @@ CREATE POLICY "allow_all" ON public.orders
 <div class="page active" id="page-dash">
   <div class="pg-hdr">
     <div><div class="pg-title">Dashboard</div><div class="pg-sub" id="dashSub">—</div></div>
-    <div class="pg-actions"><button class="btn btn-ghost btn-sm" onclick="loadData()">↻ Refresh</button></div>
+    <div class="pg-actions" style="gap:10px">
+      <!-- FY Toggle -->
+      <div class="fy-toggle" id="fyToggle">
+        <button class="fy-btn active" id="fyBtn2526" onclick="setActiveFY('25-26')">FY 25–26</button>
+        <button class="fy-btn new-fy" id="fyBtn2627" onclick="setActiveFY('26-27')">FY 26–27</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadData()">↻ Refresh</button>
+    </div>
   </div>
+  <!-- Year-End Checklist (auto-shows near March 31) -->
+  <div id="fyChecklist"></div>
+  <!-- New FY counter (shows in April+) -->
+  <div id="fyNewCounter"></div>
+  <!-- Invoice prefix warning (shows in April) -->
+  <div id="invPrefixBanner"></div>
   <!-- Today's Action List -->
   <div class="action-banner" id="actionBanner">
     <div class="action-banner-hdr">
@@ -699,10 +781,15 @@ CREATE POLICY "allow_all" ON public.orders
   </div>
   <div class="kpi-row" id="kpiRow"></div>
   <div class="dash-row">
-    <div class="dp"><div class="dp-head"><span class="dp-title">Customer Split</span><span class="dp-sub">by order value</span></div><div class="dp-body" id="dcust"></div></div>
-    <div class="dp"><div class="dp-head"><span class="dp-title">Production Pipeline</span><span class="dp-sub">active orders</span></div><div class="dp-body" id="dpipe"></div></div>
-    <div class="dp finance-only"><div class="dp-head"><span class="dp-title">Payment Status</span><span class="dp-sub">collection summary</span></div><div class="dp-body" id="dpay"></div></div>
+    <div class="dp"><div class="dp-head"><span class="dp-title">Customer Split</span><span class="dp-sub" id="dcustSub">by order value</span></div><div class="dp-body" id="dcust"></div></div>
+    <div class="dp"><div class="dp-head"><span class="dp-title">Production Pipeline</span><span class="dp-sub" id="dpipeSub">active orders</span></div><div class="dp-body" id="dpipe"></div></div>
+    <div class="dp finance-only"><div class="dp-head"><span class="dp-title">Payment Status</span><span class="dp-sub" id="dpaySub">collection summary</span></div><div class="dp-body" id="dpay"></div></div>
     <div class="dp finance-only"><div class="dp-head"><span class="dp-title">PBG Tracker</span><span class="dp-sub">active guarantees</span></div><div class="dp-body" id="dpbg"></div></div>
+  </div>
+  <!-- FY Payment Breakdown (finance only) -->
+  <div class="dp finance-only" id="fyPayBreakdown" style="margin-bottom:18px">
+    <div class="dp-head"><span class="dp-title">💰 FY-wise Payment Summary</span><span class="dp-sub">collections split by financial year</span></div>
+    <div class="dp-body" id="fyPayBody"></div>
   </div>
 </div>
 
@@ -760,7 +847,12 @@ CREATE POLICY "allow_all" ON public.orders
 <div class="page" id="page-archived">
   <div class="pg-hdr">
     <div><div class="pg-title">🗄 Archived Orders</div><div class="pg-sub">Orders moved to archive (not deleted)</div></div>
-    <div class="pg-actions"><button class="btn btn-ghost btn-sm" onclick="showPage('orders',null)">← Back to Orders</button></div>
+    <div class="pg-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportFY('25-26')">⬇ Export FY 25–26</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportFY('26-27')">⬇ Export FY 26–27</button>
+      <button class="btn btn-ghost btn-sm management-only" onclick="archiveByFY()">📦 Archive Completed FY 25–26</button>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('orders',null)">← Back to Orders</button>
+    </div>
   </div>
   <div class="tbl-wrap">
     <div style="overflow-x:auto">
@@ -888,6 +980,18 @@ CREATE POLICY "allow_all" ON public.orders
     <div class="fg ffull"><label class="flbl">Notes / Special Requirements</label>
       <input class="finput" id="f_notes" placeholder="FAT required, partial delivery, special specs, retention clause…">
     </div>
+    <div class="fhead">Financial Year</div>
+    <div class="fg">
+      <label class="flbl">Carry Forward?</label>
+      <select class="finput" id="f_carry_forward">
+        <option value="false">No — completes within same FY</option>
+        <option value="true">Yes — spans two financial years</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">FY Tag (auto-set from PO date)</label>
+      <input class="finput" id="f_fy_tag" placeholder="e.g. 25-26" readonly style="background:var(--bg);color:var(--t3)">
+    </div>
   </div>
   </div>
   <div class="modal-ft">
@@ -947,6 +1051,50 @@ let editId = null;
 let curTab = 'overview';
 let currentRole = 'management';
 let selectedRows = new Set();
+let activeFY = '25-26'; // default FY
+let fyChecklistDismissed = false;
+
+/*═══════════════════════════════════════════
+  FY HELPERS
+═══════════════════════════════════════════*/
+function getFYFromDate(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const y = d.getFullYear(); const m = d.getMonth(); // 0=Jan
+  // Indian FY: Apr 1 – Mar 31
+  if (m >= 3) return `${String(y).slice(2)}-${String(y+1).slice(2)}`; // Apr–Dec
+  return `${String(y-1).slice(2)}-${String(y).slice(2)}`; // Jan–Mar
+}
+function currentFY() {
+  const now = new Date();
+  const y = now.getFullYear(); const m = now.getMonth();
+  if (m >= 3) return `${String(y).slice(2)}-${String(y+1).slice(2)}`;
+  return `${String(y-1).slice(2)}-${String(y).slice(2)}`;
+}
+function previousFY() {
+  const cf = currentFY();
+  const [a,b] = cf.split('-').map(Number);
+  return `${String(a-1).padStart(2,'0')}-${String(a).padStart(2,'0')}`;
+}
+function getOrderFY(o) {
+  return o.fy_tag || getFYFromDate(o.po_date) || currentFY();
+}
+function isNewFYMonth() {
+  // April, May, June = new FY started recently
+  return new Date().getMonth() >= 3 && new Date().getMonth() <= 5;
+}
+function isYearEndMonth() {
+  // Jan, Feb, Mar = approaching year end
+  return new Date().getMonth() <= 2;
+}
+function setActiveFY(fy) {
+  activeFY = fy;
+  document.querySelectorAll('.fy-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(fy === '25-26' ? 'fyBtn2526' : 'fyBtn2627').classList.add('active');
+  renderDashboard();
+  // Also update orders sub-title
+  document.getElementById('dashSub').textContent = `Showing FY ${activeFY} · ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+}
 
 /*═══════════════════════════════════════════
   ROLE PASSWORDS
@@ -1010,7 +1158,7 @@ function nextStage(s) {
   return (i >= 0 && i < STAGES.length - 1) ? STAGES[i + 1].key : null;
 }
 
-const FFIELDS = ['customer','po_number','po_date','delivery_date','description','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date'];
+const FFIELDS = ['customer','po_number','po_date','delivery_date','description','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date','carry_forward','fy_tag'];
 
 /*═══════════════════════════════════════════
   LOGIN FLOW
@@ -1303,6 +1451,18 @@ function updateSidebarBadges() {
   document.getElementById('nb-pbgexp').textContent = sv.pbg_expiring;
 
   if (sv.overdue > 0) document.getElementById('nb-overdue').className = 'nbadge red';
+
+  // FY badges
+  const fy2526 = active.filter(o => getOrderFY(o) === '25-26').length;
+  const fy2627 = active.filter(o => getOrderFY(o) === '26-27').length;
+  const fyCF   = active.filter(o => o.carry_forward === true || o.carry_forward === 'true').length;
+  const nb2526 = document.getElementById('nb-fy2526');
+  const nb2627 = document.getElementById('nb-fy2627');
+  const nbCF   = document.getElementById('nb-fy-cf');
+  if (nb2526) nb2526.textContent = fy2526;
+  if (nb2627) nb2627.textContent = fy2627;
+  if (nbCF)   nbCF.textContent   = fyCF;
+  if (fyCF > 0 && nbCF) nbCF.className = 'nbadge red';
 }
 
 function updateHeaderKpis() {
@@ -1363,19 +1523,179 @@ function applyCustomFilter(key) {
 /*═══════════════════════════════════════════
   DASHBOARD RENDER
 ═══════════════════════════════════════════*/
-function renderDashboard() {
-  const active = allOrders.filter(o => !o.archived);
+function renderFYChecklist(allActive) {
+  const el = document.getElementById('fyChecklist');
+  if (!el) return;
+  if (fyChecklistDismissed || !isYearEndMonth()) { el.innerHTML = ''; return; }
   const t = today();
+  const prevFY = previousFY();
+  const prevOrders = allActive.filter(o => getOrderFY(o) === prevFY || getOrderFY(o) === '25-26');
+  const items = [
+    { ct: prevOrders.filter(o => !['Delivered','Payment Received'].includes(o.status)).length,
+      lbl: 'Orders Not Delivered', sub: `FY ${prevFY} unfinished`, view: null },
+    { ct: prevOrders.filter(o => payStatus(o) !== 'paid').length,
+      lbl: 'Payment Pending', sub: 'Invoice unpaid / partial', view: 'pending_payment' },
+    { ct: allActive.filter(o => o.pbg_required && !o.pbg_returned).length,
+      lbl: 'PBG Not Returned', sub: 'Bank guarantees outstanding', view: 'pbg_expiring' },
+    { ct: prevOrders.filter(o => ['Design','Raw Material','Fabrication','Assembly','QA/Testing'].includes(o.status)).length,
+      lbl: 'Still in Production', sub: 'Consider carry-forward flag', view: null },
+    { ct: prevOrders.filter(o => !o.inv_number && ['QA/Testing','Dispatch Ready','Shipped','Delivered'].includes(o.status)).length,
+      lbl: 'Invoice Not Raised', sub: 'No invoice number set', view: null, filterFn: 'no_invoice' },
+    { ct: prevOrders.filter(o => o.carry_forward === true || o.carry_forward === 'true').length,
+      lbl: 'Carry Forward Tagged', sub: 'Ready for new FY', resolved: true },
+  ];
+  const total = items.slice(0,5).reduce((s,i) => s+i.ct, 0);
+  el.innerHTML = `
+    <div class="fy-checklist">
+      <div class="fy-cl-hdr">
+        <div>
+          <div class="fy-cl-title">📋 FY Year-End Checklist</div>
+          <div class="fy-cl-subtitle">${total} items need attention before March 31st</div>
+        </div>
+        <button class="fy-cl-dismiss" onclick="fyChecklistDismissed=true;renderFYChecklist(allOrders.filter(o=>!o.archived))">Dismiss</button>
+      </div>
+      <div class="fy-cl-grid">
+        ${items.map(i => `
+          <div class="fy-cl-item ${i.resolved&&i.ct>0?'resolved':''}" onclick="${i.view?`smartView('${i.view}',null)`:i.filterFn?`applyCustomFilter('${i.filterFn}')`:``}">
+            <div class="fy-cl-ct" style="color:${i.resolved?'#6ee7b7':i.ct>0?'#fca5a5':'rgba(255,255,255,.5)'}">${i.ct}</div>
+            <div class="fy-cl-lbl">${i.lbl}</div>
+            <div class="fy-cl-sub">${i.sub}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
 
-  // KPIs — all clickable to filter table
+function renderFYNewCounter(allActive) {
+  const el = document.getElementById('fyNewCounter');
+  if (!el) return;
+  if (!isNewFYMonth()) { el.innerHTML = ''; return; }
+  const newFY = currentFY();
+  const newCount = allActive.filter(o => getOrderFY(o) === newFY).length;
+  el.innerHTML = `
+    <div class="fy-new-counter" onclick="navF('fy','${newFY}',null)">
+      <div class="fy-nc-badge">${newCount}</div>
+      <div class="fy-nc-text">
+        <div class="fy-nc-title">🎉 FY ${newFY} has started — ${newCount} order${newCount!==1?'s':''} so far</div>
+        <div class="fy-nc-sub">Click to view all FY ${newFY} orders</div>
+      </div>
+      <div class="fy-nc-arrow">→</div>
+    </div>`;
+}
+
+function renderInvPrefixBanner() {
+  const el = document.getElementById('invPrefixBanner');
+  if (!el) return;
+  const dismissed = localStorage.getItem('inv_prefix_dismissed_' + currentFY());
+  if (!isNewFYMonth() || dismissed) { el.innerHTML = ''; return; }
+  const newFY = currentFY();
+  const parts = newFY.split('-');
+  const prefix = `SPIAIL${parts[0]}${parts[1]}`;
+  el.innerHTML = `
+    <div class="inv-prefix-banner">
+      <div style="font-size:18px">📄</div>
+      <div class="inv-prefix-text">
+        <strong>Invoice Series Reminder:</strong> New FY ${newFY} has started. 
+        Update your invoice prefix to <strong>${prefix}01A</strong> onwards.
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="localStorage.setItem('inv_prefix_dismissed_${newFY}','1');renderInvPrefixBanner()">Got it</button>
+    </div>`;
+}
+
+function renderFYPayBreakdown(allActive) {
+  const el = document.getElementById('fyPayBody');
+  if (!el) return;
+  const fys = ['25-26','26-27'];
+  const rows = fys.map(fy => {
+    const fyOrds = allActive.filter(o => getOrderFY(o) === fy);
+    const amt    = fyOrds.reduce((s,o) => s+(o.order_amount||0), 0);
+    const rec    = fyOrds.reduce((s,o) => s+totalReceived(o), 0);
+    const pend   = Math.max(0, amt - rec);
+    const cf     = fyOrds.filter(o => o.carry_forward===true||o.carry_forward==='true').length;
+    return { fy, amt, rec, pend, cf, ct: fyOrds.length };
+  });
+  el.innerHTML = `
+    <div class="fy-pay-grid">
+      ${rows.map(r => `
+        <div class="fy-pay-card" style="border-top:3px solid ${r.fy===currentFY()?'var(--green)':'var(--blue)'}">
+          <div class="fy-pay-label">FY ${r.fy} · ${r.ct} orders</div>
+          <div class="fy-pay-val">${fmtCr(r.amt)}</div>
+          <div class="fy-pay-sub">Collected: <span style="color:var(--green);font-weight:600">${fmtCr(r.rec)}</span></div>
+          <div class="fy-pay-sub">Outstanding: <span style="color:var(--red);font-weight:600">${fmtCr(r.pend)}</span></div>
+          ${r.cf>0?`<div class="fy-pay-sub" style="margin-top:4px"><span class="cf-badge">↕ ${r.cf} carry-forward</span></div>`:''}
+        </div>`).join('')}
+      <div class="fy-pay-card" style="border-top:3px solid var(--teal)">
+        <div class="fy-pay-label">Combined Total</div>
+        <div class="fy-pay-val">${fmtCr(rows.reduce((s,r)=>s+r.amt,0))}</div>
+        <div class="fy-pay-sub">Collected: <span style="color:var(--green);font-weight:600">${fmtCr(rows.reduce((s,r)=>s+r.rec,0))}</span></div>
+        <div class="fy-pay-sub">Outstanding: <span style="color:var(--red);font-weight:600">${fmtCr(rows.reduce((s,r)=>s+r.pend,0))}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderDashboard() {
+  const allActive = allOrders.filter(o => !o.archived);
+  const active = allActive.filter(o => getOrderFY(o) === activeFY);
+  const t = today();
+  const fyLabel = `FY ${activeFY}`;
+
+  const dcustSub = document.getElementById('dcustSub');
+  const dpipeSub = document.getElementById('dpipeSub');
+  const dpaySub  = document.getElementById('dpaySub');
+  if (dcustSub) dcustSub.textContent = `${fyLabel} · by order value`;
+  if (dpipeSub) dpipeSub.textContent = `${fyLabel} · active orders`;
+  if (dpaySub)  dpaySub.textContent  = `${fyLabel} · collection summary`;
+
+  renderFYChecklist(allActive);
+  renderFYNewCounter(allActive);
+  renderInvPrefixBanner();
+  renderFYPayBreakdown(allActive);
+
   const totalAmt   = active.reduce((s,o) => s + (o.order_amount||0), 0);
   const totalRec   = active.reduce((s,o) => s + totalReceived(o), 0);
   const totalPend  = active.reduce((s,o) => s + Math.max(0, pendingAmt(o) || 0), 0);
   const overdue    = active.filter(o => o.delivery_date && o.delivery_date < t && !['Delivered','Payment Received'].includes(o.status));
   const onHold     = active.filter(o => o.status === 'On Hold');
   const pbgActive  = active.filter(o => o.pbg_required && !o.pbg_returned);
+  const cfOrders   = allActive.filter(o => o.carry_forward === true || o.carry_forward === 'true');
 
   document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi k-blue" onclick="navF('fy','${activeFY}',null)">
+      <div class="kpi-ico" style="background:var(--blue-lt)">📋</div>
+      <div class="kpi-lbl">Orders · ${fyLabel}</div>
+      <div class="kpi-val">${active.length}</div>
+      <div class="kpi-sub">${allActive.length} total active</div>
+    </div>
+    <div class="kpi k-blue finance-only" onclick="navF('fy','${activeFY}',null)">
+      <div class="kpi-ico" style="background:var(--blue-lt)">📊</div>
+      <div class="kpi-lbl">Pipeline · ${fyLabel}</div>
+      <div class="kpi-val">${fmtCr(totalAmt)}</div>
+      <div class="kpi-sub">Order book value</div>
+    </div>
+    <div class="kpi k-green finance-only" onclick="navF('fy','${activeFY}',null)">
+      <div class="kpi-ico" style="background:var(--green-lt)">✅</div>
+      <div class="kpi-lbl">Collected · ${fyLabel}</div>
+      <div class="kpi-val">${fmtCr(totalRec)}</div>
+      <div class="kpi-sub">${totalAmt ? Math.round(totalRec/totalAmt*100) : 0}% of order book</div>
+    </div>
+    <div class="kpi k-amber finance-only" onclick="smartView('pending_payment',null)">
+      <div class="kpi-ico" style="background:var(--amber-lt)">⏳</div>
+      <div class="kpi-lbl">Outstanding · ${fyLabel}</div>
+      <div class="kpi-val">${fmtCr(totalPend)}</div>
+      <div class="kpi-sub">Balance to collect ↗</div>
+    </div>
+    <div class="kpi k-red" onclick="smartView('overdue',null)">
+      <div class="kpi-ico" style="background:var(--red-lt)">🔴</div>
+      <div class="kpi-lbl">Overdue</div>
+      <div class="kpi-val" style="color:${overdue.length>0?'var(--red)':'var(--t1)'}">${overdue.length}</div>
+      <div class="kpi-sub">Past delivery date ↗</div>
+    </div>
+    <div class="kpi k-amber" onclick="navF('fy','carry',null)">
+      <div class="kpi-ico" style="background:var(--amber-lt)">↕</div>
+      <div class="kpi-lbl">Carry Forward</div>
+      <div class="kpi-val" style="color:${cfOrders.length>0?'var(--amber)':'var(--t1)'}">${cfOrders.length}</div>
+      <div class="kpi-sub">Spans two FYs ↗</div>
+    </div>
+  `;
     <div class="kpi k-blue"  onclick="smartView('all',null)">
       <div class="kpi-ico" style="background:var(--blue-lt)">📋</div>
       <div class="kpi-lbl">Total Orders</div>
@@ -1414,7 +1734,7 @@ function renderDashboard() {
     </div>
   `;
 
-  // Customer split
+  // Customer split (FY filtered)
   const custMap = {};
   active.forEach(o => {
     const c = o.customer || 'Unknown';
@@ -1462,7 +1782,7 @@ function renderDashboard() {
       <div class="pmrow"><div class="pmrow-l">Returned</div><div class="pmrow-r">${active.filter(o=>o.pbg_returned).length}</div></div>
     `;
   }
-  document.getElementById('dashSub').textContent = `${active.length} orders · Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('dashSub').textContent = `FY ${activeFY} · ${active.length} orders · Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
 /*═══════════════════════════════════════════
@@ -1528,6 +1848,10 @@ function getFilteredOrders() {
       else if (value === 'PBG')     orders = orders.filter(o => o.pbg_required && !o.pbg_returned);
     }
     else if (type === 'cust') orders = orders.filter(o => o.customer && o.customer.toLowerCase().includes(value.toLowerCase()));
+    else if (type === 'fy') {
+      if (value === 'carry') orders = orders.filter(o => o.carry_forward === true || o.carry_forward === 'true');
+      else orders = orders.filter(o => getOrderFY(o) === value);
+    }
   }
 
   // Custom chip filter
@@ -1590,12 +1914,14 @@ function renderTable() {
     const ns = nextStage(o.status);
     const qaBtn = ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${ns.replace('Fabrication','Fab').replace('Assembly','Asm').replace('Dispatch Ready','Dispatch').replace('Raw Material','Raw Mat').replace('Payment Received','Pay Rec')}</button>` : '';
 
+    const isCF = o.carry_forward === true || o.carry_forward === 'true';
+    const fyT = getOrderFY(o);
     const isSelected = selectedRows.has(o.id);
-    return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}">
+    return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}${isCF?' cf-row':''}">
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" ${isSelected?'checked':''} onchange="toggleRowSelect('${o.id}',this)"></td>
       <td class="td-sl">${o.sl||'—'}</td>
       <td class="td-cust" title="${o.customer||''}">${o.customer||'—'}</td>
-      <td class="td-po">${o.po_number||'—'}</td>
+      <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
       <td class="td-desc" title="${o.description||''}">${o.description||'—'}</td>
       <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
       <td>${ageChip(age, '')}</td>
@@ -1800,6 +2126,8 @@ function renderDrawer(o) {
         <div class="irow"><div class="ilbl">Order Amount</div><div class="ival mono finance-only">${fmtCr(o.order_amount)}</div></div>
         <div class="irow full"><div class="ilbl">Description</div><div class="ival">${o.description||'—'}</div></div>
         <div class="irow full"><div class="ilbl">Notes</div><div class="ival">${o.notes||'—'}</div></div>
+        <div class="irow"><div class="ilbl">Financial Year</div><div class="ival"><span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${getOrderFY(o)}</span></div></div>
+        <div class="irow"><div class="ilbl">Carry Forward</div><div class="ival">${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge">↕ Yes — spans two FYs</span>':'<span style="color:var(--t4);font-size:12px">No</span>'}</div></div>
       </div>
     </div>
   `;
@@ -2034,6 +2362,9 @@ function openNewModal() {
     if (el.tagName === 'SELECT') el.value = el.options[0]?.value || '';
     else el.value = '';
   });
+  // Auto-set FY tag to current FY
+  const fyEl = document.getElementById('f_fy_tag');
+  if (fyEl) fyEl.value = currentFY();
   document.getElementById('dupWarn').style.display = 'none';
   document.getElementById('orderModal').classList.add('open');
   // Draft restore
@@ -2106,7 +2437,7 @@ async function saveOrder() {
          'pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct',
          'pm_delivery_received','pbg_amount','pbg_validity_months'].includes(f)) {
       data[f] = v === '' ? null : parseFloat(v);
-    } else if (f === 'pbg_required') {
+    } else if (f === 'pbg_required' || f === 'carry_forward') {
       data[f] = v === 'true';
     } else {
       data[f] = v || null;
@@ -2190,6 +2521,40 @@ function sortBy(key) {
 }
 
 /*═══════════════════════════════════════════
+  FY BULK ARCHIVE & EXPORT
+═══════════════════════════════════════════*/
+async function archiveByFY() {
+  const fy = previousFY() || '25-26';
+  const toArchive = allOrders.filter(o =>
+    !o.archived &&
+    getOrderFY(o) === fy &&
+    o.status === 'Payment Received'
+  );
+  if (toArchive.length === 0) {
+    toast(`No completed (Payment Received) orders found for FY ${fy}`, 'warn'); return;
+  }
+  if (!confirm(`Archive ${toArchive.length} fully completed orders from FY ${fy}? They'll move to the Archive view and can be restored.`)) return;
+  try {
+    for (const o of toArchive) {
+      await SB.from('orders').update({ archived: true, archived_at: new Date().toISOString() }).eq('id', o.id);
+      await addRemarkEntry(o.id, `Bulk archived: FY ${fy} year-end closure`, currentRole);
+    }
+    toast(`${toArchive.length} orders from FY ${fy} archived ✓`, 'info');
+    await loadData();
+    showPage('archived', null);
+  } catch(e) {
+    toast('Archive failed: ' + e.message, 'err');
+  }
+}
+
+function exportFY(fy) {
+  const orders = allOrders.filter(o => getOrderFY(o) === fy);
+  if (orders.length === 0) { toast(`No orders found for FY ${fy}`, 'warn'); return; }
+  downloadCSV(orders, `SPICON_FY${fy.replace('-','_')}_export.csv`);
+  toast(`Exported ${orders.length} orders for FY ${fy}`, 'info');
+}
+
+/*═══════════════════════════════════════════
   CSV EXPORT
 ═══════════════════════════════════════════*/
 function exportCSV() {
@@ -2268,7 +2633,7 @@ function renderCardView(orders) {
       <div class="oc-top">
         <div>
           <div class="oc-cust">${o.customer||'—'}</div>
-          <div class="oc-po">${o.po_number||'—'}</div>
+          <div class="oc-po">${o.po_number||'—'} <span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">${getOrderFY(o)}</span>${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge" style="margin-left:3px">↕ CF</span>':''}</div>
         </div>
         <span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span>
       </div>
@@ -2287,6 +2652,12 @@ function renderCardView(orders) {
 document.addEventListener('DOMContentLoaded', () => {
   const poEl = document.getElementById('f_po_number');
   if (poEl) poEl.addEventListener('blur', checkDuplicatePO);
+  // Auto FY tag from PO date
+  const poDateEl = document.getElementById('f_po_date');
+  if (poDateEl) poDateEl.addEventListener('change', function() {
+    const fyEl = document.getElementById('f_fy_tag');
+    if (fyEl && this.value) fyEl.value = getFYFromDate(this.value) || currentFY();
+  });
   // Re-render cards on resize
   window.addEventListener('resize', () => renderTable());
   // Keyboard shortcuts
