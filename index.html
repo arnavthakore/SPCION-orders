@@ -552,13 +552,6 @@ td:first-child{padding-left:14px}
         <div style="text-align:center;margin-top:8px">
           <span style="font-size:11px;color:var(--t4)">First time? </span>
           <span style="font-size:11px;color:var(--blue);cursor:pointer;font-weight:500" onclick="showDbSetup()" id="dbConnectLink">First time? Connect your database →</span>
-          <script>
-            // Update link text based on whether credentials are saved
-            document.addEventListener('DOMContentLoaded', function() {
-              const lnk = document.getElementById('dbConnectLink');
-              if (lnk && localStorage.getItem('sb_url')) lnk.textContent = '⚙ Change database connection →';
-            });
-          </script>
         </div>
       </div>
     </div>
@@ -1176,6 +1169,9 @@ function showRoleSelect() {
   document.getElementById('panel-password').style.display = 'none';
   document.getElementById('panel-dbsetup').style.display = 'none';
   pendingRole = null;
+  // Update DB link text
+  const lnk = document.getElementById('dbConnectLink');
+  if (lnk) lnk.textContent = localStorage.getItem('sb_url') ? '⚙ Change database connection →' : 'First time? Connect your database →';
 }
 function showDbSetup() {
   // Pre-fill with saved credentials if they exist
@@ -1187,18 +1183,7 @@ function showDbSetup() {
   document.getElementById('panel-dbsetup').style.display = 'block';
 }
 function selectLoginRole(role) {
-  // Try to initialise Supabase from saved credentials before blocking user
-  if (!SB) {
-    const url = localStorage.getItem('sb_url');
-    const key = localStorage.getItem('sb_key');
-    if (url && key) {
-      try {
-        const { createClient } = window.supabase;
-        SB = createClient(url, key);
-      } catch(e) { SB = null; }
-    }
-  }
-  if (!SB) { showDbSetup(); return; }
+  // Show password screen immediately — DB check happens at login time
   pendingRole = role;
   const meta = ROLE_META[role];
   document.getElementById('pwRoleIcon').textContent = meta.icon;
@@ -1220,6 +1205,26 @@ function doRoleLogin() {
   }
   currentRole = pendingRole;
   localStorage.setItem('sb_role', currentRole);
+  // Try to init Supabase — if no credentials saved, show DB setup
+  if (!SB) {
+    const url = localStorage.getItem('sb_url');
+    const key = localStorage.getItem('sb_key');
+    if (!url || !key) {
+      // Password correct, but DB not configured — go to setup
+      showDbSetup();
+      document.getElementById('setupErr').textContent = '✓ Password correct! Now connect your database to continue.';
+      document.getElementById('setupErr').style.display = 'block';
+      document.getElementById('setupErr').style.color = 'var(--green)';
+      return;
+    }
+    try {
+      const { createClient } = window.supabase;
+      SB = createClient(url, key);
+    } catch(e) {
+      showPwErr('Database connection error. Please reconnect via "Change database connection".');
+      return;
+    }
+  }
   launchApp();
 }
 function showPwErr(msg) {
