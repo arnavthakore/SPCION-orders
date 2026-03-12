@@ -912,22 +912,41 @@ td:first-child{padding-left:14px}
     <div id="mt-production" class="mt-panel" style="display:none">
       <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Milestone dates — fill as each stage completes.</div>
       <div class="fgrid">
+
         <div class="fhead">Design</div>
         <div class="fg"><label class="flbl">Design Started</label><input class="finput" type="date" id="f_design_start"></div>
         <div class="fg"><label class="flbl">Design Approved</label><input class="finput" type="date" id="f_design_done"></div>
-        <div class="fhead">Manufacturing</div>
-        <div class="fg"><label class="flbl">Raw Material Ordered</label><input class="finput" type="date" id="f_raw_material_date"></div>
-        <div class="fg"><label class="flbl">Fabrication Started</label><input class="finput" type="date" id="f_fabrication_start"></div>
-        <div class="fg"><label class="flbl">Fabrication Complete</label><input class="finput" type="date" id="f_fabrication_done"></div>
-        <div class="fg"><label class="flbl">Assembly Started</label><input class="finput" type="date" id="f_assembly_start"></div>
-        <div class="fg"><label class="flbl">Assembly Complete</label><input class="finput" type="date" id="f_assembly_done"></div>
-        <div class="fhead">QA &amp; Dispatch</div>
-        <div class="fg"><label class="flbl">QA / FAT Started</label><input class="finput" type="date" id="f_qa_start"></div>
-        <div class="fg"><label class="flbl">QA / FAT Cleared</label><input class="finput" type="date" id="f_qa_done"></div>
-        <div class="fg"><label class="flbl">Dispatch Ready Date</label><input class="finput" type="date" id="f_dispatch_ready_date"></div>
-        <div class="fg"><label class="flbl">Shipped Date</label><input class="finput" type="date" id="f_shipped_date"></div>
-        <div class="fg"><label class="flbl">Delivered Date</label><input class="finput" type="date" id="f_delivered_date"></div>
-        <div class="fg"><label class="flbl">Payment Received Date</label><input class="finput" type="date" id="f_payment_received_date"></div>
+
+        <div class="fhead">Raw Material</div>
+        <div class="fg"><label class="flbl">Ordered</label><input class="finput" type="date" id="f_raw_material_date"></div>
+        <div class="fg"><label class="flbl">Received</label><input class="finput" type="date" id="f_raw_material_received"></div>
+
+        <div class="fhead">Fabrication</div>
+        <div class="fg"><label class="flbl">Started</label><input class="finput" type="date" id="f_fabrication_start"></div>
+        <div class="fg"><label class="flbl">Complete</label><input class="finput" type="date" id="f_fabrication_done"></div>
+
+        <div class="fhead">Assembly</div>
+        <div class="fg"><label class="flbl">Started</label><input class="finput" type="date" id="f_assembly_start"></div>
+        <div class="fg"><label class="flbl">Complete</label><input class="finput" type="date" id="f_assembly_done"></div>
+
+        <div class="fhead">Quality Assessment</div>
+        <div class="fg"><label class="flbl">QA Started</label><input class="finput" type="date" id="f_qa_start"></div>
+        <div class="fg"><label class="flbl">QA Cleared</label><input class="finput" type="date" id="f_qa_done"></div>
+
+        <div class="fhead">FAT — Internal</div>
+        <div class="fg"><label class="flbl">Started</label><input class="finput" type="date" id="f_fat_internal_start"></div>
+        <div class="fg"><label class="flbl">Cleared</label><input class="finput" type="date" id="f_fat_internal_done"></div>
+
+        <div class="fhead">FAT — External</div>
+        <div class="fg"><label class="flbl">Started</label><input class="finput" type="date" id="f_fat_external_start"></div>
+        <div class="fg"><label class="flbl">Cleared</label><input class="finput" type="date" id="f_fat_external_done"></div>
+
+        <div class="fhead">Dispatch &amp; Delivery</div>
+        <div class="fg"><label class="flbl">Dispatch Ready</label><input class="finput" type="date" id="f_dispatch_ready_date"></div>
+        <div class="fg"><label class="flbl">Shipped</label><input class="finput" type="date" id="f_shipped_date"></div>
+        <div class="fg"><label class="flbl">Delivered</label><input class="finput" type="date" id="f_delivered_date"></div>
+        <div class="fg"><label class="flbl">Payment Received</label><input class="finput" type="date" id="f_payment_received_date"></div>
+
       </div>
     </div>
 
@@ -1084,7 +1103,7 @@ function nextStage(s) {
   return (i >= 0 && i < STAGES.length - 1) ? STAGES[i + 1].key : null;
 }
 
-const FFIELDS = ['customer','po_number','po_date','delivery_date','description','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date','carry_forward','fy_tag'];
+const FFIELDS = ['customer','po_number','po_date','delivery_date','description','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','raw_material_received','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','fat_internal_start','fat_internal_done','fat_external_start','fat_external_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date','carry_forward','fy_tag'];
 
 /*═══════════════════════════════════════════
   SUPABASE AUTH LOGIN FLOW
@@ -2074,10 +2093,12 @@ function renderDrawer(o) {
   // ── PRODUCTION ──
   const milestones = [
     ['Design Started',o.design_start],['Design Approved',o.design_done],
-    ['Raw Material Ordered',o.raw_material_date],
+    ['Raw Material Ordered',o.raw_material_date],['Raw Material Received',o.raw_material_received],
     ['Fabrication Started',o.fabrication_start],['Fabrication Complete',o.fabrication_done],
     ['Assembly Started',o.assembly_start],['Assembly Complete',o.assembly_done],
-    ['QA Started',o.qa_start],['QA / FAT Cleared',o.qa_done],
+    ['QA Started',o.qa_start],['QA Cleared',o.qa_done],
+    ['FAT Internal Started',o.fat_internal_start],['FAT Internal Cleared',o.fat_internal_done],
+    ['FAT External Started',o.fat_external_start],['FAT External Cleared',o.fat_external_done],
     ['Dispatch Ready',o.dispatch_ready_date],['Shipped',o.shipped_date],
     ['Delivered',o.delivered_date],['Payment Received',o.payment_received_date],
   ];
