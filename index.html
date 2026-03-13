@@ -259,6 +259,10 @@ td:first-child{padding-left:14px}
 .d-close{width:30px;height:30px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:18px;transition:all .12s;border:none;background:none}
 .d-close:hover{background:var(--bg);color:var(--t1)}
 .dtabs{display:flex;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.mtabs{display:flex;border-bottom:1px solid var(--bdr);padding:0 22px;flex-shrink:0}
+.mtab{padding:10px 16px;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;white-space:nowrap}
+.mtab:hover{color:var(--t1)}
+.mtab.on{color:var(--blue);border-bottom-color:var(--blue)}
 .dtab{padding:9px 14px;font-size:12px;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}
 .dtab:hover{color:var(--t1)}
 .dtab.on{color:var(--blue);border-bottom-color:var(--blue)}
@@ -1074,6 +1078,210 @@ td:first-child{padding-left:14px}
   <div class="modal-ft">
     <button class="btn btn-ghost" onclick="document.getElementById('convertModal').classList.remove('open')">Cancel</button>
     <button class="btn btn-blue" style="width:auto;padding:10px 24px" onclick="confirmConvertToOrder()">Create Order</button>
+  </div>
+</div>
+</div>
+
+<!-- ORDER MODAL — NEW / EDIT -->
+<!-- ORDER DRAWER OVERLAY -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+
+<!-- ORDER DRAWER -->
+<div class="drawer" id="drawer">
+  <div class="d-hdr">
+    <div>
+      <div class="d-title" id="dTitle">Order</div>
+      <div class="d-sub" id="dSub"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Edit</button>
+      <button class="d-close" onclick="closeDrawer()">✕</button>
+    </div>
+  </div>
+  <div class="dtabs">
+    <div class="dtab on"  onclick="switchTab('overview',this)">📋 Overview</div>
+    <div class="dtab"     onclick="switchTab('production',this)">⚙ Production</div>
+    <div class="dtab"     onclick="switchTab('payment',this)">💰 Payment</div>
+    <div class="dtab"     onclick="switchTab('pbg',this)">🏦 PBG</div>
+    <div class="dtab"     onclick="switchTab('log',this)">📝 Log</div>
+  </div>
+  <div class="d-body">
+    <div class="dpanel on" id="dp-overview"></div>
+    <div class="dpanel"    id="dp-production"></div>
+    <div class="dpanel"    id="dp-payment"></div>
+    <div class="dpanel"    id="dp-pbg"></div>
+    <div class="dpanel"    id="dp-log"></div>
+  </div>
+</div>
+
+<!-- ORDER MODAL — NEW / EDIT -->
+<div class="modal" id="orderModal">
+<div class="modal-box">
+  <div class="modal-hd">
+    <div class="modal-title" id="modalTitle">New Order</div>
+    <button class="d-close" onclick="closeModal()">✕</button>
+  </div>
+  <!-- modal tabs -->
+  <div class="dtabs" id="modalTabs">
+    <div class="dtab on" onclick="switchModalTab('mt-basic')" id="mt-basic-tab">📋 Basic Info</div>
+    <div class="dtab" onclick="switchModalTab('mt-commercial')" id="mt-commercial-tab">💼 Commercial</div>
+    <div class="dtab" onclick="switchModalTab('mt-finance')" id="mt-finance-tab">💰 Finance</div>
+    <div class="dtab" onclick="switchModalTab('mt-production')" id="mt-production-tab">⚙ Production</div>
+  </div>
+  <div class="modal-body" style="display:block;padding:20px 22px">
+    <div class="dup-warn" id="dupWarn">⚠ A similar PO number already exists. Please verify before saving.</div>
+
+    <!-- TAB 1: BASIC INFO -->
+    <div id="mt-basic" class="mt-panel">
+      <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Fill these when you receive a new order. Other details can be added later.</div>
+      <div class="fgrid">
+        <div class="fhead">Purchase Order</div>
+        <div class="fg"><label class="flbl">Customer *</label><input class="finput" id="f_customer" placeholder="e.g. Afcons - CIDCO"></div>
+        <div class="fg"><label class="flbl">PO Number</label><input class="finput" id="f_po_number" placeholder="e.g. 4500635234"></div>
+        <div class="fg"><label class="flbl">PO Date</label><input class="finput" type="date" id="f_po_date"></div>
+        <div class="fg"><label class="flbl">Delivery Date / Schedule</label><input class="finput" id="f_delivery_date" placeholder="e.g. 15-03-2026 or 8 weeks from PO"></div>
+        <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="f_description" placeholder="e.g. 12T Locomotive Spares"></div>
+        <div class="fg"><label class="flbl">Order Type</label>
+          <select class="finput" id="f_order_type" onchange="onOrderTypeChange()">
+            <option value="manufactured">🔧 Manufactured</option>
+            <option value="traded">🏭 Traded / Subcontracted</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">Current Stage</label>
+          <select class="finput" id="f_status">
+            <option value="Design">Design / Engineering</option>
+            <option value="Raw Material">Raw Material Procurement</option>
+            <option value="Fabrication">Fabrication / Manufacturing</option>
+            <option value="Assembly">Assembly</option>
+            <option value="QA/Testing">QA / Testing &amp; FAT</option>
+            <option value="Dispatch Ready">Dispatch Ready</option>
+            <option value="Shipped">Shipped / In Transit</option>
+            <option value="Delivered">Delivered &amp; Installed</option>
+            <option value="Payment Received">Payment Received</option>
+            <option value="On Hold">On Hold</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">FY Tag (auto from PO date)</label><input class="finput" id="f_fy_tag" placeholder="e.g. 25-26" readonly style="background:var(--bg);color:var(--t3)"></div>
+        <div class="fg ffull"><label class="flbl">Notes / Special Requirements</label><input class="finput" id="f_notes" placeholder="FAT required, partial delivery, special specs…"></div>
+      </div>
+    </div>
+
+    <!-- TAB 2: COMMERCIAL -->
+    <div id="mt-commercial" class="mt-panel" style="display:none">
+      <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Order value, payment terms, invoice details and PBG.</div>
+      <div class="fgrid">
+        <div class="fhead">Order Value</div>
+        <div class="fg"><label class="flbl">Order Amount incl GST (INR)</label><input class="finput" type="number" id="f_order_amount" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="f_ex_works" placeholder="0"></div>
+        <div class="fg ffull"><label class="flbl">Payment Terms</label><input class="finput" id="f_payment_terms" placeholder="e.g. 30 Days Credit from Invoice"></div>
+
+        <div class="fhead">Invoice</div>
+        <div class="fg"><label class="flbl">Invoice Number(s)</label><input class="finput" id="f_inv_number" placeholder="e.g. SPIAIL252603A"></div>
+        <div class="fg"><label class="flbl">Invoice Date</label><input class="finput" type="date" id="f_inv_date"></div>
+        <div class="fg"><label class="flbl">Invoice Amount (INR)</label><input class="finput" type="number" id="f_inv_amount" placeholder="0"></div>
+
+        <div class="fhead">Performance Bank Guarantee (PBG)</div>
+        <div class="fg"><label class="flbl">PBG Required?</label>
+          <select class="finput" id="f_pbg_required">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+        <div class="fg"><label class="flbl">PBG Amount (INR)</label><input class="finput" type="number" id="f_pbg_amount" placeholder="0"></div>
+        <div class="fg"><label class="flbl">PBG Validity (months)</label><input class="finput" type="number" id="f_pbg_validity_months" value="12" placeholder="12"></div>
+        <div class="fg"><label class="flbl">PBG Expiry Date</label><input class="finput" type="date" id="f_pbg_expiry_date"></div>
+        <div class="fg"><label class="flbl">PBG Returned?</label>
+          <select class="finput" id="f_pbg_returned">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+        <div class="fhead">Financial Year</div>
+        <div class="fg">
+          <label class="flbl">Carry Forward?</label>
+          <select class="finput" id="f_carry_forward">
+            <option value="false">No — completes within same FY</option>
+            <option value="true">Yes — spans two financial years</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: FINANCE -->
+    <div id="mt-finance" class="mt-panel" style="display:none">
+      <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Payment milestone receipts — fill as payments come in.</div>
+      <div class="fgrid">
+        <div class="fhead">Payment Milestones</div>
+        <div class="fg"><label class="flbl">Advance % of Contract</label><input class="finput" type="number" id="f_pm_advance_pct" placeholder="e.g. 20"></div>
+        <div class="fg"><label class="flbl">Advance Received (INR)</label><input class="finput" type="number" id="f_pm_advance_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Invoice (INR)</label><input class="finput" type="number" id="f_pm_invoice_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against FAT (INR)</label><input class="finput" type="number" id="f_pm_fat_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Dispatch (INR)</label><input class="finput" type="number" id="f_pm_dispatch_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Delivery (INR)</label><input class="finput" type="number" id="f_pm_delivery_received" placeholder="0"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: PRODUCTION -->
+    <div id="mt-production" class="mt-panel" style="display:none">
+      <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Milestone dates — fill as each stage completes.</div>
+
+      <!-- Manufactured sub-panel -->
+      <div id="prod-manufactured">
+        <div class="fgrid">
+          <div class="fhead">Design</div>
+          <div class="fg"><label class="flbl">Design Started</label><input class="finput" type="date" id="f_design_start" oninput="updateDesignTarget()"></div>
+          <div class="fg"><label class="flbl">Design Target (15d) <span id="design-target-badge"></span></label><input class="finput" id="design_target_display" readonly style="background:var(--bg2);cursor:default"></div>
+          <div class="fg"><label class="flbl">Design Approved</label><input class="finput" type="date" id="f_design_done" oninput="updateDesignTarget()"></div>
+          <div class="fhead">Manufacturing</div>
+          <div class="fg"><label class="flbl">Raw Material Ordered</label><input class="finput" type="date" id="f_raw_material_date"></div>
+          <div class="fg"><label class="flbl">Raw Material % Ordered</label><input class="finput" id="f_raw_material_received" placeholder="e.g. 80"></div>
+          <div class="fg"><label class="flbl">Fabrication Started</label><input class="finput" type="date" id="f_fabrication_start"></div>
+          <div class="fg"><label class="flbl">Fabrication Complete</label><input class="finput" type="date" id="f_fabrication_done"></div>
+          <div class="fg"><label class="flbl">Assembly Started</label><input class="finput" type="date" id="f_assembly_start"></div>
+          <div class="fg"><label class="flbl">Assembly Complete</label><input class="finput" type="date" id="f_assembly_done"></div>
+          <div class="fhead">QA &amp; Dispatch</div>
+          <div class="fg"><label class="flbl">QA Started</label><input class="finput" type="date" id="f_qa_start"></div>
+          <div class="fg"><label class="flbl">QA Cleared</label><input class="finput" type="date" id="f_qa_done"></div>
+          <div class="fg"><label class="flbl">FAT Internal Start</label><input class="finput" type="date" id="f_fat_internal_start"></div>
+          <div class="fg"><label class="flbl">FAT Internal Cleared</label><input class="finput" type="date" id="f_fat_internal_done"></div>
+          <div class="fg"><label class="flbl">FAT External Start</label><input class="finput" type="date" id="f_fat_external_start"></div>
+          <div class="fg"><label class="flbl">FAT External Cleared</label><input class="finput" type="date" id="f_fat_external_done"></div>
+          <div class="fg"><label class="flbl">Dispatch Ready Date</label><input class="finput" type="date" id="f_dispatch_ready_date"></div>
+          <div class="fg"><label class="flbl">Shipped Date</label><input class="finput" type="date" id="f_shipped_date"></div>
+          <div class="fg"><label class="flbl">Delivered Date</label><input class="finput" type="date" id="f_delivered_date"></div>
+          <div class="fg"><label class="flbl">Payment Received Date</label><input class="finput" type="date" id="f_payment_received_date"></div>
+        </div>
+      </div>
+
+      <!-- Traded/Supplier sub-panel -->
+      <div id="prod-traded" style="display:none">
+        <div class="fgrid">
+          <div class="fhead">Design</div>
+          <div class="fg"><label class="flbl">Design Started</label><input class="finput" type="date" id="f_design_start_t" oninput="updateDesignTarget()"></div>
+          <div class="fg"><label class="flbl">Design Target (15d) <span id="design-target-badge-t"></span></label><input class="finput" id="design_target_display_t" readonly style="background:var(--bg2);cursor:default"></div>
+          <div class="fg"><label class="flbl">Design Approved</label><input class="finput" type="date" id="f_design_done_t" oninput="updateDesignTarget()"></div>
+          <div class="fhead">Supplier</div>
+          <div class="fg"><label class="flbl">Supplier Name</label><input class="finput" id="f_supplier_name" placeholder="e.g. Atlas Copco India"></div>
+          <div class="fg"><label class="flbl">Supplier PO Number</label><input class="finput" id="f_supplier_po_number"></div>
+          <div class="fg"><label class="flbl">Supplier PO Date</label><input class="finput" type="date" id="f_supplier_po_date"></div>
+          <div class="fg"><label class="flbl">Delivery Commitment</label><input class="finput" id="f_supplier_delivery_commitment" placeholder="e.g. 90 days from PO"></div>
+          <div class="fg"><label class="flbl">Supplier Invoice No.</label><input class="finput" id="f_supplier_inv_number"></div>
+          <div class="fg"><label class="flbl">Supplier Invoice Amount</label><input class="finput" type="number" id="f_supplier_inv_amount" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Dispatched from Supplier</label><input class="finput" type="date" id="f_supplier_dispatch_date"></div>
+          <div class="fg"><label class="flbl">Supplier Payment Date</label><input class="finput" type="date" id="f_supplier_payment_date"></div>
+          <div class="fg"><label class="flbl">Supplier Payment Amount</label><input class="finput" type="number" id="f_supplier_payment_amount" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Delivered to Customer</label><input class="finput" type="date" id="f_delivered_date_t"></div>
+          <div class="fg"><label class="flbl">Payment Received Date</label><input class="finput" type="date" id="f_payment_received_date_t"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-blue" style="width:auto;padding:10px 24px" id="saveBtn" onclick="saveOrder()">Save Order</button>
   </div>
 </div>
 </div>
