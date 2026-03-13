@@ -616,6 +616,60 @@ td:first-child{padding-left:14px}
 .comp-green{background:var(--green)}
 .comp-amber{background:var(--amber)}
 .comp-red{background:var(--red)}
+
+/*============================
+  STAGE PROGRESS BAR
+============================*/
+.stage-progress-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:4px;overflow:hidden;width:100%}
+.stage-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s ease}
+
+/*============================
+  IMPROVED MOBILE CARDS
+============================*/
+.order-card{display:flex;flex-direction:column;min-height:200px}
+.oc-row{flex-grow:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px}
+.oc-advance-btn{width:100%;padding:12px 16px;border:none;border-radius:var(--r);background:var(--blue);color:#fff;font-weight:600;font-size:12px;cursor:pointer;transition:all .15s;min-height:44px;display:flex;align-items:center;justify-content:center;gap:4px;margin-top:auto}
+.oc-advance-btn:active{transform:scale(.98)}
+.oc-advance-btn:hover{background:var(--blue-h)}
+
+/*============================
+  UNDO TOAST
+============================*/
+.toast-with-undo{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.toast-undo-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;transition:background .15s}
+.toast-undo-btn:hover{background:rgba(255,255,255,.35)}
+
+/*============================
+  PULL-TO-REFRESH
+============================*/
+.ptr-container{position:relative;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ptr-icon{position:absolute;top:-50px;left:50%;transform:translateX(-50%);font-size:24px;opacity:0;transition:opacity .15s;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.ptr-container.ptr-active .ptr-icon{opacity:1;top:-40px}
+
+/*============================
+  BOTTOM NAVIGATION BAR (Mobile)
+============================*/
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid var(--bdr);z-index:100;justify-content:space-around;align-items:center;box-shadow:0 -2px 8px rgba(0,0,0,.07)}
+.bottom-nav.show{display:flex}
+.bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 12px;cursor:pointer;color:var(--t4);font-size:10px;font-weight:600;transition:color .15s;text-decoration:none;flex:1;height:100%;border:none;background:none}
+.bottom-nav-item:hover,.bottom-nav-item.active{color:var(--blue)}
+.bottom-nav-item-icon{font-size:18px}
+.bottom-nav-fab{position:fixed;bottom:70px;right:16px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;border:none;box-shadow:var(--sh-md);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:24px;transition:all .15s}
+.bottom-nav-fab.show{display:flex}
+.bottom-nav-fab:active{transform:scale(.95)}
+.bottom-nav-fab:hover{box-shadow:var(--sh-lg)}
+
+@media (max-width:768px){
+  .bottom-nav.show{display:flex}
+  .bottom-nav-fab.show{display:flex}
+  .page{padding:14px 14px 74px}
+}
+
+/*============================
+  MOBILE DELIVERY DATE DISPLAY
+============================*/
+.oc-delivery{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:3px}
+
 </style>
 </head>
 <body>
@@ -781,6 +835,8 @@ td:first-child{padding-left:14px}
 </nav>
 
 <div class="main">
+<!-- Pull-to-refresh icon (mobile) -->
+<div class="ptr-icon" style="display:none">⬇</div>
 
 <!-- ══ DASHBOARD ══ -->
 <div class="page active" id="page-dash">
@@ -829,6 +885,7 @@ td:first-child{padding-left:14px}
     <div><div class="pg-title">All Orders</div><div class="pg-sub" id="ordersSub">Loading…</div></div>
     <div class="pg-actions">
       <button class="btn btn-ghost btn-sm" onclick="clearFilter()">✕ Clear Filter</button>
+      <button class="btn btn-ghost btn-sm" onclick="generateReport()">📊 Report</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
       <button class="btn btn-blue btn-sm" id="btn-new-order2" onclick="openQuickAdd()">+ New Order</button>
     </div>
@@ -2400,13 +2457,18 @@ function renderTable() {
     const isCF = o.carry_forward === true || o.carry_forward === 'true';
     const fyT = getOrderFY(o);
     const isSelected = selectedRows.has(o.id);
+
+    // Calculate stage progress percentage
+    const stageIdx_ = stageIdx(o.status);
+    const stageProgress = stageIdx_ >= 0 ? Math.round((stageIdx_ / (STAGES.length - 1)) * 100) : 0;
+
     return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}${isCF?' cf-row':''}">
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" ${isSelected?'checked':''} onchange="toggleRowSelect('${o.id}',this)"></td>
       <td class="td-sl">${o.sl||'—'}</td>
       <td class="td-cust" title="${o.customer||''}"><span style="display:inline-flex;align-items:center;gap:5px">${(()=>{const cf=['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];const fp=cf.filter(f=>o[f]!==null&&o[f]!==undefined&&o[f]!=='').length;const p=Math.round(fp/cf.length*100);return `<span class="comp-dot ${p>=80?'comp-green':p>=40?'comp-amber':'comp-red'}" title="Completeness: ${p}%"></span>`;})()} ${o.customer||'—'}</span></td>
       <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
       <td class="td-desc" title="${o.description||''}">${o.description||'—'}</td>
-      <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
+      <td><div><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span><div class="stage-progress-bar"><div class="stage-progress-fill" style="width:${stageProgress}%"></div></div></div></td>
       <td>${ageChip(age, '')}</td>
       <td>${delayChip(o)}</td>
       ${isFinance ? `<td class="td-mono finance-only">${fmtCr(o.order_amount)}</td>` : ''}
@@ -2522,13 +2584,53 @@ async function quickAdvance(id, newStage) {
   const updates = { status: newStage };
   if (dateMap[newStage] && !o[dateMap[newStage]]) updates[dateMap[newStage]] = today();
 
+  // Save the previous stage for undo
+  const previousStage = o.status;
+  const previousDateField = dateMap[newStage];
+  const previousDateValue = previousDateField ? o[previousDateField] : null;
+
   try {
     await SB.from('orders').update(updates).eq('id', id);
     await addRemarkEntry(id, `Stage advanced to ${newStage}`, currentRole);
-    toast(`Moved to ${newStage}`, 'info');
+
+    // Show toast with undo button
+    const t = document.createElement('div');
+    t.className = 'toast info';
+    t.innerHTML = `<div class="toast-with-undo">
+      <span>Moved to ${newStage}</span>
+      <button class="toast-undo-btn" onclick="undoAdvance('${id}','${previousStage}','${previousDateField}')">↶ Undo</button>
+    </div>`;
+    const tray = document.getElementById('toastTray');
+    tray.appendChild(t);
+
+    // Auto-remove after 5 seconds
+    const undoBtn = t.querySelector('.toast-undo-btn');
+    let autoRemoveTimer = setTimeout(() => t.remove(), 5000);
+
+    // Clear timer if undo is clicked (handled in undoAdvance)
+    undoBtn.dataset.timeoutId = autoRemoveTimer;
+
     await loadData();
   } catch(e) {
     toast('Update failed: ' + e.message, 'err');
+  }
+}
+
+// Undo function for reverting a stage advance
+async function undoAdvance(id, previousStage, dateField) {
+  try {
+    const updates = { status: previousStage };
+    // If there was a previous date value, we can't restore it (it was null or empty)
+    // So we just clear it
+    if (dateField && dateField !== 'null') {
+      updates[dateField] = null;
+    }
+    await SB.from('orders').update(updates).eq('id', id);
+    await addRemarkEntry(id, `Stage reverted to ${previousStage} (undo)`, currentRole);
+    toast(`Reverted to ${previousStage}`, 'info');
+    await loadData();
+  } catch(e) {
+    toast('Undo failed: ' + e.message, 'err');
   }
 }
 
@@ -3233,18 +3335,187 @@ function exportCSV() {
   downloadCSV(orders, 'SPICON_orders_export.csv');
 }
 function downloadCSV(orders, filename) {
-  const headers = ['SL','Customer','PO Number','Description','Status','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry'];
+  const headers = ['SL','Customer','PO Number','Description','Status','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','Payment Status','Design Start','Fabrication Start','QA Start','Dispatch Ready Date','Shipped Date','Delivered Date','Supplier','PBG Amount','PBG Expiry','FY Tag','Remarks Count'];
   const rows = orders.map(o => [
     o.sl||'', o.customer||'', o.po_number||'', o.description||'', o.status||'',
     o.po_date||'', o.delivery_date||'', o.order_amount||'', o.inv_amount||'',
     totalReceived(o), Math.max(0, pendingAmt(o)||0),
-    o.pbg_required?'Yes':'No', o.pbg_expiry_date||''
+    payStatus(o)||'',
+    o.design_start||'', o.fabrication_start||'', o.qa_start||'', o.dispatch_ready_date||'', o.shipped_date||'', o.delivered_date||'',
+    o.supplier_name||'',
+    o.pbg_amount||'', o.pbg_expiry_date||'',
+    getOrderFY(o)||'',
+    (o.remarks && Array.isArray(o.remarks)) ? o.remarks.length : 0
   ]);
   const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
   a.download = filename;
   a.click();
+}
+
+/*============================
+  XLSX EXPORT (HTML Table)
+============================*/
+function exportXLSX() {
+  const orders = getFilteredOrders();
+  if (orders.length === 0) { toast('No orders to export', 'warn'); return; }
+
+  let html = `<html><head><meta charset="UTF-8"><style>
+    body { font-family: Arial, sans-serif; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #1a56db; color: white; font-weight: bold; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .numeric { text-align: right; }
+  </style></head><body><table>
+  <thead><tr>
+    <th>#</th><th>Customer</th><th>PO Number</th><th>Description</th><th>Status</th>
+    <th>PO Date</th><th>Delivery Date</th><th>Order Amount</th><th>Payment Status</th>
+    <th>Supplier</th><th>Pending Amount</th>
+  </tr></thead><tbody>`;
+
+  orders.forEach((o, idx) => {
+    html += `<tr>
+      <td>${idx+1}</td>
+      <td>${o.customer||'—'}</td>
+      <td>${o.po_number||'—'}</td>
+      <td>${o.description||'—'}</td>
+      <td>${o.status||'—'}</td>
+      <td>${o.po_date||'—'}</td>
+      <td>${o.delivery_date||'—'}</td>
+      <td class="numeric">${fmtCr(o.order_amount)||'—'}</td>
+      <td>${payStatus(o)||'—'}</td>
+      <td>${o.supplier_name||'—'}</td>
+      <td class="numeric">${fmtCr(Math.max(0, pendingAmt(o)||0))}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></body></html>`;
+
+  const win = window.open('', 'XLSX Export', 'width=1200,height=600');
+  win.document.write(html);
+  win.document.close();
+  toast(`Opened export table for ${orders.length} orders. Copy and paste into Excel.`, 'info');
+}
+
+/*============================
+  SUMMARY REPORT
+============================*/
+function generateReport() {
+  const orders = allOrders.filter(o => !o.archived);
+  const stageCount = {};
+  const paymentCount = { paid: 0, partial: 0, pending: 0, none: 0 };
+  const overdueOrders = [];
+  let totalAmount = 0, totalReceived = 0;
+
+  orders.forEach(o => {
+    const stage = o.status || 'Unknown';
+    stageCount[stage] = (stageCount[stage] || 0) + 1;
+
+    const ps = payStatus(o);
+    if (ps) paymentCount[ps]++;
+
+    const amt = o.order_amount || 0;
+    totalAmount += amt;
+    totalReceived += totalReceived(o);
+
+    // Check for overdue orders
+    if (o.delivery_date) {
+      const delDate = new Date(o.delivery_date);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (delDate < today && o.status !== 'Delivered') {
+        overdueOrders.push(o);
+      }
+    }
+  });
+
+  let html = `<html><head><meta charset="UTF-8"><style>
+    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+    .header { font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #1a56db; }
+    .section { margin-bottom: 30px; }
+    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #1a56db; padding-bottom: 6px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: #f0f2f5; padding: 12px; border-radius: 6px; text-align: center; }
+    .stat-number { font-size: 24px; font-weight: bold; color: #1a56db; }
+    .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #1a56db; color: white; font-weight: bold; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    .warn { color: #dc2626; font-weight: bold; }
+    .time { font-size: 12px; color: #999; margin-top: 20px; }
+  </style></head><body>
+  <div class="header">📊 SPICON Order Management Report</div>
+
+  <div class="section">
+    <div class="section-title">📈 Overall Statistics</div>
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-number">${orders.length}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${fmtCr(totalAmount)}</div>
+        <div class="stat-label">Total Order Value</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${fmtCr(totalReceived)}</div>
+        <div class="stat-label">Total Received</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">${fmtCr(totalAmount - totalReceived)}</div>
+        <div class="stat-label">Pending Amount</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔄 Stage-wise Distribution</div>
+    <table>
+      <thead><tr><th>Stage</th><th>Count</th><th>Percentage</th></tr></thead>
+      <tbody>`;
+
+  STAGES.forEach(s => {
+    const cnt = stageCount[s.key] || 0;
+    const pct = orders.length > 0 ? Math.round((cnt / orders.length) * 100) : 0;
+    html += `<tr><td>${s.label}</td><td>${cnt}</td><td>${pct}%</td></tr>`;
+  });
+
+  html += `</tbody></table></div>
+
+  <div class="section">
+    <div class="section-title">💰 Payment Status Summary</div>
+    <table>
+      <thead><tr><th>Status</th><th>Count</th></tr></thead>
+      <tbody>
+        <tr><td>Paid</td><td>${paymentCount.paid}</td></tr>
+        <tr><td>Partial</td><td>${paymentCount.partial}</td></tr>
+        <tr><td>Pending</td><td>${paymentCount.pending}</td></tr>
+        <tr><td>None</td><td>${paymentCount.none}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  if (overdueOrders.length > 0) {
+    html += `<div class="section">
+      <div class="section-title" style="color: #dc2626;">⚠️ Overdue Orders (${overdueOrders.length})</div>
+      <table>
+        <thead><tr><th>Customer</th><th>PO Number</th><th>Delivery Date</th><th>Current Stage</th></tr></thead>
+        <tbody>`;
+    overdueOrders.forEach(o => {
+      html += `<tr><td>${o.customer||'—'}</td><td>${o.po_number||'—'}</td><td class="warn">${o.delivery_date||'—'}</td><td>${o.status||'—'}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  html += `<div class="time">Report generated on ${new Date().toLocaleString()}</div>
+  </body></html>`;
+
+  const win = window.open('', 'Report', 'width=1000,height=700');
+  win.document.write(html);
+  win.document.close();
+  toast('Report generated', 'info');
 }
 
 /*============================
@@ -3298,23 +3569,25 @@ function renderCardView(orders) {
                     ps === 'partial' ? '<span class="badge bp-partial">Partial</span>' :
                     ps === 'pending' ? '<span class="badge bp-pending">Pending</span>' : '';
     const ns = nextStage(o.status);
-    const qaBtn = ns ? `<button class="qa-btn qa-next oc-qa" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ ${ns.split(' ')[0]}</button>` : '';
     const delChip = delayChip(o);
+    const delDate = o.delivery_date ? `<span class="oc-delivery">📅 ${fmtDate(o.delivery_date)}</span>` : '';
+    const advanceBtn = ns ? `<button class="oc-advance-btn" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ Advance to ${ns}</button>` : '<div style="height:44px"></div>';
     return `<div class="order-card" onclick="openDrawer('${o.id}')">
       <div class="oc-top">
         <div>
-          <div class="oc-cust">${o.customer||'—'}</div>
+          <div class="oc-cust" style="font-size:15px">${o.customer||'—'}</div>
           <div class="oc-po">${o.po_number||'—'} <span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">${getOrderFY(o)}</span>${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge" style="margin-left:3px">↕ CF</span>':''}</div>
+          ${delDate}
         </div>
-        <span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span>
+        <span class="badge ${si.cls}" style="font-size:12px"><span class="bdot ${si.dot}"></span>${si.label}</span>
       </div>
       <div class="oc-desc">${o.description||'—'}</div>
       <div class="oc-row">
-        ${age !== null ? `<span class="age-chip ${age>21?'age-red':age>10?'age-amber':'age-green'}">${age}d in stage</span>` : ''}
+        ${age !== null ? `<span class="age-chip ${age>21?'age-red':age>10?'age-amber':'age-green'}">${age}d</span>` : ''}
         ${delChip}
         ${psBadge}
-        ${qaBtn}
       </div>
+      ${advanceBtn}
     </div>`;
   }).join('') || `<div style="text-align:center;padding:32px;color:var(--t4);font-size:13px">No orders match.</div>`;
 }
@@ -3343,7 +3616,77 @@ document.addEventListener('DOMContentLoaded', () => {
   // Password enter key
   document.getElementById('loginPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') doEmailLogin(); });
   document.getElementById('loginEmail')?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword')?.focus(); });
+
+  // Pull-to-refresh on mobile
+  if (isMobile()) {
+    setupPullToRefresh();
+  }
 });
+
+// Pull-to-refresh functionality
+function setupPullToRefresh() {
+  const main = document.querySelector('.main');
+  if (!main) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isRefreshing = false;
+
+  main.addEventListener('touchstart', (e) => {
+    if (main.scrollTop === 0) {
+      startY = e.touches[0].clientY;
+    }
+  }, false);
+
+  main.addEventListener('touchmove', (e) => {
+    if (main.scrollTop === 0 && startY > 0) {
+      currentY = e.touches[0].clientY;
+      const diff = currentY - startY;
+      if (diff > 0 && diff < 100) {
+        e.preventDefault();
+        const ptr = document.querySelector('.ptr-icon');
+        if (ptr) {
+          ptr.style.opacity = Math.min(diff / 50, 1);
+          ptr.style.transform = `translateX(-50%) rotate(${(diff / 100) * 360}deg)`;
+        }
+      }
+    }
+  }, false);
+
+  main.addEventListener('touchend', (e) => {
+    const diff = currentY - startY;
+    if (diff > 60 && !isRefreshing) {
+      isRefreshing = true;
+      const ptr = document.querySelector('.ptr-icon');
+      if (ptr) ptr.style.opacity = 1;
+
+      // Reload data
+      loadData().then(() => {
+        isRefreshing = false;
+        startY = 0;
+        currentY = 0;
+        const ptr = document.querySelector('.ptr-icon');
+        if (ptr) {
+          ptr.style.opacity = 0;
+          ptr.style.transform = 'translateX(-50%) rotate(0deg)';
+        }
+        toast('Refreshed', 'info');
+      }).catch(() => {
+        isRefreshing = false;
+        startY = 0;
+        currentY = 0;
+      });
+    } else {
+      startY = 0;
+      currentY = 0;
+      const ptr = document.querySelector('.ptr-icon');
+      if (ptr) {
+        ptr.style.opacity = 0;
+        ptr.style.transform = 'translateX(-50%) rotate(0deg)';
+      }
+    }
+  }, false);
+}
 
 /*============================
   AUTO LOGIN
@@ -3839,6 +4182,67 @@ function getEnqKPIs() {
   const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && !['won','lost'].includes(e.status));
   return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: followups.length };
 }
+
+/*============================
+  MOBILE BOTTOM NAVIGATION SETUP
+============================*/
+function initBottomNav() {
+  if (!isMobile()) return;
+  const nav = document.querySelector('.bottom-nav');
+  if (!nav) return;
+
+  // Update active nav item based on current page
+  const pages = ['dash', 'orders', 'enquiries'];
+  pages.forEach(p => {
+    const item = document.querySelector(`[data-page="${p}"]`);
+    if (!item) return;
+    const isActive = document.getElementById(`page-${p}`)?.classList.contains('active');
+    item.classList.toggle('active', isActive);
+  });
+}
+
+// Show bottom nav on mobile
+window.addEventListener('resize', () => {
+  const nav = document.querySelector('.bottom-nav');
+  const fab = document.querySelector('.bottom-nav-fab');
+  if (nav && fab) {
+    const isMob = window.innerWidth <= 768;
+    nav.classList.toggle('show', isMob);
+    fab.classList.toggle('show', isMob);
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize bottom nav visibility on load
+  const nav = document.querySelector('.bottom-nav');
+  const fab = document.querySelector('.bottom-nav-fab');
+  if (nav && fab && isMobile()) {
+    nav.classList.add('show');
+    fab.classList.add('show');
+  }
+});
 </script>
+
+<!-- BOTTOM NAVIGATION BAR (Mobile) -->
+<div class="bottom-nav">
+  <button class="bottom-nav-item" data-page="dash" onclick="showPage('dash',null);initBottomNav()">
+    <div class="bottom-nav-item-icon">📊</div>
+    <div>Dashboard</div>
+  </button>
+  <button class="bottom-nav-item" data-page="orders" onclick="showPage('orders',null);initBottomNav()">
+    <div class="bottom-nav-item-icon">📦</div>
+    <div>Orders</div>
+  </button>
+  <button class="bottom-nav-item" data-page="enquiries" onclick="showPage('enquiries',null);initBottomNav()">
+    <div class="bottom-nav-item-icon">💬</div>
+    <div>Enquiries</div>
+  </button>
+</div>
+
+<!-- FLOATING ACTION BUTTON (Mobile) -->
+<button class="bottom-nav-fab" onclick="openQuickAdd()" title="New Order">
+  <span style="font-size:28px">+</span>
+</button>
+
 </body>
 </html>
