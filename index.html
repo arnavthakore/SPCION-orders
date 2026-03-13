@@ -563,6 +563,59 @@ td:first-child{padding-left:14px}
   .d-ft{flex-wrap:wrap;gap:6px}
   .d-ft .btn{font-size:11px;padding:7px 10px}
 }
+
+/*============================
+  QUICK-ADD MODAL
+============================*/
+#quickAddModal .modal-box{max-width:460px}
+.qa-modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.qa-hint{font-size:11px;color:var(--t3);background:var(--bg);border-radius:var(--r);padding:8px 12px;margin-bottom:4px;border-left:3px solid var(--blue)}
+
+/*============================
+  STAGE STEPPER (drawer top)
+============================*/
+.stage-stepper{padding:14px 20px 0;flex-shrink:0;border-bottom:1px solid var(--bdr);background:var(--white)}
+.stage-stepper-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--t4);margin-bottom:8px}
+.stage-stepper-track{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.stage-stepper-track::-webkit-scrollbar{display:none}
+.ss-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:52px;cursor:pointer;position:relative;flex-shrink:0}
+.ss-step:not(:last-child)::after{content:'';position:absolute;top:12px;left:calc(50% + 14px);width:calc(100% - 28px);height:2px;background:var(--bdr);z-index:0}
+.ss-step.done:not(:last-child)::after{background:var(--green)}
+.ss-step.current:not(:last-child)::after{background:var(--bdr)}
+.ss-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;border:2px solid var(--bdr);background:var(--white);color:var(--t4);z-index:1;transition:all .15s;position:relative}
+.ss-step.done .ss-dot{background:var(--green);border-color:var(--green);color:#fff}
+.ss-step.current .ss-dot{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 0 0 3px var(--blue-md)}
+.ss-step:hover:not(.current) .ss-dot{border-color:var(--blue-md);background:var(--blue-lt);color:var(--blue)}
+.ss-lbl{font-size:8.5px;color:var(--t4);font-weight:500;text-align:center;white-space:nowrap;max-width:52px;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.ss-step.done .ss-lbl{color:var(--green)}
+.ss-step.current .ss-lbl{color:var(--blue);font-weight:700}
+.ss-step:hover:not(.current) .ss-lbl{color:var(--blue)}
+.ss-hold{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid var(--bdr2);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;color:var(--t3);background:var(--white);transition:all .15s;margin-left:8px;flex-shrink:0;margin-bottom:12px}
+.ss-hold:hover{border-color:var(--red);color:var(--red);background:var(--red-lt)}
+.ss-hold.active{border-color:var(--red);color:var(--red);background:var(--red-lt)}
+
+/*============================
+  INLINE EDITING in drawer
+============================*/
+.irow{position:relative}
+.irow:hover .ie-btn{opacity:1}
+.ie-btn{opacity:0;position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-md);transition:opacity .12s;line-height:1}
+.ie-input{width:100%;border:1.5px solid var(--blue);border-radius:var(--r);padding:4px 7px;font-family:var(--font);font-size:12px;color:var(--t1);background:var(--white);outline:none;margin-top:2px}
+.ie-input:focus{box-shadow:0 0 0 3px rgba(26,86,219,.1)}
+.ie-row{display:flex;gap:5px;margin-top:4px}
+.ie-save{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:var(--blue);color:#fff}
+.ie-save:hover{background:var(--blue-h)}
+.ie-cancel{padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;border:1.5px solid var(--bdr2);cursor:pointer;background:var(--white);color:var(--t3)}
+.ie-cancel:hover{background:var(--bg)}
+.irow.editing{background:var(--blue-lt);border-radius:var(--r)}
+
+/*============================
+  COMPLETENESS DOT in table
+============================*/
+.comp-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.comp-green{background:var(--green)}
+.comp-amber{background:var(--amber)}
+.comp-red{background:var(--red)}
 </style>
 </head>
 <body>
@@ -666,7 +719,7 @@ td:first-child{padding-left:14px}
     <div class="role-badge" id="roleBadge">👔 Management</div>
     <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
     <button class="btn btn-ghost btn-sm" onclick="showPage('archived',null)">🗄 Archive</button>
-    <button class="btn btn-blue btn-sm" id="btn-new-order" onclick="openNewModal()">+ New Order</button>
+    <button class="btn btn-blue btn-sm" id="btn-new-order" onclick="openQuickAdd()">+ New Order</button>
     <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:1px solid var(--teal)" id="btn-new-enq" onclick="openNewEnqModal()">+ Enquiry</button>
     <button class="btn btn-sm" style="background:var(--c-enq-new-lt);color:var(--c-enq-new);border:1.5px solid var(--c-enq-new);font-weight:700" id="btn-new-enq" onclick="openNewEnquiry()">+ Enquiry</button>
     <button class="btn btn-sm" style="background:var(--bg2);color:var(--t3);border:1px solid var(--bdr)" onclick="doLogout()">Sign Out</button>
@@ -777,7 +830,7 @@ td:first-child{padding-left:14px}
     <div class="pg-actions">
       <button class="btn btn-ghost btn-sm" onclick="clearFilter()">✕ Clear Filter</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
-      <button class="btn btn-blue btn-sm" id="btn-new-order2" onclick="openNewModal()">+ New Order</button>
+      <button class="btn btn-blue btn-sm" id="btn-new-order2" onclick="openQuickAdd()">+ New Order</button>
     </div>
   </div>
   <!-- Smart Filter Chips -->
@@ -1095,8 +1148,16 @@ td:first-child{padding-left:14px}
       <div class="d-sub" id="dSub"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Edit</button>
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Full Edit</button>
       <button class="d-close" onclick="closeDrawer()">✕</button>
+    </div>
+  </div>
+  <!-- STAGE STEPPER — always visible -->
+  <div class="stage-stepper" id="stageStepper">
+    <div class="stage-stepper-label">Production stage — click to advance</div>
+    <div style="display:flex;align-items:center">
+      <div class="stage-stepper-track" id="stepperTrack"></div>
+      <button class="ss-hold" id="ssHoldBtn" onclick="updateStageFromDrawer('On Hold')">⚠ Hold</button>
     </div>
   </div>
   <div class="dtabs">
@@ -1116,6 +1177,64 @@ td:first-child{padding-left:14px}
 </div>
 
 <!-- ORDER MODAL — NEW / EDIT -->
+<!-- ====== QUICK-ADD ORDER MODAL ====== -->
+<div class="modal" id="quickAddModal">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-hd">
+      <div class="modal-title">+ New Order</div>
+      <button class="d-close" onclick="closeQuickAdd()">✕</button>
+    </div>
+    <div class="qa-modal-body">
+      <div class="qa-hint">Enter the 5 key details — everything else can be filled later directly in the order.</div>
+      <div class="fg">
+        <label class="flbl">Customer <span style="color:var(--red)">*</span></label>
+        <input class="finput" id="qa_customer" placeholder="e.g. Afcons Infrastructure" autocomplete="off">
+      </div>
+      <div class="fg">
+        <label class="flbl">Description <span style="color:var(--red)">*</span></label>
+        <input class="finput" id="qa_description" placeholder="e.g. Tunnel Ventilation System — Package B">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg">
+          <label class="flbl">PO Number</label>
+          <input class="finput" id="qa_po_number" placeholder="e.g. AFN/2526/041" oninput="qaCheckDup()">
+        </div>
+        <div class="fg">
+          <label class="flbl">PO Date</label>
+          <input class="finput" type="date" id="qa_po_date">
+        </div>
+      </div>
+      <div class="dup-warn" id="qaDupWarn">⚠ A PO with this number already exists — check before saving.</div>
+      <div class="fg">
+        <label class="flbl">Order Amount (₹)</label>
+        <input class="finput" id="qa_order_amount" placeholder="e.g. 4500000" type="number">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg">
+          <label class="flbl">Order Type</label>
+          <select class="finput" id="qa_order_type">
+            <option value="manufactured">Manufactured</option>
+            <option value="traded">Traded / Supply</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="flbl">Initial Stage</label>
+          <select class="finput" id="qa_status">
+            <option value="Design">Design / Engg</option>
+            <option value="Raw Material">Raw Material</option>
+            <option value="Fabrication">Fabrication</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeQuickAdd()">Cancel</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickAdd();openNewModal()" style="color:var(--t3)">Full Form →</button>
+      <button class="btn btn-blue" id="qaSaveBtn" onclick="saveQuickOrder()">Create Order →</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal" id="orderModal">
 <div class="modal-box">
   <div class="modal-hd">
@@ -2284,7 +2403,7 @@ function renderTable() {
     return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}${isCF?' cf-row':''}">
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" ${isSelected?'checked':''} onchange="toggleRowSelect('${o.id}',this)"></td>
       <td class="td-sl">${o.sl||'—'}</td>
-      <td class="td-cust" title="${o.customer||''}">${o.customer||'—'}</td>
+      <td class="td-cust" title="${o.customer||''}"><span style="display:inline-flex;align-items:center;gap:5px">${(()=>{const cf=['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];const fp=cf.filter(f=>o[f]!==null&&o[f]!==undefined&&o[f]!=='').length;const p=Math.round(fp/cf.length*100);return `<span class="comp-dot ${p>=80?'comp-green':p>=40?'comp-amber':'comp-red'}" title="Completeness: ${p}%"></span>`;})()} ${o.customer||'—'}</span></td>
       <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
       <td class="td-desc" title="${o.description||''}">${o.description||'—'}</td>
       <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
@@ -2435,6 +2554,139 @@ function renderArchiveTable() {
 /*============================
   DRAWER
 ============================*/
+/*============================
+  INLINE EDIT HELPERS
+============================*/
+function ieRow(orderId, field, label, displayVal, inputType, extraCls, rawVal, wrapCls) {
+  const cls = wrapCls ? ` class="irow ${wrapCls}-row"` : ' class="irow"';
+  return `<div${cls}>${ieRowInner(orderId, field, label, displayVal, inputType, extraCls, rawVal)}</div>`;
+}
+function ieRowInner(orderId, field, label, displayVal, inputType, extraCls, rawVal) {
+  const display = (displayVal === null || displayVal === undefined || displayVal === '') ? '—' : displayVal;
+  const raw = rawVal !== undefined ? rawVal : (displayVal || '');
+  const monoClass = extraCls === 'mono' ? ' mono' : '';
+  const colorClass = extraCls && extraCls !== 'mono' ? ' ' + extraCls : '';
+  return `
+    <div class="ilbl">${label}</div>
+    <div class="ival${monoClass}${colorClass}" id="ie-display-${orderId}-${field}">${display}</div>
+    <span class="ie-btn" onclick="startInlineEdit('${orderId}','${field}','${inputType}',this)" title="Edit">✎</span>
+    <div id="ie-edit-${orderId}-${field}" style="display:none">
+      <input class="ie-input" type="${inputType === 'number' ? 'number' : inputType === 'date' ? 'date' : 'text'}"
+        value="${String(raw).replace(/"/g,'&quot;')}"
+        onkeydown="ieKeydown(event,'${orderId}','${field}','${inputType}')"
+        id="ie-inp-${orderId}-${field}">
+      <div class="ie-row">
+        <button class="ie-save" onclick="saveInlineEdit('${orderId}','${field}','${inputType}')">Save</button>
+        <button class="ie-cancel" onclick="cancelInlineEdit('${orderId}','${field}')">Cancel</button>
+      </div>
+    </div>`;
+}
+function startInlineEdit(orderId, field, inputType, btn) {
+  const row = btn.closest('.irow');
+  row.classList.add('editing');
+  document.getElementById('ie-display-' + orderId + '-' + field).style.display = 'none';
+  btn.style.display = 'none';
+  const editDiv = document.getElementById('ie-edit-' + orderId + '-' + field);
+  editDiv.style.display = 'block';
+  const inp = document.getElementById('ie-inp-' + orderId + '-' + field);
+  if (inp) { inp.focus(); inp.select(); }
+}
+function cancelInlineEdit(orderId, field) {
+  const editDiv = document.getElementById('ie-edit-' + orderId + '-' + field);
+  if (editDiv) editDiv.style.display = 'none';
+  const display = document.getElementById('ie-display-' + orderId + '-' + field);
+  if (display) display.style.display = '';
+  const row = editDiv?.closest('.irow');
+  if (row) { row.classList.remove('editing'); const btn = row.querySelector('.ie-btn'); if (btn) btn.style.display = ''; }
+}
+function ieKeydown(e, orderId, field, inputType) {
+  if (e.key === 'Enter') saveInlineEdit(orderId, field, inputType);
+  if (e.key === 'Escape') cancelInlineEdit(orderId, field);
+}
+async function saveInlineEdit(orderId, field, inputType) {
+  const inp = document.getElementById('ie-inp-' + orderId + '-' + field);
+  if (!inp) return;
+  let val = inp.value.trim();
+  const numericFields = ['order_amount','inv_amount','pm_advance_pct','pm_advance_received',
+    'pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received',
+    'pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','raw_material_received'];
+  let dbVal;
+  if (numericFields.includes(field)) dbVal = val === '' ? null : parseFloat(val);
+  else dbVal = val || null;
+
+  try {
+    const { error } = await SB.from('orders').update({ [field]: dbVal }).eq('id', orderId);
+    if (error) throw error;
+    // Update local cache
+    const o = allOrders.find(x => x.id === orderId);
+    if (o) o[field] = dbVal;
+    toast('Saved', 'info');
+    // Re-render drawer with updated data
+    const updated = allOrders.find(x => x.id === orderId);
+    if (updated) renderDrawer(updated);
+    renderTable();
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'err');
+    cancelInlineEdit(orderId, field);
+  }
+}
+
+/*============================
+  QUICK-ADD MODAL
+============================*/
+function openQuickAdd() {
+  ['qa_customer','qa_description','qa_po_number','qa_order_amount'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const d = document.getElementById('qa_po_date'); if (d) d.value = '';
+  const ot = document.getElementById('qa_order_type'); if (ot) ot.value = 'manufactured';
+  const st = document.getElementById('qa_status'); if (st) st.value = 'Design';
+  document.getElementById('qaDupWarn').style.display = 'none';
+  document.getElementById('quickAddModal').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('qa_customer'); if (el) el.focus(); }, 100);
+}
+function closeQuickAdd() {
+  document.getElementById('quickAddModal').classList.remove('open');
+}
+function qaCheckDup() {
+  const po = document.getElementById('qa_po_number')?.value?.trim();
+  if (!po) { document.getElementById('qaDupWarn').style.display = 'none'; return; }
+  const dup = allOrders.find(o => o.po_number === po);
+  document.getElementById('qaDupWarn').style.display = dup ? 'block' : 'none';
+}
+async function saveQuickOrder() {
+  const customer = document.getElementById('qa_customer')?.value?.trim();
+  const description = document.getElementById('qa_description')?.value?.trim();
+  if (!customer) { toast('Customer name is required', 'err'); document.getElementById('qa_customer').focus(); return; }
+  if (!description) { toast('Description is required', 'err'); document.getElementById('qa_description').focus(); return; }
+  const data = {
+    customer,
+    description,
+    po_number: document.getElementById('qa_po_number')?.value?.trim() || null,
+    po_date: document.getElementById('qa_po_date')?.value || null,
+    order_amount: parseFloat(document.getElementById('qa_order_amount')?.value) || null,
+    order_type: document.getElementById('qa_order_type')?.value || 'manufactured',
+    status: document.getElementById('qa_status')?.value || 'Design',
+    fy_tag: currentFY(),
+  };
+  const btn = document.getElementById('qaSaveBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const { data: inserted, error } = await SB.from('orders').insert(data).select().single();
+    if (error) throw error;
+    await addRemarkEntry(inserted.id, 'Order created', currentRole);
+    toast('Order created — click it to fill in details', 'info');
+    closeQuickAdd();
+    await loadData();
+    // Auto-open drawer for the new order
+    setTimeout(() => openDrawer(inserted.id), 400);
+  } catch(e) {
+    toast('Save failed: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Order →';
+  }
+}
+
 function openDrawer(id) {
   selectedId = id;
   const o = allOrders.find(x => x.id === id);
@@ -2465,35 +2717,48 @@ function renderDrawer(o) {
   const idx = stageIdx(o.status);
   document.getElementById('dTitle').textContent = (o.customer || 'Order') + (o.po_number ? ' · ' + o.po_number : '');
 
+  // ── STAGE STEPPER ──
+  const track = document.getElementById('stepperTrack');
+  const holdBtn = document.getElementById('ssHoldBtn');
+  if (track) {
+    track.innerHTML = STAGES.map((s, i) => {
+      const cls = i < idx ? 'done' : i === idx ? 'current' : '';
+      return `<div class="ss-step ${cls}" onclick="updateStageFromDrawer('${s.key}')" title="Set to ${s.label}">
+        <div class="ss-dot">${i < idx ? '✓' : s.icon}</div>
+        <div class="ss-lbl">${s.label.replace('Raw Material','Raw Mat').replace('Fabrication','Fab').replace('Assembly','Asm').replace('QA/Testing','QA').replace('Dispatch Ready','Dispatch').replace('Payment Received','Pay Rec')}</div>
+      </div>`;
+    }).join('');
+  }
+  if (holdBtn) holdBtn.className = 'ss-hold' + (o.status === 'On Hold' ? ' active' : '');
+
+  // ── COMPLETENESS score ──
+  const compFields = ['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];
+  const filled = compFields.filter(f => o[f] !== null && o[f] !== undefined && o[f] !== '').length;
+  const compPct = Math.round(filled / compFields.length * 100);
+  const compCls = compPct >= 80 ? 'comp-green' : compPct >= 40 ? 'comp-amber' : 'comp-red';
+  const compLabel = compPct >= 80 ? 'Complete' : compPct >= 40 ? 'Partial' : 'Incomplete';
+  document.getElementById('dSub').innerHTML = `<span class="comp-dot ${compCls}" title="Order completeness: ${compPct}%"></span> <span style="font-size:11px;color:var(--t3)">${compLabel} · ${compPct}%</span>`;
+
   // ── OVERVIEW ──
   const age = stageAgeDays(o);
   const delay = deliveryDelay(o);
   document.getElementById('dp-overview').innerHTML = `
     <div class="dsec">
-      <div class="dsec-t">Status</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <span class="badge ${si.cls}" style="font-size:12px;padding:4px 12px"><span class="bdot ${si.dot}"></span>${si.label}</span>
-        ${age !== null ? `<span class="age-chip ${age>21?'age-red':age>10?'age-amber':'age-green'}">${age}d in stage</span>` : ''}
-        ${o.archived ? '<span class="archived-tag">🗄 Archived</span>' : ''}
-      </div>
-      <!-- Stage Progress Bar -->
-      <div class="stage-progress">${STAGES.map((s,i) => `<div class="sp-dot${i<idx?' done':i===idx?' current':''}"></div>`).join('')}</div>
-    </div>
-    <div class="dsec">
-      <div class="dsec-t">Order Details</div>
+      <div class="dsec-t">Order Details <span style="font-size:9.5px;font-weight:400;color:var(--t4);margin-left:4px">click any value to edit</span></div>
       <div class="igrid">
-        <div class="irow"><div class="ilbl">Customer</div><div class="ival">${o.customer||'—'}</div></div>
-        <div class="irow"><div class="ilbl">PO Number</div><div class="ival mono">${o.po_number||'—'}</div></div>
-        <div class="irow"><div class="ilbl">PO Date</div><div class="ival">${fmtDate(o.po_date)}</div></div>
-        <div class="irow"><div class="ilbl">Delivery Date</div><div class="ival ${delay!==null&&delay>0?'red':''}">${fmtDate(o.delivery_date)}${delay!==null?' · '+(delay>0?'+'+delay+'d overdue':Math.abs(delay)+'d left'):''}</div></div>
-        <div class="irow"><div class="ilbl">Ex Works</div><div class="ival">${o.ex_works||'—'}</div></div>
-        <div class="irow"><div class="ilbl">Order Amount</div><div class="ival mono finance-only">${fmtCr(o.order_amount)}</div></div>
-        <div class="irow full"><div class="ilbl">Description</div><div class="ival">${o.description||'—'}</div></div>
-        <div class="irow full"><div class="ilbl">Notes</div><div class="ival">${o.notes||'—'}</div></div>
+        ${ieRow(o.id,'customer','Customer',o.customer,'text')}
+        ${ieRow(o.id,'po_number','PO Number',o.po_number,'text','mono')}
+        ${ieRow(o.id,'po_date','PO Date',fmtDate(o.po_date),'date','',(o.po_date||''))}
+        ${ieRow(o.id,'delivery_date','Delivery Date',fmtDate(o.delivery_date)+(delay!==null?' · '+(delay>0?'<span style="color:var(--red)">+'+delay+'d overdue</span>':'<span style="color:var(--green)">'+Math.abs(delay)+'d left</span>'):''),'date',delay!==null&&delay>0?'red':'',(o.delivery_date||''))}
+        ${ieRow(o.id,'ex_works','Ex Works',o.ex_works,'text')}
+        ${['management','finance'].includes(currentRole) ? ieRow(o.id,'order_amount','Order Amount (₹)',fmtCr(o.order_amount),'number','',(o.order_amount||'')) : ''}
+        <div class="irow full">${ieRowInner(o.id,'description','Description',o.description,'text')}</div>
+        <div class="irow full">${ieRowInner(o.id,'notes','Notes',o.notes,'text')}</div>
         <div class="irow"><div class="ilbl">Financial Year</div><div class="ival"><span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${getOrderFY(o)}</span></div></div>
         <div class="irow"><div class="ilbl">Carry Forward</div><div class="ival">${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge">↕ Yes — spans two FYs</span>':'<span style="color:var(--t4);font-size:12px">No</span>'}</div></div>
       </div>
     </div>
+    ${o.archived ? '<div style="margin-top:8px"><span class="archived-tag">🗄 Archived</span></div>' : ''}
   `;
 
   // ── PRODUCTION ──
@@ -2517,40 +2782,31 @@ function renderDrawer(o) {
     designTargetHtml = '<div class="irow"><div class="ilbl">Design Target' + tgtBadge + '</div><div class="ival mono green">' + tgtStr + '</div></div>';
   }
   const milestones = isTraded ? [
-    ['Design Started',o.design_start],['Design Approved',o.design_done],
-    ['Supplier',o.supplier_name],['Supplier PO No.',o.supplier_po_number],
-    ['Supplier PO Date',o.supplier_po_date],['Delivery Commitment',o.supplier_delivery_commitment],
-    ['Supplier Invoice',o.supplier_inv_number],['Dispatched from Supplier',o.supplier_dispatch_date],
-    ['Delivered to Customer',o.delivered_date],['Payment Received',o.payment_received_date],
+    ['Design Started',o.design_start,'design_start'],['Design Approved',o.design_done,'design_done'],
+    ['Supplier',o.supplier_name,null],['Supplier PO No.',o.supplier_po_number,null],
+    ['Supplier PO Date',o.supplier_po_date,'supplier_po_date'],['Delivery Commitment',o.supplier_delivery_commitment,'supplier_delivery_commitment'],
+    ['Supplier Invoice',o.supplier_inv_number,null],['Dispatched from Supplier',o.supplier_dispatch_date,'supplier_dispatch_date'],
+    ['Delivered to Customer',o.delivered_date,'delivered_date'],['Payment Received',o.payment_received_date,'payment_received_date'],
   ] : [
-    ['Design Started',o.design_start],['Design Approved',o.design_done],
-    ['RM First Order',o.raw_material_date],['RM % Ordered',o.raw_material_received ? o.raw_material_received+'%' : null],
-    ['Fabrication Started',o.fabrication_start],['Fabrication Complete',o.fabrication_done],
-    ['Assembly Started',o.assembly_start],['Assembly Complete',o.assembly_done],
-    ['QA Started',o.qa_start],['QA Cleared',o.qa_done],
-    ['FAT Internal Started',o.fat_internal_start],['FAT Internal Cleared',o.fat_internal_done],
-    ['FAT External Started',o.fat_external_start],['FAT External Cleared',o.fat_external_done],
-    ['Dispatch Ready',o.dispatch_ready_date],['Shipped',o.shipped_date],
-    ['Delivered',o.delivered_date],['Payment Received',o.payment_received_date],
+    ['Design Started',o.design_start,'design_start'],['Design Approved',o.design_done,'design_done'],
+    ['RM First Order',o.raw_material_date,'raw_material_date'],['RM % Ordered',o.raw_material_received ? o.raw_material_received+'%' : null,null],
+    ['Fabrication Started',o.fabrication_start,'fabrication_start'],['Fabrication Complete',o.fabrication_done,'fabrication_done'],
+    ['Assembly Started',o.assembly_start,'assembly_start'],['Assembly Complete',o.assembly_done,'assembly_done'],
+    ['QA Started',o.qa_start,'qa_start'],['QA Cleared',o.qa_done,'qa_done'],
+    ['FAT Internal Started',o.fat_internal_start,'fat_internal_start'],['FAT Internal Cleared',o.fat_internal_done,'fat_internal_done'],
+    ['FAT External Started',o.fat_external_start,'fat_external_start'],['FAT External Cleared',o.fat_external_done,'fat_external_done'],
+    ['Dispatch Ready',o.dispatch_ready_date,'dispatch_ready_date'],['Shipped',o.shipped_date,'shipped_date'],
+    ['Delivered',o.delivered_date,'delivered_date'],['Payment Received',o.payment_received_date,'payment_received_date'],
   ];
   document.getElementById('dp-production').innerHTML = `
     <div class="dsec">
-      <div class="dsec-t">Milestone Dates</div>
-      <div class="igrid">${designTargetHtml + milestones.map(([l,v]) => `<div class="irow"><div class="ilbl">${l}</div><div class="ival mono ${v?'green':''}">${v?fmtDate(v):'—'}</div></div>`).join('')}</div>
+      <div class="dsec-t">Milestone Dates <span style="font-size:9.5px;font-weight:400;color:var(--t4);margin-left:4px">click any value to edit</span></div>
+      <div class="igrid">${designTargetHtml + milestones.map(([l,v,fk]) => {
+        if (!fk) return '<div class="irow"><div class="ilbl">'+l+'</div><div class="ival mono '+(v?'green':'')+'">'+( v ? (typeof v==='string'&&v.match(/^\d{4}-\d{2}-\d{2}$/)?fmtDate(v):v) : '\u2014')+'</div></div>';
+        return ieRow(o.id, fk, l, v ? fmtDate(v) : '', 'date', v ? 'green' : '', v || '');
+      }).join('')}</div>
     </div>
-    <div class="dsec">
-      <div class="dsec-t">Advance Stage</div>
-      <div class="stage-btns">
-        ${STAGES.map(s => {
-          const isCur = s.key === o.status;
-          const isDone = stageIdx(s.key) < idx;
-          return `<button class="stage-btn" style="background:${isCur?'var(--blue)':'var(--bg)'};color:${isCur?'#fff':'var(--t3)'};border-color:${isCur?'var(--blue)':'var(--bdr2)'}" onclick="updateStageFromDrawer('${s.key}')">${s.icon} ${s.label}</button>`;
-        }).join('')}
-        <button class="stage-btn" style="background:${o.status==='On Hold'?'var(--red)':'var(--bg)'};color:${o.status==='On Hold'?'#fff':'var(--t3)'};border-color:${o.status==='On Hold'?'var(--red)':'var(--bdr2)'}" onclick="updateStageFromDrawer('On Hold')">⚠ On Hold</button>
-      </div>
-    </div>
-  `;
-
+  `
   // ── PAYMENT ──
   const rec = totalReceived(o);
   const amt = o.order_amount || 0;
@@ -2572,22 +2828,22 @@ function renderDrawer(o) {
       </div>
     </div>
     <div class="dsec">
-      <div class="dsec-t">Invoice</div>
+      <div class="dsec-t">Invoice <span style="font-size:9.5px;font-weight:400;color:var(--t4);margin-left:4px">click any value to edit</span></div>
       <div class="igrid">
-        <div class="irow"><div class="ilbl">Invoice Number</div><div class="ival mono">${o.inv_number||'—'}</div></div>
-        <div class="irow"><div class="ilbl">Invoice Date</div><div class="ival">${fmtDate(o.inv_date)}</div></div>
-        <div class="irow"><div class="ilbl">Invoice Amount</div><div class="ival mono">${fmtCr(o.inv_amount)}</div></div>
-        <div class="irow"><div class="ilbl">Payment Terms</div><div class="ival">${o.payment_terms||'—'}</div></div>
+        ${ieRow(o.id,'inv_number','Invoice Number',o.inv_number,'text','mono')}
+        ${ieRow(o.id,'inv_date','Invoice Date',fmtDate(o.inv_date),'date','',(o.inv_date||''))}
+        ${ieRow(o.id,'inv_amount','Invoice Amount (₹)',o.inv_amount,'number','mono',(o.inv_amount||''))}
+        ${ieRow(o.id,'payment_terms','Payment Terms',o.payment_terms,'text')}
       </div>
     </div>
     <div class="dsec">
-      <div class="dsec-t">Payment Milestones Received</div>
+      <div class="dsec-t">Payment Milestones Received <span style="font-size:9.5px;font-weight:400;color:var(--t4);margin-left:4px">click to edit</span></div>
       <div class="igrid">
-        <div class="irow"><div class="ilbl">Advance ${o.pm_advance_pct?'('+o.pm_advance_pct+'%)':''}</div><div class="ival mono ${o.pm_advance_received?'green':''}">${fmtCr(o.pm_advance_received)}</div></div>
-        <div class="irow"><div class="ilbl">Against Invoice</div><div class="ival mono ${o.pm_invoice_received?'green':''}">${fmtCr(o.pm_invoice_received)}</div></div>
-        <div class="irow"><div class="ilbl">Against FAT</div><div class="ival mono ${o.pm_fat_received?'green':''}">${fmtCr(o.pm_fat_received)}</div></div>
-        <div class="irow"><div class="ilbl">Against Dispatch</div><div class="ival mono ${o.pm_dispatch_received?'green':''}">${fmtCr(o.pm_dispatch_received)}</div></div>
-        <div class="irow"><div class="ilbl">Against Delivery</div><div class="ival mono ${o.pm_delivery_received?'green':''}">${fmtCr(o.pm_delivery_received)}</div></div>
+        ${ieRow(o.id,'pm_advance_received','Advance'+(o.pm_advance_pct?' ('+o.pm_advance_pct+'%)':''),o.pm_advance_received,'number',o.pm_advance_received?'mono green':'mono',(o.pm_advance_received||''))}
+        ${ieRow(o.id,'pm_invoice_received','Against Invoice',o.pm_invoice_received,'number',o.pm_invoice_received?'mono green':'mono',(o.pm_invoice_received||''))}
+        ${ieRow(o.id,'pm_fat_received','Against FAT',o.pm_fat_received,'number',o.pm_fat_received?'mono green':'mono',(o.pm_fat_received||''))}
+        ${ieRow(o.id,'pm_dispatch_received','Against Dispatch',o.pm_dispatch_received,'number',o.pm_dispatch_received?'mono green':'mono',(o.pm_dispatch_received||''))}
+        ${ieRow(o.id,'pm_delivery_received','Against Delivery',o.pm_delivery_received,'number',o.pm_delivery_received?'mono green':'mono',(o.pm_delivery_received||''))}
         <div class="irow" style="border:1px solid var(--bdr2)"><div class="ilbl">Total Received</div><div class="ival mono green">${fmtCr(rec)}</div></div>
       </div>
     </div>
