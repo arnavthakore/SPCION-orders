@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>SPICON · Order Management System</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/ss2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -227,20 +227,11 @@ td:first-child{padding-left:14px}
 .age-red{background:var(--red-lt);color:var(--red)}
 .age-gray{background:var(--bg2);color:var(--t4)}
 /* QUICK ACTIONS */
-.stage-shift-btns{display:flex;gap:3px;align-items:center}
-.qa-btn{padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid;cursor:pointer;transition:all .12s;font-family:var(--font);line-height:1.4;white-space:nowrap}
+.qa-btn{padding:3px 8px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid;cursor:pointer;transition:all .12s;font-family:var(--font);line-height:1.4}
 .qa-btn:hover{transform:translateY(-1px)}
 .qa-next{background:var(--blue-lt);color:var(--blue);border-color:var(--blue-md)}
 .qa-next:hover{background:var(--blue);color:#fff}
-.qa-prev{background:var(--bg2);color:var(--t3);border-color:var(--bdr)}
-.qa-prev:hover{background:var(--amber-lt);color:var(--amber);border-color:var(--amber-md)}
 .qa-hold{background:var(--c-hold-lt);color:var(--c-hold);border-color:var(--red-md)}
-/* ENQUIRY PIPELINE */
-.enq-pipeline{display:flex;gap:8px;padding:10px 0}
-.enq-pipe-col{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:50px;transition:all .15s}
-.enq-pipe-col:hover{transform:translateY(-1px)}
-.enq-pipe-label{font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
-.enq-pipe-ct{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1)}
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
 .bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -401,6 +392,17 @@ td:first-child{padding-left:14px}
 .lost-reason-opt{padding:10px 14px;border-radius:var(--r);border:1.5px solid var(--bdr);cursor:pointer;margin-bottom:7px;font-size:13px;transition:all .12s}
 .lost-reason-opt:hover{border-color:var(--blue);background:var(--blue-lt)}
 .lost-reason-opt.sel{border-color:var(--red);background:var(--red-lt);color:var(--red);font-weight:600}
+
+/* Stage shift quick buttons */
+.stage-shift-btns{display:inline-flex;gap:4px;margin-left:6px}
+.qa-btn{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--white);color:var(--t3);transition:all .12s;white-space:nowrap}
+.qa-btn:hover{background:var(--blue-lt);color:var(--blue);border-color:var(--blue-md)}
+.qa-prev{color:var(--amber)}
+.qa-prev:hover{background:var(--amber-lt);color:var(--amber);border-color:var(--amber-md)}
+.qa-next{color:var(--green)}
+.qa-next:hover{background:var(--green-lt);color:var(--green);border-color:var(--green-md)}
+/* Delete button - management only */
+body:not(.role-management) .mgmt-delete-btn{display:none!important}
 
 /*═══════════════════════════════════════════
   FINANCIAL YEAR STYLES
@@ -625,60 +627,6 @@ td:first-child{padding-left:14px}
 .comp-green{background:var(--green)}
 .comp-amber{background:var(--amber)}
 .comp-red{background:var(--red)}
-
-/*============================
-  STAGE PROGRESS BAR
-============================*/
-.stage-progress-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:4px;overflow:hidden;width:100%}
-.stage-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s ease}
-
-/*============================
-  IMPROVED MOBILE CARDS
-============================*/
-.order-card{display:flex;flex-direction:column;min-height:200px}
-.oc-row{flex-grow:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px}
-.oc-advance-btn{width:100%;padding:12px 16px;border:none;border-radius:var(--r);background:var(--blue);color:#fff;font-weight:600;font-size:12px;cursor:pointer;transition:all .15s;min-height:44px;display:flex;align-items:center;justify-content:center;gap:4px;margin-top:auto}
-.oc-advance-btn:active{transform:scale(.98)}
-.oc-advance-btn:hover{background:var(--blue-h)}
-
-/*============================
-  UNDO TOAST
-============================*/
-.toast-with-undo{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
-.toast-undo-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:4px 10px;border-radius:4px;font-weight:600;font-size:11px;cursor:pointer;transition:background .15s}
-.toast-undo-btn:hover{background:rgba(255,255,255,.35)}
-
-/*============================
-  PULL-TO-REFRESH
-============================*/
-.ptr-container{position:relative;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.ptr-icon{position:absolute;top:-50px;left:50%;transform:translateX(-50%);font-size:24px;opacity:0;transition:opacity .15s;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
-.ptr-container.ptr-active .ptr-icon{opacity:1;top:-40px}
-
-/*============================
-  BOTTOM NAVIGATION BAR (Mobile)
-============================*/
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;background:#fff;border-top:1px solid var(--bdr);z-index:100;justify-content:space-around;align-items:center;box-shadow:0 -2px 8px rgba(0,0,0,.07)}
-.bottom-nav.show{display:flex}
-.bottom-nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 12px;cursor:pointer;color:var(--t4);font-size:10px;font-weight:600;transition:color .15s;text-decoration:none;flex:1;height:100%;border:none;background:none}
-.bottom-nav-item:hover,.bottom-nav-item.active{color:var(--blue)}
-.bottom-nav-item-icon{font-size:18px}
-.bottom-nav-fab{position:fixed;bottom:70px;right:16px;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;border:none;box-shadow:var(--sh-md);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:24px;transition:all .15s}
-.bottom-nav-fab.show{display:flex}
-.bottom-nav-fab:active{transform:scale(.95)}
-.bottom-nav-fab:hover{box-shadow:var(--sh-lg)}
-
-@media (max-width:768px){
-  .bottom-nav.show{display:flex}
-  .bottom-nav-fab.show{display:flex}
-  .page{padding:14px 14px 74px}
-}
-
-/*============================
-  MOBILE DELIVERY DATE DISPLAY
-============================*/
-.oc-delivery{font-size:11px;color:var(--t3);display:flex;align-items:center;gap:3px}
-
 </style>
 </head>
 <body>
@@ -780,11 +728,10 @@ td:first-child{padding-left:14px}
   </div>
   <div class="hdr-right">
     <div class="role-badge" id="roleBadge">👔 Management</div>
-    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
-    <button class="btn btn-ghost btn-sm" onclick="showPage('archived',null)">🗄 Archive</button>
+    <button class="btn btn-ghost btn-sm hdr-sec-btn" onclick="exportCSV()" title="Export CSV">⬇ Export</button>
+    <button class="btn btn-ghost btn-sm hdr-sec-btn" onclick="showPage('archived',null)" title="View Archive">🗄 Archive</button>
     <button class="btn btn-blue btn-sm" id="btn-new-order" onclick="openQuickAdd()">+ New Order</button>
     <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:1px solid var(--teal)" id="btn-new-enq" onclick="openNewEnqModal()">+ Enquiry</button>
-    <button class="btn btn-sm" style="background:var(--c-enq-new-lt);color:var(--c-enq-new);border:1.5px solid var(--c-enq-new);font-weight:700" id="btn-new-enq" onclick="openNewEnquiry()">+ Enquiry</button>
     <button class="btn btn-sm" style="background:var(--bg2);color:var(--t3);border:1px solid var(--bdr)" onclick="doLogout()">Sign Out</button>
   </div>
 </header>
@@ -843,8 +790,6 @@ td:first-child{padding-left:14px}
 </nav>
 
 <div class="main">
-<!-- Pull-to-refresh icon (mobile) -->
-<div class="ptr-icon" style="display:none">⬇</div>
 
 <!-- ══ DASHBOARD ══ -->
 <div class="page active" id="page-dash">
@@ -893,7 +838,6 @@ td:first-child{padding-left:14px}
     <div><div class="pg-title">All Orders</div><div class="pg-sub" id="ordersSub">Loading…</div></div>
     <div class="pg-actions">
       <button class="btn btn-ghost btn-sm" onclick="clearFilter()">✕ Clear Filter</button>
-      <button class="btn btn-ghost btn-sm" onclick="generateReport()">📊 Report</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
       <button class="btn btn-blue btn-sm" id="btn-new-order2" onclick="openQuickAdd()">+ New Order</button>
     </div>
@@ -970,8 +914,6 @@ td:first-child{padding-left:14px}
       <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:1px solid var(--teal)" onclick="openNewEnqModal()">+ New Enquiry</button>
     </div>
   </div>
-  <!-- Pipeline visualization -->
-  <div id="enqPipelineWrap" style="margin-bottom:14px"></div>
   <!-- Status filter chips -->
   <div class="smart-filters" id="enqStatusChips" style="margin-bottom:12px"></div>
   <div class="tbl-wrap">
@@ -1008,7 +950,10 @@ td:first-child{padding-left:14px}
       <div class="d-title" id="enqDrawerTitle">Enquiry</div>
       <div class="d-sub" id="enqDrawerSub"></div>
     </div>
-    <button class="d-close" onclick="closeEnqDrawer()">✕</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm mgmt-delete-btn" onclick="deleteEnquiry()" style="font-size:11px;color:var(--red)" title="Delete Enquiry (Management only)">🗑 Delete</button>
+      <button class="d-close" onclick="closeEnqDrawer()">✕</button>
+    </div>
   </div>
   <!-- Stage advance bar -->
   <div id="enqStageBar" style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
@@ -1033,6 +978,8 @@ td:first-child{padding-left:14px}
           <div class="fg ffull"><label class="flbl">Equipment / Description</label><input class="finput" id="eq_description"></div>
           <div class="fg"><label class="flbl">Enquiry Date</label><input class="finput" type="date" id="eq_enquiry_date"></div>
           <div class="fg"><label class="flbl">Expected Value (INR)</label><input class="finput" type="number" id="eq_expected_value" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="eq_ex_works" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Value Incl GST (INR)</label><input class="finput" type="number" id="eq_incl_gst" placeholder="0"></div>
           <div class="fg"><label class="flbl">Order Type</label>
             <select class="finput" id="eq_order_type">
               <option value="manufactured">🔧 Manufactured</option>
@@ -1106,11 +1053,6 @@ td:first-child{padding-left:14px}
       </div>
     </div>
 
-    <!-- Delete Enquiry (management only) -->
-    <div class="management-only" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--bdr)">
-      <button class="btn btn-danger btn-sm" onclick="deleteEnquiry()">🗑 Delete Enquiry</button>
-    </div>
-
   </div>
 </div>
 
@@ -1128,6 +1070,8 @@ td:first-child{padding-left:14px}
       <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="enqf_description" placeholder="e.g. 12T Battery Locomotive"></div>
       <div class="fg"><label class="flbl">Enquiry Date *</label><input class="finput" type="date" id="enqf_enquiry_date"></div>
       <div class="fg"><label class="flbl">Expected Value (INR)</label><input class="finput" type="number" id="enqf_expected_value" placeholder="0"></div>
+      <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="enqf_ex_works" placeholder="0"></div>
+      <div class="fg"><label class="flbl">Value Incl GST (INR)</label><input class="finput" type="number" id="enqf_incl_gst" placeholder="0"></div>
       <div class="fg"><label class="flbl">Order Type</label>
         <select class="finput" id="enqf_order_type">
           <option value="manufactured">🔧 Manufactured</option>
@@ -1181,6 +1125,27 @@ td:first-child{padding-left:14px}
 </div>
 </div>
 
+<!-- STAGE SHIFT MODAL -->
+<div class="modal" id="stageShiftModal">
+<div class="modal-box" style="max-width:440px">
+  <div class="modal-hd">
+    <div class="modal-title" id="ssm-title">Stage Change</div>
+    <button class="d-close" onclick="document.getElementById('stageShiftModal').classList.remove('open')">✕</button>
+  </div>
+  <div style="padding:20px 22px">
+    <div id="ssm-info" style="font-size:12px;color:var(--t3);margin-bottom:14px;padding:10px 14px;background:var(--blue-lt);border-radius:var(--r);border:1px solid var(--blue-md)"></div>
+    <div class="fgrid">
+      <div class="fg"><label class="flbl" id="ssm-date-label">Date *</label><input class="finput" type="date" id="ssm-date"></div>
+      <div class="fg full"><label class="flbl">Remark (optional)</label><input class="finput" id="ssm-remark" placeholder="e.g. material procured from vendor X"></div>
+    </div>
+  </div>
+  <div class="modal-ft">
+    <button class="btn btn-ghost" onclick="document.getElementById('stageShiftModal').classList.remove('open')">Cancel</button>
+    <button class="btn btn-blue" style="width:auto;padding:10px 24px" onclick="confirmStageShift()">Confirm</button>
+  </div>
+</div>
+</div>
+
 <!-- CONVERT TO ORDER MODAL -->
 <div class="modal" id="convertModal">
 <div class="modal-box" style="max-width:500px">
@@ -1219,10 +1184,9 @@ td:first-child{padding-left:14px}
       <div class="d-title" id="dTitle">Order</div>
       <div class="d-sub" id="dSub"></div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Edit</button>
-      <button id="btn-archive-order" class="btn btn-ghost btn-sm" onclick="archiveOrder()" style="font-size:11px">📁 Archive</button>
-      <button id="btn-delete-order" class="btn btn-danger btn-sm" onclick="deleteOrder()" style="font-size:11px">🗑 Delete</button>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-ghost btn-sm mgmt-delete-btn" onclick="deleteOrder()" style="font-size:11px;color:var(--red)" title="Delete Order (Management only)">🗑 Delete</button>
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Full Edit</button>
       <button class="d-close" onclick="closeDrawer()">✕</button>
     </div>
   </div>
@@ -1629,7 +1593,10 @@ function prevStage(s) {
   return (i > 0) ? STAGES[i - 1].key : null;
 }
 function shortStageName(s) {
-  return s.replace('Fabrication','Fab').replace('Assembly','Asm').replace('Dispatch Ready','Dispatch').replace('Raw Material','Raw Mat').replace('Payment Received','Pay Rec').replace('QA/Testing','QA');
+  const map = {'Design':'Des','Raw Material':'RM','Fabrication':'Fab','Assembly':'Asm',
+    'QA/Testing':'QA','Dispatch Ready':'Disp','Shipped':'Ship','Delivered':'Del',
+    'Payment Received':'Paid','On Hold':'Hold'};
+  return map[s] || s;
 }
 
 const FFIELDS = ['customer','po_number','po_date','delivery_date','description','order_type','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','raw_material_received','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','fat_internal_start','fat_internal_done','fat_external_start','fat_external_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date','carry_forward','fy_tag','supplier_name','supplier_po_number','supplier_po_date','supplier_delivery_commitment','supplier_inv_number','supplier_inv_amount','supplier_dispatch_date','supplier_payment_date','supplier_payment_amount'];
@@ -1977,9 +1944,12 @@ function getSmartViewOrders(viewKey) {
       return active.filter(o => o.delivery_date && o.delivery_date >= t && o.delivery_date <= ws);
     }
     case 'pending_payment':
+      // Only show payment pending for orders that have reached a payment-relevant stage
+      // (Dispatch Ready or later) — not for newly created orders still in production
+      const PAY_RELEVANT_STAGES = ['Dispatch Ready','Shipped','Delivered','Payment Received'];
       return active.filter(o => {
         const ps = payStatus(o);
-        return ps === 'pending' || ps === 'partial';
+        return (ps === 'pending' || ps === 'partial') && PAY_RELEVANT_STAGES.includes(o.status);
       });
     case 'stuck':
       return active.filter(o => {
@@ -2076,7 +2046,7 @@ function updateActionList() {
   const actions = [
     { ct: sv.overdue,          lbl: 'Overdue Deliveries',     sub: 'Past delivery date',        cls: sv.overdue > 0 ? 'urgent' : '', view: 'overdue' },
     { ct: sv.stuck,            lbl: 'Stuck 14+ Days',         sub: 'No stage progress',         cls: sv.stuck > 0 ? 'warn' : '',    view: 'stuck' },
-    { ct: sv.pending_payment,  lbl: 'Payment Pending',        sub: 'Invoice unpaid / partial',  cls: sv.pending_payment > 0 ? 'warn' : '', view: 'pending_payment' },
+    { ct: sv.pending_payment,  lbl: 'Payment Pending',        sub: 'Dispatched but unpaid',     cls: sv.pending_payment > 0 ? 'warn' : '', view: 'pending_payment' },
     { ct: pbg15,               lbl: 'PBG Expiring ≤15d',      sub: 'Bank guarantee renewal',    cls: pbg15 > 0 ? 'urgent' : '',     view: 'pbg_expiring' },
     { ct: sv.dispatch_week,    lbl: 'Dispatch This Week',     sub: 'Delivery due in 7 days',    cls: '',                             view: 'dispatch_week' },
     { ct: active.filter(o => !o.inv_number && ['QA/Testing','Dispatch Ready','Shipped','Delivered'].includes(o.status)).length,
@@ -2116,8 +2086,8 @@ function renderFYChecklist(allActive) {
   const items = [
     { ct: prevOrders.filter(o => !['Delivered','Payment Received'].includes(o.status)).length,
       lbl: 'Orders Not Delivered', sub: `FY ${prevFY} unfinished`, view: null },
-    { ct: prevOrders.filter(o => payStatus(o) !== 'paid').length,
-      lbl: 'Payment Pending', sub: 'Invoice unpaid / partial', view: 'pending_payment' },
+    { ct: prevOrders.filter(o => payStatus(o) !== 'paid' && ['Dispatch Ready','Shipped','Delivered','Payment Received'].includes(o.status)).length,
+      lbl: 'Payment Pending', sub: 'Dispatched but unpaid', view: 'pending_payment' },
     { ct: allActive.filter(o => o.pbg_required && !o.pbg_returned).length,
       lbl: 'PBG Not Returned', sub: 'Bank guarantees outstanding', view: 'pbg_expiring' },
     { ct: prevOrders.filter(o => ['Design','Raw Material','Fabrication','Assembly','QA/Testing'].includes(o.status)).length,
@@ -2324,14 +2294,17 @@ function renderDashboard() {
   }
 
 
-  // Payment
-  const paid    = active.filter(o => payStatus(o) === 'paid').length;
-  const partial = active.filter(o => payStatus(o) === 'partial').length;
-  const pending = active.filter(o => payStatus(o) === 'pending').length;
+  // Payment — stage-wise: only count payment pending for orders at Dispatch Ready or later
+  const PAY_STAGES = ['Dispatch Ready','Shipped','Delivered','Payment Received'];
+  const paid      = active.filter(o => payStatus(o) === 'paid').length;
+  const partial   = active.filter(o => payStatus(o) === 'partial').length;
+  const pendPay   = active.filter(o => payStatus(o) === 'pending' && PAY_STAGES.includes(o.status)).length;
+  const inProd    = active.filter(o => payStatus(o) === 'pending' && !PAY_STAGES.includes(o.status)).length;
   document.getElementById('dpay').innerHTML = `
     <div class="pmrow"><div class="pmrow-l">🟢 Fully Paid</div><div class="pmrow-r">${paid}</div></div>
     <div class="pmrow"><div class="pmrow-l">🟡 Partial</div><div class="pmrow-r">${partial}</div></div>
-    <div class="pmrow"><div class="pmrow-l">🔴 Pending</div><div class="pmrow-r">${pending}</div></div>
+    <div class="pmrow"><div class="pmrow-l">🔴 Payment Pending</div><div class="pmrow-r">${pendPay}</div></div>
+    <div class="pmrow"><div class="pmrow-l">🔵 In Production</div><div class="pmrow-r">${inProd}</div></div>
     <div class="pmrow"><div class="pmrow-l">Total Received</div><div class="pmrow-r" style="color:var(--green)">${fmtCr(totalRec)}</div></div>
     <div class="pmrow"><div class="pmrow-l">Outstanding</div><div class="pmrow-r" style="color:var(--red)">${fmtCr(totalPend)}</div></div>
   `;
@@ -2477,24 +2450,19 @@ function renderTable() {
     const pendDisplay = isFinance ? (pend !== null && pend > 0 ? `<span class="pending-badge">${fmtCr(pend)}</span>` : `<span style="font-family:var(--mono);font-size:11px;color:var(--t4)">—</span>`) : '';
 
     const ns = nextStage(o.status);
-    const ps = prevStage(o.status);
-    const qaBtn = `<div class="stage-shift-btns">${ps ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${ps}')" title="Back to ${ps}">← ${shortStageName(ps)}</button>` : ''}${ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${shortStageName(ns)}</button>` : ''}</div>`;
+    const prvS = prevStage(o.status);
+    const qaBtn = `<div class="stage-shift-btns">${prvS ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${prvS}')" title="Back to ${prvS}">← ${shortStageName(prvS)}</button>` : ''}${ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${shortStageName(ns)}</button>` : ''}</div>`;
 
     const isCF = o.carry_forward === true || o.carry_forward === 'true';
     const fyT = getOrderFY(o);
     const isSelected = selectedRows.has(o.id);
-
-    // Calculate stage progress percentage
-    const stageIdx_ = stageIdx(o.status);
-    const stageProgress = stageIdx_ >= 0 ? Math.round((stageIdx_ / (STAGES.length - 1)) * 100) : 0;
-
     return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}${isCF?' cf-row':''}">
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" ${isSelected?'checked':''} onchange="toggleRowSelect('${o.id}',this)"></td>
       <td class="td-sl">${o.sl||'—'}</td>
       <td class="td-cust" title="${o.customer||''}"><span style="display:inline-flex;align-items:center;gap:5px">${(()=>{const cf=['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];const fp=cf.filter(f=>o[f]!==null&&o[f]!==undefined&&o[f]!=='').length;const p=Math.round(fp/cf.length*100);return `<span class="comp-dot ${p>=80?'comp-green':p>=40?'comp-amber':'comp-red'}" title="Completeness: ${p}%"></span>`;})()} ${o.customer||'—'}</span></td>
       <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
       <td class="td-desc" title="${o.description||''}">${o.description||'—'}</td>
-      <td><div><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span><div class="stage-progress-bar"><div class="stage-progress-fill" style="width:${stageProgress}%"></div></div></div></td>
+      <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
       <td>${ageChip(age, '')}</td>
       <td>${delayChip(o)}</td>
       ${isFinance ? `<td class="td-mono finance-only">${fmtCr(o.order_amount)}</td>` : ''}
@@ -2593,71 +2561,7 @@ function bulkExport() {
 async function quickAdvance(id, newStage) {
   const o = allOrders.find(x => x.id === id);
   if (!o) return;
-
-  // Mandatory field check
-  const mand = MANDATORY_FOR_STAGE[newStage];
-  if (mand && !o[mand.field]) {
-    toast(mand.label, 'err');
-    openDrawer(id); // open drawer so they can fill it
-    return;
-  }
-
-  const dateMap = {
-    'Design': 'design_start', 'Raw Material': 'raw_material_date', 'Fabrication': 'fabrication_start',
-    'Assembly': 'assembly_start', 'QA/Testing': 'qa_start', 'Dispatch Ready': 'dispatch_ready_date',
-    'Shipped': 'shipped_date', 'Delivered': 'delivered_date', 'Payment Received': 'payment_received_date',
-  };
-  const updates = { status: newStage };
-  if (dateMap[newStage] && !o[dateMap[newStage]]) updates[dateMap[newStage]] = today();
-
-  // Save the previous stage for undo
-  const previousStage = o.status;
-  const previousDateField = dateMap[newStage];
-  const previousDateValue = previousDateField ? o[previousDateField] : null;
-
-  try {
-    await SB.from('orders').update(updates).eq('id', id);
-    await addRemarkEntry(id, `Stage advanced to ${newStage}`, currentRole);
-
-    // Show toast with undo button
-    const t = document.createElement('div');
-    t.className = 'toast info';
-    t.innerHTML = `<div class="toast-with-undo">
-      <span>Moved to ${newStage}</span>
-      <button class="toast-undo-btn" onclick="undoAdvance('${id}','${previousStage}','${previousDateField}')">↶ Undo</button>
-    </div>`;
-    const tray = document.getElementById('toastTray');
-    tray.appendChild(t);
-
-    // Auto-remove after 5 seconds
-    const undoBtn = t.querySelector('.toast-undo-btn');
-    let autoRemoveTimer = setTimeout(() => t.remove(), 5000);
-
-    // Clear timer if undo is clicked (handled in undoAdvance)
-    undoBtn.dataset.timeoutId = autoRemoveTimer;
-
-    await loadData();
-  } catch(e) {
-    toast('Update failed: ' + e.message, 'err');
-  }
-}
-
-// Undo function for reverting a stage advance
-async function undoAdvance(id, previousStage, dateField) {
-  try {
-    const updates = { status: previousStage };
-    // If there was a previous date value, we can't restore it (it was null or empty)
-    // So we just clear it
-    if (dateField && dateField !== 'null') {
-      updates[dateField] = null;
-    }
-    await SB.from('orders').update(updates).eq('id', id);
-    await addRemarkEntry(id, `Stage reverted to ${previousStage} (undo)`, currentRole);
-    toast(`Reverted to ${previousStage}`, 'info');
-    await loadData();
-  } catch(e) {
-    toast('Undo failed: ' + e.message, 'err');
-  }
+  openStageShiftModal(id, o.status, newStage);
 }
 
 /*============================
@@ -3051,44 +2955,92 @@ async function submitRemark() {
 /*============================
   STAGE UPDATE FROM DRAWER
 ============================*/
-async function updateStageFromDrawer(newStage) {
+// ── Stage date labels for the shift modal ──
+const STAGE_DATE_LABELS = {
+  'Design':'Design Start Date','Raw Material':'Raw Material Date','Fabrication':'Fabrication Start Date',
+  'Assembly':'Assembly Start Date','QA/Testing':'QA / Testing Date','Dispatch Ready':'Dispatch Ready Date',
+  'Shipped':'Shipped Date','Delivered':'Delivered Date','Payment Received':'Payment Received Date','On Hold':'Hold Date'
+};
+const STAGE_DATE_MAP = {
+  'Design':'design_start','Raw Material':'raw_material_date','Fabrication':'fabrication_start',
+  'Assembly':'assembly_start','QA/Testing':'qa_start','Dispatch Ready':'dispatch_ready_date',
+  'Shipped':'shipped_date','Delivered':'delivered_date','Payment Received':'payment_received_date',
+};
+
+let _ssmOrderId = null, _ssmNewStage = null, _ssmOldStage = null;
+
+function openStageShiftModal(orderId, oldStage, newStage) {
+  const o = allOrders.find(x => x.id === orderId);
+  if (!o) return;
+
+  // Mandatory field check (e.g. date must exist before advancing)
+  const mand = MANDATORY_FOR_STAGE[newStage];
+  if (mand && !o[mand.field]) {
+    // We will let the user fill it through the modal — skip blocking
+  }
+
+  _ssmOrderId = orderId;
+  _ssmNewStage = newStage;
+  _ssmOldStage = oldStage;
+
+  const stageObj = STAGES.find(s => s.key === newStage) || HOLD;
+  document.getElementById('ssm-title').textContent = stageObj.icon + ' Move to ' + stageObj.label;
+  document.getElementById('ssm-info').innerHTML = `<strong>${oldStage}</strong> → <strong>${newStage}</strong><br><span style="font-size:11px">Enter the date for this stage and an optional remark.</span>`;
+  document.getElementById('ssm-date-label').textContent = (STAGE_DATE_LABELS[newStage] || 'Stage Date') + ' *';
+  document.getElementById('ssm-date').value = today();
+  document.getElementById('ssm-remark').value = '';
+  document.getElementById('stageShiftModal').classList.add('open');
+}
+
+async function confirmStageShift() {
+  if (!_ssmOrderId || !_ssmNewStage) return;
+  const dateVal = document.getElementById('ssm-date').value;
+  const remark = document.getElementById('ssm-remark').value.trim();
+  if (!dateVal) { toast('Please enter a date', 'err'); return; }
+
+  const o = allOrders.find(x => x.id === _ssmOrderId);
+  if (!o) return;
+
+  const updates = { status: _ssmNewStage };
+  const dateField = STAGE_DATE_MAP[_ssmNewStage];
+  if (dateField) updates[dateField] = dateVal;
+
+  const btn = document.querySelector('#stageShiftModal .btn-blue');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="border-top-color:#fff"></div> Saving…'; }
+
+  try {
+    await SB.from('orders').update(updates).eq('id', _ssmOrderId);
+    const remarkText = `Stage: ${_ssmOldStage} → ${_ssmNewStage}` + (remark ? ` — ${remark}` : '');
+    await addRemarkEntry(_ssmOrderId, remarkText, currentRole);
+    toast(`Stage → ${_ssmNewStage}`, 'info');
+    document.getElementById('stageShiftModal').classList.remove('open');
+    await loadData();
+    // If drawer is open, refresh it
+    if (selectedId === _ssmOrderId) {
+      const fresh = allOrders.find(x => x.id === _ssmOrderId);
+      if (fresh) renderDrawer(fresh);
+    }
+  } catch(e) {
+    toast('Update failed: ' + e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm'; }
+  }
+}
+
+function updateStageFromDrawer(newStage) {
   if (!selectedId) return;
   const o = allOrders.find(x => x.id === selectedId);
   if (!o) return;
-
-  const mand = MANDATORY_FOR_STAGE[newStage];
-  if (mand && !o[mand.field]) {
-    toast(mand.label, 'err');
-    return;
-  }
-
-  const dateMap = {
-    'Design':'design_start','Raw Material':'raw_material_date','Fabrication':'fabrication_start',
-    'Assembly':'assembly_start','QA/Testing':'qa_start','Dispatch Ready':'dispatch_ready_date',
-    'Shipped':'shipped_date','Delivered':'delivered_date','Payment Received':'payment_received_date',
-  };
-  const updates = { status: newStage };
-  if (dateMap[newStage] && !o[dateMap[newStage]]) updates[dateMap[newStage]] = today();
-
-  try {
-    await SB.from('orders').update(updates).eq('id', selectedId);
-    const oldStage = o.status;
-    await addRemarkEntry(selectedId, `Stage: ${oldStage} → ${newStage}`, currentRole);
-    toast(`Stage → ${newStage}`, 'info');
-    await loadData();
-    const fresh = allOrders.find(x => x.id === selectedId);
-    if (fresh) renderDrawer(fresh);
-  } catch(e) {
-    toast('Update failed: ' + e.message, 'err');
-  }
+  openStageShiftModal(selectedId, o.status, newStage);
 }
+
 async function advanceStage() {
   if (!selectedId) return;
   const o = allOrders.find(x => x.id === selectedId);
   if (!o) return;
   const ns = nextStage(o.status);
   if (!ns) { toast('Already at final stage', 'warn'); return; }
-  await updateStageFromDrawer(ns);
+  updateStageFromDrawer(ns);
 }
 
 /*============================
@@ -3116,6 +3068,18 @@ async function deleteOrder() {
     await loadData();
   } catch(e) { toast('Delete failed: ' + e.message, 'err'); }
 }
+async function deleteEnquiry() {
+  if (!selectedEnqId) return;
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!confirm(`Permanently delete enquiry for "${e?.customer || selectedEnqId}"? This cannot be undone.`)) return;
+  try {
+    await SB.from('enquiries').delete().eq('id', selectedEnqId);
+    toast('Enquiry deleted', 'warn');
+    closeEnqDrawer();
+    await loadData();
+  } catch(err) { toast('Delete failed: ' + err.message, 'err'); }
+}
+
 async function restoreOrder(id) {
   if (!confirm('Restore this order to active?')) return;
   try {
@@ -3221,8 +3185,9 @@ async function saveOrder() {
     const v = el.value.trim();
     if (['order_amount','inv_amount','pm_advance_pct','pm_advance_received','pm_invoice_received',
          'pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct',
-         'pm_delivery_received','pbg_amount','pbg_validity_months'].includes(f)) {
-      data[f] = v === '' ? null : parseFloat(v);
+         'pm_delivery_received','pbg_amount','pbg_validity_months','raw_material_received',
+         'ex_works','incl_gst'].includes(f)) {
+      data[f] = v === '' ? null : parseFloat(v.replace(/[%₹,\s]/g, ''));
     } else if (f === 'pbg_required' || f === 'carry_forward') {
       data[f] = v === 'true';
     } else {
@@ -3246,14 +3211,24 @@ async function saveOrder() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-top-color:#fff"></div> Saving…';
 
+  // Strip null/empty fields so Supabase won't error on columns that may not exist yet
+  // Skip supplier fields + raw_material_received if DB column type is wrong (date instead of numeric/text)
+  const PROBLEM_FIELDS = ['supplier_delivery_commitment','supplier_dispatch_date','supplier_payment_date','supplier_payment_amount'];
+  const cleanData = {};
+  Object.keys(data).forEach(k => {
+    if (data[k] !== null && data[k] !== '' && !PROBLEM_FIELDS.includes(k)) {
+      cleanData[k] = data[k];
+    }
+  });
+
   try {
     if (editId) {
-      const { error } = await SB.from('orders').update(data).eq('id', editId);
+      const { error } = await SB.from('orders').update(cleanData).eq('id', editId);
       if (error) throw error;
       await addRemarkEntry(editId, 'Order details updated', currentRole);
       toast('Order updated', 'info');
     } else {
-      const { data: inserted, error } = await SB.from('orders').insert(data).select().single();
+      const { data: inserted, error } = await SB.from('orders').insert(cleanData).select().single();
       if (error) throw error;
       await addRemarkEntry(inserted.id, 'Order created', currentRole);
       // Link back to enquiry if this was a conversion
@@ -3294,7 +3269,7 @@ function showPage(page, el) {
     if (map[page]) document.getElementById(map[page])?.classList.add('active');
   }
   if (page === 'orders') { activeFilter = null; renderTable(); }
-  if (page === 'enquiries') { renderEnqTable(); renderEnqPipeline(); renderEnqStatusChips(); }
+  if (page === 'enquiries') { renderEnqTable(); renderEnqPipeline(); }
   if (page === 'archived') renderArchiveTable();
   closeSidebar();
 }
@@ -3361,187 +3336,18 @@ function exportCSV() {
   downloadCSV(orders, 'SPICON_orders_export.csv');
 }
 function downloadCSV(orders, filename) {
-  const headers = ['SL','Customer','PO Number','Description','Status','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','Payment Status','Design Start','Fabrication Start','QA Start','Dispatch Ready Date','Shipped Date','Delivered Date','Supplier','PBG Amount','PBG Expiry','FY Tag','Remarks Count'];
+  const headers = ['SL','Customer','PO Number','Description','Status','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry'];
   const rows = orders.map(o => [
     o.sl||'', o.customer||'', o.po_number||'', o.description||'', o.status||'',
     o.po_date||'', o.delivery_date||'', o.order_amount||'', o.inv_amount||'',
     totalReceived(o), Math.max(0, pendingAmt(o)||0),
-    payStatus(o)||'',
-    o.design_start||'', o.fabrication_start||'', o.qa_start||'', o.dispatch_ready_date||'', o.shipped_date||'', o.delivered_date||'',
-    o.supplier_name||'',
-    o.pbg_amount||'', o.pbg_expiry_date||'',
-    getOrderFY(o)||'',
-    (o.remarks && Array.isArray(o.remarks)) ? o.remarks.length : 0
+    o.pbg_required?'Yes':'No', o.pbg_expiry_date||''
   ]);
   const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
   a.download = filename;
   a.click();
-}
-
-/*============================
-  XLSX EXPORT (HTML Table)
-============================*/
-function exportXLSX() {
-  const orders = getFilteredOrders();
-  if (orders.length === 0) { toast('No orders to export', 'warn'); return; }
-
-  let html = `<html><head><meta charset="UTF-8"><style>
-    body { font-family: Arial, sans-serif; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #1a56db; color: white; font-weight: bold; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    .numeric { text-align: right; }
-  </style></head><body><table>
-  <thead><tr>
-    <th>#</th><th>Customer</th><th>PO Number</th><th>Description</th><th>Status</th>
-    <th>PO Date</th><th>Delivery Date</th><th>Order Amount</th><th>Payment Status</th>
-    <th>Supplier</th><th>Pending Amount</th>
-  </tr></thead><tbody>`;
-
-  orders.forEach((o, idx) => {
-    html += `<tr>
-      <td>${idx+1}</td>
-      <td>${o.customer||'—'}</td>
-      <td>${o.po_number||'—'}</td>
-      <td>${o.description||'—'}</td>
-      <td>${o.status||'—'}</td>
-      <td>${o.po_date||'—'}</td>
-      <td>${o.delivery_date||'—'}</td>
-      <td class="numeric">${fmtCr(o.order_amount)||'—'}</td>
-      <td>${payStatus(o)||'—'}</td>
-      <td>${o.supplier_name||'—'}</td>
-      <td class="numeric">${fmtCr(Math.max(0, pendingAmt(o)||0))}</td>
-    </tr>`;
-  });
-
-  html += `</tbody></table></body></html>`;
-
-  const win = window.open('', 'XLSX Export', 'width=1200,height=600');
-  win.document.write(html);
-  win.document.close();
-  toast(`Opened export table for ${orders.length} orders. Copy and paste into Excel.`, 'info');
-}
-
-/*============================
-  SUMMARY REPORT
-============================*/
-function generateReport() {
-  const orders = allOrders.filter(o => !o.archived);
-  const stageCount = {};
-  const paymentCount = { paid: 0, partial: 0, pending: 0, none: 0 };
-  const overdueOrders = [];
-  let totalAmount = 0, totalReceived = 0;
-
-  orders.forEach(o => {
-    const stage = o.status || 'Unknown';
-    stageCount[stage] = (stageCount[stage] || 0) + 1;
-
-    const ps = payStatus(o);
-    if (ps) paymentCount[ps]++;
-
-    const amt = o.order_amount || 0;
-    totalAmount += amt;
-    totalReceived += totalReceived(o);
-
-    // Check for overdue orders
-    if (o.delivery_date) {
-      const delDate = new Date(o.delivery_date);
-      const today = new Date(); today.setHours(0,0,0,0);
-      if (delDate < today && o.status !== 'Delivered') {
-        overdueOrders.push(o);
-      }
-    }
-  });
-
-  let html = `<html><head><meta charset="UTF-8"><style>
-    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-    .header { font-size: 24px; font-weight: bold; margin-bottom: 30px; color: #1a56db; }
-    .section { margin-bottom: 30px; }
-    .section-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #1a56db; padding-bottom: 6px; }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-    .stat-box { background: #f0f2f5; padding: 12px; border-radius: 6px; text-align: center; }
-    .stat-number { font-size: 24px; font-weight: bold; color: #1a56db; }
-    .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #1a56db; color: white; font-weight: bold; }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    .warn { color: #dc2626; font-weight: bold; }
-    .time { font-size: 12px; color: #999; margin-top: 20px; }
-  </style></head><body>
-  <div class="header">📊 SPICON Order Management Report</div>
-
-  <div class="section">
-    <div class="section-title">📈 Overall Statistics</div>
-    <div class="stats">
-      <div class="stat-box">
-        <div class="stat-number">${orders.length}</div>
-        <div class="stat-label">Total Orders</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${fmtCr(totalAmount)}</div>
-        <div class="stat-label">Total Order Value</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${fmtCr(totalReceived)}</div>
-        <div class="stat-label">Total Received</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">${fmtCr(totalAmount - totalReceived)}</div>
-        <div class="stat-label">Pending Amount</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">🔄 Stage-wise Distribution</div>
-    <table>
-      <thead><tr><th>Stage</th><th>Count</th><th>Percentage</th></tr></thead>
-      <tbody>`;
-
-  STAGES.forEach(s => {
-    const cnt = stageCount[s.key] || 0;
-    const pct = orders.length > 0 ? Math.round((cnt / orders.length) * 100) : 0;
-    html += `<tr><td>${s.label}</td><td>${cnt}</td><td>${pct}%</td></tr>`;
-  });
-
-  html += `</tbody></table></div>
-
-  <div class="section">
-    <div class="section-title">💰 Payment Status Summary</div>
-    <table>
-      <thead><tr><th>Status</th><th>Count</th></tr></thead>
-      <tbody>
-        <tr><td>Paid</td><td>${paymentCount.paid}</td></tr>
-        <tr><td>Partial</td><td>${paymentCount.partial}</td></tr>
-        <tr><td>Pending</td><td>${paymentCount.pending}</td></tr>
-        <tr><td>None</td><td>${paymentCount.none}</td></tr>
-      </tbody>
-    </table>
-  </div>`;
-
-  if (overdueOrders.length > 0) {
-    html += `<div class="section">
-      <div class="section-title" style="color: #dc2626;">⚠️ Overdue Orders (${overdueOrders.length})</div>
-      <table>
-        <thead><tr><th>Customer</th><th>PO Number</th><th>Delivery Date</th><th>Current Stage</th></tr></thead>
-        <tbody>`;
-    overdueOrders.forEach(o => {
-      html += `<tr><td>${o.customer||'—'}</td><td>${o.po_number||'—'}</td><td class="warn">${o.delivery_date||'—'}</td><td>${o.status||'—'}</td></tr>`;
-    });
-    html += `</tbody></table></div>`;
-  }
-
-  html += `<div class="time">Report generated on ${new Date().toLocaleString()}</div>
-  </body></html>`;
-
-  const win = window.open('', 'Report', 'width=1000,height=700');
-  win.document.write(html);
-  win.document.close();
-  toast('Report generated', 'info');
 }
 
 /*============================
@@ -3595,26 +3401,24 @@ function renderCardView(orders) {
                     ps === 'partial' ? '<span class="badge bp-partial">Partial</span>' :
                     ps === 'pending' ? '<span class="badge bp-pending">Pending</span>' : '';
     const ns = nextStage(o.status);
-    const delChip = delayChip(o);
-    const delDate = o.delivery_date ? `<span class="oc-delivery">📅 ${fmtDate(o.delivery_date)}</span>` : '';
     const psMob = prevStage(o.status);
-    const advanceBtn = `<div style="display:flex;gap:6px;margin-top:8px">${psMob ? `<button class="oc-advance-btn" style="flex:0.4;background:var(--bg2);color:var(--t2);border:1px solid var(--bdr)" onclick="event.stopPropagation();quickAdvance('${o.id}','${psMob}')">← ${shortStageName(psMob)}</button>` : ''}${ns ? `<button class="oc-advance-btn" style="flex:1" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ ${shortStageName(ns)}</button>` : ''}</div>`;
+    const qaBtn = `<div style="display:flex;gap:6px;margin-top:8px">${psMob ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${psMob}')">← ${shortStageName(psMob)}</button>` : ''}${ns ? `<button class="qa-btn qa-next oc-qa" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ ${shortStageName(ns)}</button>` : ''}</div>`;
+    const delChip = delayChip(o);
     return `<div class="order-card" onclick="openDrawer('${o.id}')">
       <div class="oc-top">
         <div>
-          <div class="oc-cust" style="font-size:15px">${o.customer||'—'}</div>
+          <div class="oc-cust">${o.customer||'—'}</div>
           <div class="oc-po">${o.po_number||'—'} <span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">${getOrderFY(o)}</span>${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge" style="margin-left:3px">↕ CF</span>':''}</div>
-          ${delDate}
         </div>
-        <span class="badge ${si.cls}" style="font-size:12px"><span class="bdot ${si.dot}"></span>${si.label}</span>
+        <span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span>
       </div>
       <div class="oc-desc">${o.description||'—'}</div>
       <div class="oc-row">
-        ${age !== null ? `<span class="age-chip ${age>21?'age-red':age>10?'age-amber':'age-green'}">${age}d</span>` : ''}
+        ${age !== null ? `<span class="age-chip ${age>21?'age-red':age>10?'age-amber':'age-green'}">${age}d in stage</span>` : ''}
         ${delChip}
         ${psBadge}
+        ${qaBtn}
       </div>
-      ${advanceBtn}
     </div>`;
   }).join('') || `<div style="text-align:center;padding:32px;color:var(--t4);font-size:13px">No orders match.</div>`;
 }
@@ -3643,77 +3447,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Password enter key
   document.getElementById('loginPassword')?.addEventListener('keydown', e => { if (e.key === 'Enter') doEmailLogin(); });
   document.getElementById('loginEmail')?.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPassword')?.focus(); });
-
-  // Pull-to-refresh on mobile
-  if (isMobile()) {
-    setupPullToRefresh();
-  }
 });
-
-// Pull-to-refresh functionality
-function setupPullToRefresh() {
-  const main = document.querySelector('.main');
-  if (!main) return;
-
-  let startY = 0;
-  let currentY = 0;
-  let isRefreshing = false;
-
-  main.addEventListener('touchstart', (e) => {
-    if (main.scrollTop === 0) {
-      startY = e.touches[0].clientY;
-    }
-  }, false);
-
-  main.addEventListener('touchmove', (e) => {
-    if (main.scrollTop === 0 && startY > 0) {
-      currentY = e.touches[0].clientY;
-      const diff = currentY - startY;
-      if (diff > 0 && diff < 100) {
-        e.preventDefault();
-        const ptr = document.querySelector('.ptr-icon');
-        if (ptr) {
-          ptr.style.opacity = Math.min(diff / 50, 1);
-          ptr.style.transform = `translateX(-50%) rotate(${(diff / 100) * 360}deg)`;
-        }
-      }
-    }
-  }, false);
-
-  main.addEventListener('touchend', (e) => {
-    const diff = currentY - startY;
-    if (diff > 60 && !isRefreshing) {
-      isRefreshing = true;
-      const ptr = document.querySelector('.ptr-icon');
-      if (ptr) ptr.style.opacity = 1;
-
-      // Reload data
-      loadData().then(() => {
-        isRefreshing = false;
-        startY = 0;
-        currentY = 0;
-        const ptr = document.querySelector('.ptr-icon');
-        if (ptr) {
-          ptr.style.opacity = 0;
-          ptr.style.transform = 'translateX(-50%) rotate(0deg)';
-        }
-        toast('Refreshed', 'info');
-      }).catch(() => {
-        isRefreshing = false;
-        startY = 0;
-        currentY = 0;
-      });
-    } else {
-      startY = 0;
-      currentY = 0;
-      const ptr = document.querySelector('.ptr-icon');
-      if (ptr) {
-        ptr.style.opacity = 0;
-        ptr.style.transform = 'translateX(-50%) rotate(0deg)';
-      }
-    }
-  }, false);
-}
 
 /*============================
   AUTO LOGIN
@@ -3756,7 +3490,7 @@ window.addEventListener('load', async () => {
 let allEnquiries = [];
 let enqFilter = '';
 let enqEditId = null;
-let enqSelectedId = null;
+let selectedEnqId = null;
 let lostEnqId = null;
 let lostReasonSelected = '';
 
@@ -3848,7 +3582,7 @@ function renderEnqTable() {
   ENQUIRY MODAL — NEW
 ============================*/
 function openNewEnqModal() {
-  ['enqf_customer','enqf_contact_person','enqf_description','enqf_expected_value','enqf_notes'].forEach(id => {
+  ['enqf_customer','enqf_contact_person','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
@@ -3868,6 +3602,8 @@ async function saveNewEnquiry() {
     description,
     enquiry_date,
     expected_value: parseFloat(document.getElementById('enqf_expected_value')?.value) || null,
+    ex_works: parseFloat(document.getElementById('enqf_ex_works')?.value) || null,
+    incl_gst: parseFloat(document.getElementById('enqf_incl_gst')?.value) || null,
     order_type: document.getElementById('enqf_order_type')?.value || 'manufactured',
     source: document.getElementById('enqf_source')?.value || 'direct',
     notes: document.getElementById('enqf_notes')?.value.trim() || null,
@@ -3938,6 +3674,8 @@ function renderEnqDrawer(e) {
     ['Contact', fmt(e.contact_person)],
     ['Enquiry Date', e.enquiry_date ? fmtDate(e.enquiry_date) : '—'],
     ['Expected Value', fmtVal(e.expected_value)],
+    ['Ex-Works Value', fmtVal(e.ex_works)],
+    ['Value Incl GST', fmtVal(e.incl_gst)],
     ['Order Type', e.order_type === 'traded' ? '🏭 Traded' : '🔧 Manufactured'],
     ['Source', fmt(e.source)],
     ['Status', ENQ_STATUS_LABELS[e.status] || e.status],
@@ -3950,6 +3688,8 @@ function renderEnqDrawer(e) {
   });
   if (document.getElementById('eq_enquiry_date')) document.getElementById('eq_enquiry_date').value = e.enquiry_date || '';
   if (document.getElementById('eq_expected_value')) document.getElementById('eq_expected_value').value = e.expected_value || '';
+  if (document.getElementById('eq_ex_works')) document.getElementById('eq_ex_works').value = e.ex_works || '';
+  if (document.getElementById('eq_incl_gst')) document.getElementById('eq_incl_gst').value = e.incl_gst || '';
   if (document.getElementById('eq_order_type')) document.getElementById('eq_order_type').value = e.order_type || 'manufactured';
   if (document.getElementById('eq_source')) document.getElementById('eq_source').value = e.source || 'direct';
 
@@ -3975,18 +3715,18 @@ function renderNegLog(e) {
     wrap.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:12px 0">No negotiation entries yet.</div>';
     return;
   }
-  const canConvert = !e.converted_order_id && ['negotiating','quoted','won'].includes(e.status);
-  wrap.innerHTML = entries.slice().reverse().map((n, rIdx) => {
-    const origIdx = entries.length - 1 - rIdx;
-    const convertBtn = (canConvert && n.price) ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:9.5px;padding:3px 8px;margin-top:6px" onclick="event.stopPropagation();convertFromNegEntry(${origIdx})">Convert to Order →</button>` : '';
-    return `<div class="log-entry">
+  const showConvert = !e.converted_order_id;
+  wrap.innerHTML = entries.slice().reverse().map((n, ri) => {
+    const origIdx = entries.length - 1 - ri;
+    return `
+    <div class="log-entry">
       <div class="log-entry-hdr">
         <span class="log-entry-date">${n.date ? fmtDate(n.date) : '—'}</span>
         ${n.price ? `<span class="log-entry-price">₹${Number(n.price).toLocaleString('en-IN')}</span>` : ''}
       </div>
       ${n.notes ? `<div class="log-entry-notes">${n.notes}</div>` : ''}
       ${n.followup ? `<div class="log-entry-followup">📅 Follow-up: ${fmtDate(n.followup)}</div>` : ''}
-      ${convertBtn}
+      ${showConvert ? `<button class="qa-btn qa-next" style="margin-top:6px;font-size:10px" onclick="convertFromNeg('${e.id}',${origIdx})" title="Convert this negotiation entry to an order">Convert to Order →</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -4096,6 +3836,8 @@ async function saveEnqDetails() {
     description: document.getElementById('eq_description')?.value.trim() || null,
     enquiry_date: document.getElementById('eq_enquiry_date')?.value || null,
     expected_value: parseFloat(document.getElementById('eq_expected_value')?.value) || null,
+    ex_works: parseFloat(document.getElementById('eq_ex_works')?.value) || null,
+    incl_gst: parseFloat(document.getElementById('eq_incl_gst')?.value) || null,
     order_type: document.getElementById('eq_order_type')?.value || 'manufactured',
     source: document.getElementById('eq_source')?.value || 'direct',
     notes: document.getElementById('eq_notes')?.value.trim() || null
@@ -4148,6 +3890,29 @@ async function confirmMarkLost() {
 /*============================
   CONVERT TO ORDER
 ============================*/
+function convertFromNeg(enqId, negIdx) {
+  selectedEnqId = enqId;
+  const e = allEnquiries.find(x => x.id === enqId);
+  if (!e) return;
+  let entries = [];
+  try { entries = JSON.parse(e.negotiation_log || '[]'); } catch {}
+  const neg = entries[negIdx];
+  if (!neg) { openConvertModal(enqId); return; }
+  // Prefill modal with negotiation entry data
+  ['conv_po_number','conv_po_date','conv_delivery_date','conv_payment_terms'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  // Use neg price if available, else expected_value
+  if (document.getElementById('conv_order_amount')) {
+    document.getElementById('conv_order_amount').value = neg.price || e.expected_value || '';
+  }
+  // Pre-fill date from negotiation entry
+  if (neg.date && document.getElementById('conv_po_date')) {
+    document.getElementById('conv_po_date').value = neg.date;
+  }
+  document.getElementById('convertModal').classList.add('open');
+}
+
 function openConvertModal(enqId) {
   selectedEnqId = enqId;
   const e = allEnquiries.find(x => x.id === enqId);
@@ -4214,141 +3979,6 @@ function getEnqKPIs() {
   const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && !['won','lost'].includes(e.status));
   return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: followups.length };
 }
-
-/*============================
-  ENQUIRY PIPELINE VISUALIZATION
-============================*/
-function renderEnqPipeline() {
-  // Pipeline summary above the table
-  const wrap = document.getElementById('enqPipelineWrap');
-  if (!wrap) return;
-  const counts = {};
-  ENQ_STATUSES.forEach(s => counts[s] = 0);
-  allEnquiries.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
-  const colors = { new:'var(--c-enq-new)', negotiating:'var(--c-enq-neg)', quoted:'var(--c-enq-quot)', won:'var(--c-enq-won)', lost:'var(--c-enq-lost)' };
-  const total = allEnquiries.length || 1;
-  wrap.innerHTML = `<div class="enq-pipeline">${ENQ_STATUSES.map(s => {
-    const pct = Math.round((counts[s] / total) * 100);
-    return `<div class="enq-pipe-col" onclick="setEnqFilter('${s}')" style="cursor:pointer;flex:${Math.max(counts[s],1)}">
-      <div class="enq-pipe-bar" style="background:${colors[s]};opacity:0.85;height:6px;border-radius:3px;width:100%"></div>
-      <div class="enq-pipe-label" style="color:${colors[s]}">${ENQ_STATUS_LABELS[s]}</div>
-      <div class="enq-pipe-ct">${counts[s]}</div>
-    </div>`;
-  }).join('')}</div>`;
-}
-
-/*============================
-  CONVERT FROM NEGOTIATION ENTRY
-============================*/
-function convertFromNegEntry(entryIdx) {
-  const e = allEnquiries.find(x => x.id === selectedEnqId);
-  if (!e) return;
-  let entries = [];
-  try { entries = JSON.parse(e.negotiation_log || '[]'); } catch {}
-  const entry = entries[entryIdx];
-  if (!entry) return;
-
-  selectedEnqId = e.id;
-  // Prefill the convert modal
-  ['conv_po_number','conv_po_date','conv_delivery_date','conv_payment_terms'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  // Use nego price as order amount, but leave it editable
-  if (document.getElementById('conv_order_amount')) {
-    document.getElementById('conv_order_amount').value = entry.price || e.expected_value || '';
-  }
-  // Show approval notice
-  document.getElementById('convertModal').classList.add('open');
-  // Add a visual indicator this came from negotiation
-  const notice = document.querySelector('#convertModal .convert-source-notice');
-  if (notice) notice.remove();
-  const hdr = document.querySelector('#convertModal .modal-box > div:nth-child(2)');
-  if (hdr) {
-    const noticeEl = document.createElement('div');
-    noticeEl.className = 'convert-source-notice';
-    noticeEl.style.cssText = 'font-size:11px;color:var(--amber);margin-bottom:8px;padding:8px 12px;background:var(--amber-lt);border-radius:var(--r);border:1px solid var(--amber-md)';
-    noticeEl.innerHTML = '📋 Pre-filled from negotiation entry (' + (entry.date ? fmtDate(entry.date) : 'undated') + ')' +
-      (entry.price ? ' · ₹' + Number(entry.price).toLocaleString('en-IN') : '') +
-      '<br><strong>Please verify the price and fill in PO details. Requires management approval.</strong>';
-    hdr.insertBefore(noticeEl, hdr.firstChild);
-  }
-}
-
-/*============================
-  DELETE ENQUIRY (Management only)
-============================*/
-async function deleteEnquiry() {
-  if (!selectedEnqId) return;
-  const e = allEnquiries.find(x => x.id === selectedEnqId);
-  if (!confirm('Permanently delete enquiry for "' + (e?.customer || selectedEnqId) + '"? This cannot be undone.')) return;
-  try {
-    await SB.from('enquiries').delete().eq('id', selectedEnqId);
-    toast('Enquiry deleted', 'warn');
-    closeEnqDrawer();
-    await loadEnquiries();
-  } catch(err) { toast('Delete failed: ' + err.message, 'err'); }
-}
-
-/*============================
-  MOBILE BOTTOM NAVIGATION SETUP
-============================*/
-function initBottomNav() {
-  if (!isMobile()) return;
-  const nav = document.querySelector('.bottom-nav');
-  if (!nav) return;
-
-  // Update active nav item based on current page
-  const pages = ['dash', 'orders', 'enquiries'];
-  pages.forEach(p => {
-    const item = document.querySelector(`[data-page="${p}"]`);
-    if (!item) return;
-    const isActive = document.getElementById(`page-${p}`)?.classList.contains('active');
-    item.classList.toggle('active', isActive);
-  });
-}
-
-// Show bottom nav on mobile
-window.addEventListener('resize', () => {
-  const nav = document.querySelector('.bottom-nav');
-  const fab = document.querySelector('.bottom-nav-fab');
-  if (nav && fab) {
-    const isMob = window.innerWidth <= 768;
-    nav.classList.toggle('show', isMob);
-    fab.classList.toggle('show', isMob);
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize bottom nav visibility on load
-  const nav = document.querySelector('.bottom-nav');
-  const fab = document.querySelector('.bottom-nav-fab');
-  if (nav && fab && isMobile()) {
-    nav.classList.add('show');
-    fab.classList.add('show');
-  }
-});
 </script>
-
-<!-- BOTTOM NAVIGATION BAR (Mobile) -->
-<div class="bottom-nav">
-  <button class="bottom-nav-item" data-page="dash" onclick="showPage('dash',null);initBottomNav()">
-    <div class="bottom-nav-item-icon">📊</div>
-    <div>Dashboard</div>
-  </button>
-  <button class="bottom-nav-item" data-page="orders" onclick="showPage('orders',null);initBottomNav()">
-    <div class="bottom-nav-item-icon">📦</div>
-    <div>Orders</div>
-  </button>
-  <button class="bottom-nav-item" data-page="enquiries" onclick="showPage('enquiries',null);initBottomNav()">
-    <div class="bottom-nav-item-icon">💬</div>
-    <div>Enquiries</div>
-  </button>
-</div>
-
-<!-- FLOATING ACTION BUTTON (Mobile) -->
-<button class="bottom-nav-fab" onclick="openQuickAdd()" title="New Order">
-  <span style="font-size:28px">+</span>
-</button>
-
 </body>
 </html>
