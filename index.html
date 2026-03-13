@@ -227,11 +227,20 @@ td:first-child{padding-left:14px}
 .age-red{background:var(--red-lt);color:var(--red)}
 .age-gray{background:var(--bg2);color:var(--t4)}
 /* QUICK ACTIONS */
-.qa-btn{padding:3px 8px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid;cursor:pointer;transition:all .12s;font-family:var(--font);line-height:1.4}
+.stage-shift-btns{display:flex;gap:3px;align-items:center}
+.qa-btn{padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;border:1px solid;cursor:pointer;transition:all .12s;font-family:var(--font);line-height:1.4;white-space:nowrap}
 .qa-btn:hover{transform:translateY(-1px)}
 .qa-next{background:var(--blue-lt);color:var(--blue);border-color:var(--blue-md)}
 .qa-next:hover{background:var(--blue);color:#fff}
+.qa-prev{background:var(--bg2);color:var(--t3);border-color:var(--bdr)}
+.qa-prev:hover{background:var(--amber-lt);color:var(--amber);border-color:var(--amber-md)}
 .qa-hold{background:var(--c-hold-lt);color:var(--c-hold);border-color:var(--red-md)}
+/* ENQUIRY PIPELINE */
+.enq-pipeline{display:flex;gap:8px;padding:10px 0}
+.enq-pipe-col{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:50px;transition:all .15s}
+.enq-pipe-col:hover{transform:translateY(-1px)}
+.enq-pipe-label{font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.enq-pipe-ct{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t1)}
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;white-space:nowrap}
 .bdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -788,7 +797,6 @@ td:first-child{padding-left:14px}
   <div class="nitem active" id="nav-dash" onclick="showPage('dash',this)"><span class="ni">◈</span>Dashboard</div>
   <div class="nitem" id="nav-orders" onclick="showPage('orders',this)"><span class="ni">≡</span>All Orders<span class="nbadge" id="nb-all">0</span></div>
   <div class="nitem" id="nav-enquiries" onclick="showPage('enquiries',this)"><span class="ni">💬</span>Enquiries<span class="nbadge" id="nb-enq">0</span></div>
-  <div class="nitem" id="nav-enquiries" onclick="showPage('enquiries',this)"><span class="ni">🔍</span>Enquiries<span class="nbadge" id="nb-enq">0</span></div>
 
   <div class="ndiv"></div>
   <div class="nav-sec-title">Smart Views</div>
@@ -962,6 +970,8 @@ td:first-child{padding-left:14px}
       <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:1px solid var(--teal)" onclick="openNewEnqModal()">+ New Enquiry</button>
     </div>
   </div>
+  <!-- Pipeline visualization -->
+  <div id="enqPipelineWrap" style="margin-bottom:14px"></div>
   <!-- Status filter chips -->
   <div class="smart-filters" id="enqStatusChips" style="margin-bottom:12px"></div>
   <div class="tbl-wrap">
@@ -1096,6 +1106,11 @@ td:first-child{padding-left:14px}
       </div>
     </div>
 
+    <!-- Delete Enquiry (management only) -->
+    <div class="management-only" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--bdr)">
+      <button class="btn btn-danger btn-sm" onclick="deleteEnquiry()">🗑 Delete Enquiry</button>
+    </div>
+
   </div>
 </div>
 
@@ -1204,8 +1219,10 @@ td:first-child{padding-left:14px}
       <div class="d-title" id="dTitle">Order</div>
       <div class="d-sub" id="dSub"></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Full Edit</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal()" style="font-size:11px">✏ Edit</button>
+      <button id="btn-archive-order" class="btn btn-ghost btn-sm" onclick="archiveOrder()" style="font-size:11px">📁 Archive</button>
+      <button id="btn-delete-order" class="btn btn-danger btn-sm" onclick="deleteOrder()" style="font-size:11px">🗑 Delete</button>
       <button class="d-close" onclick="closeDrawer()">✕</button>
     </div>
   </div>
@@ -1605,6 +1622,14 @@ function nextStage(s) {
   if (s === 'On Hold') return null;
   const i = stageIdx(s);
   return (i >= 0 && i < STAGES.length - 1) ? STAGES[i + 1].key : null;
+}
+function prevStage(s) {
+  if (s === 'On Hold') return null;
+  const i = stageIdx(s);
+  return (i > 0) ? STAGES[i - 1].key : null;
+}
+function shortStageName(s) {
+  return s.replace('Fabrication','Fab').replace('Assembly','Asm').replace('Dispatch Ready','Dispatch').replace('Raw Material','Raw Mat').replace('Payment Received','Pay Rec').replace('QA/Testing','QA');
 }
 
 const FFIELDS = ['customer','po_number','po_date','delivery_date','description','order_type','ex_works','order_amount','payment_terms','status','inv_number','inv_date','inv_amount','notes','pm_advance_pct','pm_advance_received','pm_invoice_received','pm_fat_pct','pm_fat_received','pm_dispatch_pct','pm_dispatch_received','pm_delivery_pct','pm_delivery_received','pbg_amount','pbg_validity_months','pbg_expiry_date','design_start','design_done','raw_material_date','raw_material_received','fabrication_start','fabrication_done','assembly_start','assembly_done','qa_start','qa_done','fat_internal_start','fat_internal_done','fat_external_start','fat_external_done','dispatch_ready_date','shipped_date','delivered_date','payment_received_date','carry_forward','fy_tag','supplier_name','supplier_po_number','supplier_po_date','supplier_delivery_commitment','supplier_inv_number','supplier_inv_amount','supplier_dispatch_date','supplier_payment_date','supplier_payment_amount'];
@@ -2452,7 +2477,8 @@ function renderTable() {
     const pendDisplay = isFinance ? (pend !== null && pend > 0 ? `<span class="pending-badge">${fmtCr(pend)}</span>` : `<span style="font-family:var(--mono);font-size:11px;color:var(--t4)">—</span>`) : '';
 
     const ns = nextStage(o.status);
-    const qaBtn = ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${ns.replace('Fabrication','Fab').replace('Assembly','Asm').replace('Dispatch Ready','Dispatch').replace('Raw Material','Raw Mat').replace('Payment Received','Pay Rec')}</button>` : '';
+    const ps = prevStage(o.status);
+    const qaBtn = `<div class="stage-shift-btns">${ps ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${ps}')" title="Back to ${ps}">← ${shortStageName(ps)}</button>` : ''}${ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${shortStageName(ns)}</button>` : ''}</div>`;
 
     const isCF = o.carry_forward === true || o.carry_forward === 'true';
     const fyT = getOrderFY(o);
@@ -3268,7 +3294,7 @@ function showPage(page, el) {
     if (map[page]) document.getElementById(map[page])?.classList.add('active');
   }
   if (page === 'orders') { activeFilter = null; renderTable(); }
-  if (page === 'enquiries') { renderEnqTable(); renderEnqPipeline(); }
+  if (page === 'enquiries') { renderEnqTable(); renderEnqPipeline(); renderEnqStatusChips(); }
   if (page === 'archived') renderArchiveTable();
   closeSidebar();
 }
@@ -3571,7 +3597,8 @@ function renderCardView(orders) {
     const ns = nextStage(o.status);
     const delChip = delayChip(o);
     const delDate = o.delivery_date ? `<span class="oc-delivery">📅 ${fmtDate(o.delivery_date)}</span>` : '';
-    const advanceBtn = ns ? `<button class="oc-advance-btn" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ Advance to ${ns}</button>` : '<div style="height:44px"></div>';
+    const psMob = prevStage(o.status);
+    const advanceBtn = `<div style="display:flex;gap:6px;margin-top:8px">${psMob ? `<button class="oc-advance-btn" style="flex:0.4;background:var(--bg2);color:var(--t2);border:1px solid var(--bdr)" onclick="event.stopPropagation();quickAdvance('${o.id}','${psMob}')">← ${shortStageName(psMob)}</button>` : ''}${ns ? `<button class="oc-advance-btn" style="flex:1" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ ${shortStageName(ns)}</button>` : ''}</div>`;
     return `<div class="order-card" onclick="openDrawer('${o.id}')">
       <div class="oc-top">
         <div>
@@ -3948,15 +3975,20 @@ function renderNegLog(e) {
     wrap.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:12px 0">No negotiation entries yet.</div>';
     return;
   }
-  wrap.innerHTML = entries.slice().reverse().map(n => `
-    <div class="log-entry">
+  const canConvert = !e.converted_order_id && ['negotiating','quoted','won'].includes(e.status);
+  wrap.innerHTML = entries.slice().reverse().map((n, rIdx) => {
+    const origIdx = entries.length - 1 - rIdx;
+    const convertBtn = (canConvert && n.price) ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:9.5px;padding:3px 8px;margin-top:6px" onclick="event.stopPropagation();convertFromNegEntry(${origIdx})">Convert to Order →</button>` : '';
+    return `<div class="log-entry">
       <div class="log-entry-hdr">
         <span class="log-entry-date">${n.date ? fmtDate(n.date) : '—'}</span>
         ${n.price ? `<span class="log-entry-price">₹${Number(n.price).toLocaleString('en-IN')}</span>` : ''}
       </div>
       ${n.notes ? `<div class="log-entry-notes">${n.notes}</div>` : ''}
       ${n.followup ? `<div class="log-entry-followup">📅 Follow-up: ${fmtDate(n.followup)}</div>` : ''}
-    </div>`).join('');
+      ${convertBtn}
+    </div>`;
+  }).join('');
 }
 
 function renderQuoteLog(e) {
@@ -4181,6 +4213,80 @@ function getEnqKPIs() {
   const winRate = total > 0 ? Math.round((won / (won + lost || 1)) * 100) : 0;
   const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && !['won','lost'].includes(e.status));
   return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: followups.length };
+}
+
+/*============================
+  ENQUIRY PIPELINE VISUALIZATION
+============================*/
+function renderEnqPipeline() {
+  // Pipeline summary above the table
+  const wrap = document.getElementById('enqPipelineWrap');
+  if (!wrap) return;
+  const counts = {};
+  ENQ_STATUSES.forEach(s => counts[s] = 0);
+  allEnquiries.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
+  const colors = { new:'var(--c-enq-new)', negotiating:'var(--c-enq-neg)', quoted:'var(--c-enq-quot)', won:'var(--c-enq-won)', lost:'var(--c-enq-lost)' };
+  const total = allEnquiries.length || 1;
+  wrap.innerHTML = `<div class="enq-pipeline">${ENQ_STATUSES.map(s => {
+    const pct = Math.round((counts[s] / total) * 100);
+    return `<div class="enq-pipe-col" onclick="setEnqFilter('${s}')" style="cursor:pointer;flex:${Math.max(counts[s],1)}">
+      <div class="enq-pipe-bar" style="background:${colors[s]};opacity:0.85;height:6px;border-radius:3px;width:100%"></div>
+      <div class="enq-pipe-label" style="color:${colors[s]}">${ENQ_STATUS_LABELS[s]}</div>
+      <div class="enq-pipe-ct">${counts[s]}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+/*============================
+  CONVERT FROM NEGOTIATION ENTRY
+============================*/
+function convertFromNegEntry(entryIdx) {
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e) return;
+  let entries = [];
+  try { entries = JSON.parse(e.negotiation_log || '[]'); } catch {}
+  const entry = entries[entryIdx];
+  if (!entry) return;
+
+  selectedEnqId = e.id;
+  // Prefill the convert modal
+  ['conv_po_number','conv_po_date','conv_delivery_date','conv_payment_terms'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  // Use nego price as order amount, but leave it editable
+  if (document.getElementById('conv_order_amount')) {
+    document.getElementById('conv_order_amount').value = entry.price || e.expected_value || '';
+  }
+  // Show approval notice
+  document.getElementById('convertModal').classList.add('open');
+  // Add a visual indicator this came from negotiation
+  const notice = document.querySelector('#convertModal .convert-source-notice');
+  if (notice) notice.remove();
+  const hdr = document.querySelector('#convertModal .modal-box > div:nth-child(2)');
+  if (hdr) {
+    const noticeEl = document.createElement('div');
+    noticeEl.className = 'convert-source-notice';
+    noticeEl.style.cssText = 'font-size:11px;color:var(--amber);margin-bottom:8px;padding:8px 12px;background:var(--amber-lt);border-radius:var(--r);border:1px solid var(--amber-md)';
+    noticeEl.innerHTML = '📋 Pre-filled from negotiation entry (' + (entry.date ? fmtDate(entry.date) : 'undated') + ')' +
+      (entry.price ? ' · ₹' + Number(entry.price).toLocaleString('en-IN') : '') +
+      '<br><strong>Please verify the price and fill in PO details. Requires management approval.</strong>';
+    hdr.insertBefore(noticeEl, hdr.firstChild);
+  }
+}
+
+/*============================
+  DELETE ENQUIRY (Management only)
+============================*/
+async function deleteEnquiry() {
+  if (!selectedEnqId) return;
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!confirm('Permanently delete enquiry for "' + (e?.customer || selectedEnqId) + '"? This cannot be undone.')) return;
+  try {
+    await SB.from('enquiries').delete().eq('id', selectedEnqId);
+    toast('Enquiry deleted', 'warn');
+    closeEnqDrawer();
+    await loadEnquiries();
+  } catch(err) { toast('Delete failed: ' + err.message, 'err'); }
 }
 
 /*============================
