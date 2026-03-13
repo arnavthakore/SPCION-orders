@@ -1987,8 +1987,13 @@ function updateAll() {
 function updateSidebarBadges() {
   const active = allOrders.filter(o => !o.archived);
   document.getElementById('nb-all').textContent = active.length;
+  const STAGE_BADGE_MAP = {
+    'Design':'nb-design','Raw Material':'nb-raw','Fabrication':'nb-fab','Assembly':'nb-asm',
+    'QA/Testing':'nb-qa','Dispatch Ready':'nb-dispatch','Shipped':'nb-ship',
+    'Delivered':'nb-del','Payment Received':'nb-payrec'
+  };
   STAGES.forEach(s => {
-    const el = document.getElementById('nb-' + s.key.toLowerCase().replace(/[^a-z]/g,''));
+    const el = document.getElementById(STAGE_BADGE_MAP[s.key]);
     if (!el) return;
     el.textContent = active.filter(o => o.status === s.key).length;
   });
@@ -3268,7 +3273,7 @@ function showPage(page, el) {
     const map = { 'dash':'nav-dash', 'orders':'nav-orders' };
     if (map[page]) document.getElementById(map[page])?.classList.add('active');
   }
-  if (page === 'orders') { activeFilter = null; renderTable(); }
+  if (page === 'orders') { if (!activeFilter && !activeSmartView) activeFilter = null; renderTable(); }
   if (page === 'enquiries') { renderEnqTable(); renderEnqPipeline(); }
   if (page === 'archived') renderArchiveTable();
   closeSidebar();
