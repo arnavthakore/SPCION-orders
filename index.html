@@ -32,6 +32,11 @@
   --sh-md:0 6px 20px rgba(0,0,0,.09);--sh-lg:0 16px 48px rgba(0,0,0,.13);
   --r:6px;--r-lg:10px;--r-xl:14px;
   --c-enq-new:#7c3aed;--c-enq-new-lt:#f5f0ff;
+  --c-enq-costing:#0e7490;--c-enq-costing-lt:#ecfeff;
+  --c-enq-specs:#6d28d9;--c-enq-specs-lt:#f5f3ff;
+  --c-enq-fwd:#0369a1;--c-enq-fwd-lt:#e0f2fe;
+  --c-enq-partner:#0891b2;--c-enq-partner-lt:#ecfeff;
+  --c-enq-offer:#1a56db;--c-enq-offer-lt:#eff4ff;
   --c-enq-neg:#d97706;--c-enq-neg-lt:#fffbeb;
   --c-enq-quot:#1a56db;--c-enq-quot-lt:#eff4ff;
   --c-enq-won:#059669;--c-enq-won-lt:#ecfdf5;
@@ -332,6 +337,11 @@ td:first-child{padding-left:14px}
 /* Enquiry status badges */
 .enq-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}
 .enq-new{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-lt)}
+.enq-costing{background:var(--c-enq-costing-lt);color:var(--c-enq-costing);border:1px solid var(--c-enq-costing-lt)}
+.enq-specs_received{background:var(--c-enq-specs-lt);color:var(--c-enq-specs);border:1px solid var(--c-enq-specs-lt)}
+.enq-forwarded_partner{background:var(--c-enq-fwd-lt);color:var(--c-enq-fwd);border:1px solid var(--c-enq-fwd-lt)}
+.enq-offer_from_partner{background:var(--c-enq-partner-lt);color:var(--c-enq-partner);border:1px solid var(--c-enq-partner-lt)}
+.enq-offer_sent{background:var(--c-enq-offer-lt);color:var(--c-enq-offer);border:1px solid var(--c-enq-offer-lt)}
 .enq-negotiating{background:var(--amber-lt);color:var(--amber);border:1px solid var(--amber-md)}
 .enq-quoted{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
 .enq-won{background:var(--green-lt);color:var(--green);border:1px solid var(--green-md)}
@@ -363,6 +373,11 @@ td:first-child{padding-left:14px}
 ═══════════════════════════════════════════*/
 .enq-stage-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
 .enq-stage-new{background:var(--c-enq-new-lt);color:var(--c-enq-new)}
+.enq-stage-costing{background:var(--c-enq-costing-lt);color:var(--c-enq-costing)}
+.enq-stage-specs_received{background:var(--c-enq-specs-lt);color:var(--c-enq-specs)}
+.enq-stage-forwarded_partner{background:var(--c-enq-fwd-lt);color:var(--c-enq-fwd)}
+.enq-stage-offer_from_partner{background:var(--c-enq-partner-lt);color:var(--c-enq-partner)}
+.enq-stage-offer_sent{background:var(--c-enq-offer-lt);color:var(--c-enq-offer)}
 .enq-stage-negotiating{background:var(--c-enq-neg-lt);color:var(--c-enq-neg)}
 .enq-stage-quoted{background:var(--c-enq-quot-lt);color:var(--c-enq-quot)}
 .enq-stage-won{background:var(--c-enq-won-lt);color:var(--c-enq-won)}
@@ -1567,6 +1582,9 @@ const STAGES = [
 ];
 const HOLD = { key:'On Hold', label:'On Hold', icon:'⚠', cls:'bs-hold', dot:'bdot-hold', btn:'s-hold' };
 
+// Traded machines skip production stages — only these stages apply
+const TRADED_STAGE_KEYS = ['Design','Dispatch Ready','Shipped','Delivered','Payment Received'];
+
 /* Mandatory fields before advancing to certain stages */
 const MANDATORY_FOR_STAGE = {
   'Shipped':          { field:'shipped_date',       label:'Shipped Date must be filled before marking Shipped.' },
@@ -1582,15 +1600,22 @@ function stageIdx(s) {
   const i = STAGES.findIndex(x => x.key === s);
   return i >= 0 ? i : -1;
 }
-function nextStage(s) {
-  if (s === 'On Hold') return null;
-  const i = stageIdx(s);
-  return (i >= 0 && i < STAGES.length - 1) ? STAGES[i + 1].key : null;
+function stagesForOrder(o) {
+  // Return applicable stages based on order type
+  if (o && o.order_type === 'traded') return STAGES.filter(s => TRADED_STAGE_KEYS.includes(s.key));
+  return STAGES;
 }
-function prevStage(s) {
+function nextStage(s, orderType) {
   if (s === 'On Hold') return null;
-  const i = stageIdx(s);
-  return (i > 0) ? STAGES[i - 1].key : null;
+  const list = (orderType === 'traded') ? STAGES.filter(x => TRADED_STAGE_KEYS.includes(x.key)) : STAGES;
+  const i = list.findIndex(x => x.key === s);
+  return (i >= 0 && i < list.length - 1) ? list[i + 1].key : null;
+}
+function prevStage(s, orderType) {
+  if (s === 'On Hold') return null;
+  const list = (orderType === 'traded') ? STAGES.filter(x => TRADED_STAGE_KEYS.includes(x.key)) : STAGES;
+  const i = list.findIndex(x => x.key === s);
+  return (i > 0) ? list[i - 1].key : null;
 }
 function shortStageName(s) {
   const map = {'Design':'Des','Raw Material':'RM','Fabrication':'Fab','Assembly':'Asm',
@@ -1876,8 +1901,13 @@ function stageAgeDays(o) {
   if (!d) return null;
   return daysDiff(d);
 }
+function isValidDate(s) {
+  if (!s) return false;
+  const d = new Date(s);
+  return !isNaN(d.getTime());
+}
 function deliveryDelay(o) {
-  if (!o.delivery_date) return null;
+  if (!o.delivery_date || !isValidDate(o.delivery_date)) return null;
   const done = ['Delivered','Payment Received'].includes(o.status);
   if (done && o.delivered_date) {
     return daysDiff(o.delivery_date) - daysDiff(o.delivered_date);
@@ -1924,6 +1954,7 @@ function fmtCr(n) {
 }
 function fmtDate(d) {
   if (!d) return '—';
+  if (!isValidDate(d)) return d; // Return as-is if it's freeform text like "8 weeks from PO"
   const [y,m,dd] = d.slice(0,10).split('-');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   return `${parseInt(dd)} ${months[parseInt(m)-1]} ${y.slice(2)}`;
@@ -2454,8 +2485,8 @@ function renderTable() {
     const pend = pendingAmt(o);
     const pendDisplay = isFinance ? (pend !== null && pend > 0 ? `<span class="pending-badge">${fmtCr(pend)}</span>` : `<span style="font-family:var(--mono);font-size:11px;color:var(--t4)">—</span>`) : '';
 
-    const ns = nextStage(o.status);
-    const prvS = prevStage(o.status);
+    const ns = nextStage(o.status, o.order_type);
+    const prvS = prevStage(o.status, o.order_type);
     const qaBtn = `<div class="stage-shift-btns">${prvS ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${prvS}')" title="Back to ${prvS}">← ${shortStageName(prvS)}</button>` : ''}${ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${shortStageName(ns)}</button>` : ''}</div>`;
 
     const isCF = o.carry_forward === true || o.carry_forward === 'true';
@@ -2754,14 +2785,16 @@ function renderDrawer(o) {
   const idx = stageIdx(o.status);
   document.getElementById('dTitle').textContent = (o.customer || 'Order') + (o.po_number ? ' · ' + o.po_number : '');
 
-  // ── STAGE STEPPER ──
+  // ── STAGE STEPPER (order-type aware) ──
+  const oStages = stagesForOrder(o);
+  const oIdx = oStages.findIndex(s => s.key === o.status);
   const track = document.getElementById('stepperTrack');
   const holdBtn = document.getElementById('ssHoldBtn');
   if (track) {
-    track.innerHTML = STAGES.map((s, i) => {
-      const cls = i < idx ? 'done' : i === idx ? 'current' : '';
+    track.innerHTML = oStages.map((s, i) => {
+      const cls = i < oIdx ? 'done' : i === oIdx ? 'current' : '';
       return `<div class="ss-step ${cls}" onclick="updateStageFromDrawer('${s.key}')" title="Set to ${s.label}">
-        <div class="ss-dot">${i < idx ? '✓' : s.icon}</div>
+        <div class="ss-dot">${i < oIdx ? '✓' : s.icon}</div>
         <div class="ss-lbl">${s.label.replace('Raw Material','Raw Mat').replace('Fabrication','Fab').replace('Assembly','Asm').replace('QA/Testing','QA').replace('Dispatch Ready','Dispatch').replace('Payment Received','Pay Rec')}</div>
       </div>`;
     }).join('');
@@ -3043,7 +3076,7 @@ async function advanceStage() {
   if (!selectedId) return;
   const o = allOrders.find(x => x.id === selectedId);
   if (!o) return;
-  const ns = nextStage(o.status);
+  const ns = nextStage(o.status, o.order_type);
   if (!ns) { toast('Already at final stage', 'warn'); return; }
   updateStageFromDrawer(ns);
 }
@@ -3405,8 +3438,8 @@ function renderCardView(orders) {
     const psBadge = ps === 'paid' ? '<span class="badge bp-paid">Paid</span>' :
                     ps === 'partial' ? '<span class="badge bp-partial">Partial</span>' :
                     ps === 'pending' ? '<span class="badge bp-pending">Pending</span>' : '';
-    const ns = nextStage(o.status);
-    const psMob = prevStage(o.status);
+    const ns = nextStage(o.status, o.order_type);
+    const psMob = prevStage(o.status, o.order_type);
     const qaBtn = `<div style="display:flex;gap:6px;margin-top:8px">${psMob ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${psMob}')">← ${shortStageName(psMob)}</button>` : ''}${ns ? `<button class="qa-btn qa-next oc-qa" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')">→ ${shortStageName(ns)}</button>` : ''}</div>`;
     const delChip = delayChip(o);
     return `<div class="order-card" onclick="openDrawer('${o.id}')">
@@ -3516,15 +3549,33 @@ async function loadEnquiries() {
   }
 }
 
+function isEnqActive(e) { return !['won','lost'].includes(e.status); }
 function updateEnqBadge() {
-  const active = allEnquiries.filter(e => !['won','lost'].includes(e.status));
+  const active = allEnquiries.filter(e => isEnqActive(e));
   const el = document.getElementById('nb-enq');
   if (el) el.textContent = active.length;
 }
 
-const ENQ_STATUSES = ['new','negotiating','quoted','won','lost'];
-const ENQ_STATUS_LABELS = { new:'New', negotiating:'Negotiating', quoted:'Quoted', won:'Won', lost:'Lost' };
-const ENQ_STATUS_CLASS = { new:'enq-new', negotiating:'enq-negotiating', quoted:'enq-quoted', won:'enq-won', lost:'enq-lost' };
+// All possible enquiry statuses (superset)
+const ENQ_STATUSES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','quoted','won','lost'];
+const ENQ_STATUS_LABELS = {
+  new:'New / Quotation Requested', costing:'Costing', specs_received:'Specs Received',
+  forwarded_partner:'Forwarded to Partner', offer_from_partner:'Offer from Partner',
+  offer_sent:'Offer Sent', negotiating:'Negotiating', quoted:'Quoted', won:'Won', lost:'Lost'
+};
+const ENQ_STATUS_CLASS = {
+  new:'enq-new', costing:'enq-costing', specs_received:'enq-specs_received',
+  forwarded_partner:'enq-forwarded_partner', offer_from_partner:'enq-offer_from_partner',
+  offer_sent:'enq-offer_sent', negotiating:'enq-negotiating', quoted:'enq-quoted', won:'enq-won', lost:'enq-lost'
+};
+// Stage flows by order type
+const ENQ_FLOW_MANUFACTURED = ['new','costing','offer_sent','negotiating'];
+const ENQ_FLOW_TRADED = ['specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating'];
+function enqFlowFor(orderType) {
+  return orderType === 'traded' ? ENQ_FLOW_TRADED : ENQ_FLOW_MANUFACTURED;
+}
+// All non-terminal stages for chip display (union of both flows)
+const ENQ_CHIP_STAGES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','won','lost'];
 
 function enqBadge(status) {
   return `<span class="enq-badge ${ENQ_STATUS_CLASS[status] || ''}">${ENQ_STATUS_LABELS[status] || status}</span>`;
@@ -3534,10 +3585,13 @@ function renderEnqStatusChips() {
   const wrap = document.getElementById('enqStatusChips');
   if (!wrap) return;
   const counts = {};
-  ENQ_STATUSES.forEach(s => counts[s] = 0);
+  ENQ_CHIP_STAGES.forEach(s => counts[s] = 0);
   allEnquiries.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
+  // Only show chips that have at least 1 enquiry, plus always show won/lost
+  const alwaysShow = ['won','lost'];
+  const visibleChips = ENQ_CHIP_STAGES.filter(s => counts[s] > 0 || alwaysShow.includes(s));
   wrap.innerHTML = `<span class="chip ${!enqFilter ? 'on' : ''}" onclick="setEnqFilter(null)">All <span class="chip-ct">${allEnquiries.length}</span></span>` +
-    ENQ_STATUSES.map(s => `<span class="chip ${enqFilter===s ? 'on' : ''}" onclick="setEnqFilter('${s}')">${ENQ_STATUS_LABELS[s]} <span class="chip-ct">${counts[s]}</span></span>`).join('');
+    visibleChips.map(s => `<span class="chip ${enqFilter===s ? 'on' : ''}" onclick="setEnqFilter('${s}')">${ENQ_STATUS_LABELS[s]} <span class="chip-ct">${counts[s]}</span></span>`).join('');
 }
 
 function setEnqFilter(status) {
@@ -3567,7 +3621,7 @@ function renderEnqTable() {
   tbody.innerHTML = rows.map((e, i) => {
     const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + (new Date(e.next_followup) < new Date() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     const val = e.expected_value ? '₹' + Number(e.expected_value).toLocaleString('en-IN') : '—';
-    const convertBtn = ['quoted','won'].includes(e.status) && !e.converted_order_id
+    const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
       : e.converted_order_id ? '<span style="font-size:10px;color:var(--green);font-weight:700">✓ Converted</span>' : '';
     return `<tr onclick="openEnqDrawer('${e.id}')" style="cursor:pointer">
@@ -3612,7 +3666,7 @@ async function saveNewEnquiry() {
     order_type: document.getElementById('enqf_order_type')?.value || 'manufactured',
     source: document.getElementById('enqf_source')?.value || 'direct',
     notes: document.getElementById('enqf_notes')?.value.trim() || null,
-    status: 'new',
+    status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new',
     negotiation_log: '[]',
     quote_log: '[]'
   };
@@ -3657,17 +3711,19 @@ function renderEnqDrawer(e) {
   document.getElementById('enqDrawerTitle').textContent = e.customer || 'Enquiry';
   document.getElementById('enqDrawerSub').textContent = e.description || '';
 
-  // Stage bar
+  // Stage bar — order-type aware
   const bar = document.getElementById('enqStageBar');
-  const stages = ['new','negotiating','quoted'];
-  bar.innerHTML = stages.map(s => {
+  const enqFlow = enqFlowFor(e.order_type);
+  const curFlowIdx = enqFlow.indexOf(e.status);
+  bar.innerHTML = enqFlow.map((s, i) => {
     const isActive = e.status === s;
-    const isPast = ENQ_STATUSES.indexOf(s) < ENQ_STATUSES.indexOf(e.status);
-    return `<button class="enq-stage-btn ${isActive ? 'active' : isPast ? 'won' : ''}" onclick="advanceEnqTo('${s}')">${ENQ_STATUS_LABELS[s]}</button>`;
+    const isPast = curFlowIdx >= 0 && i < curFlowIdx;
+    const shortLabel = ENQ_STATUS_LABELS[s] || s;
+    return `<button class="enq-stage-btn ${isActive ? 'active' : isPast ? 'won' : ''}" onclick="advanceEnqTo('${s}')" title="${shortLabel}">${shortLabel}</button>`;
   }).join('<span style="color:var(--t4);font-size:12px">›</span>') +
   `<button class="enq-stage-btn won ${e.status==='won'?'active':''}" onclick="advanceEnqTo('won')">🎉 Won</button>` +
   `<button class="enq-stage-btn lost-btn ${e.status==='lost'?'active':''}" onclick="openLostModal()">✗ Lost</button>` +
-  ((['quoted','won'].includes(e.status) && !e.converted_order_id) ? `<button class="convert-btn" onclick="openConvertModal('${e.id}')">Convert to Order →</button>` :
+  ((['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id) ? `<button class="convert-btn" onclick="openConvertModal('${e.id}')">Convert to Order →</button>` :
    e.converted_order_id ? '<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green)">✓ Converted to Order</span>' : '');
 
   // Details grid
@@ -3788,7 +3844,7 @@ async function saveNegEntry() {
   const updates = {
     negotiation_log: JSON.stringify(entries),
     next_followup: entry.followup || e.next_followup,
-    status: e.status === 'new' ? 'negotiating' : e.status
+    status: (!['negotiating','quoted','won','lost'].includes(e.status)) ? 'negotiating' : e.status
   };
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
@@ -3818,7 +3874,7 @@ async function saveQuoteEntry() {
   entries.push(entry);
   const updates = {
     quote_log: JSON.stringify(entries),
-    status: ['new','negotiating'].includes(e.status) ? 'quoted' : e.status
+    status: !['quoted','won','lost'].includes(e.status) ? 'quoted' : e.status
   };
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
@@ -3981,8 +4037,11 @@ function getEnqKPIs() {
   const total = allEnquiries.length;
   const pipeline = allEnquiries.filter(e => e.status !== 'lost').reduce((s,e) => s + (e.expected_value || 0), 0);
   const winRate = total > 0 ? Math.round((won / (won + lost || 1)) * 100) : 0;
-  const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && !['won','lost'].includes(e.status));
+  const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && isEnqActive(e));
   return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: followups.length };
+}
+function renderEnqPipeline() {
+  // no-op — pipeline is rendered via status chips
 }
 </script>
 </body>
