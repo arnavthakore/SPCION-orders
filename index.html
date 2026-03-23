@@ -1036,7 +1036,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <div class="dsec-t">New Entry</div>
         <div class="fgrid" style="padding:0 2px">
           <div class="fg"><label class="flbl">Date</label><input class="finput" type="date" id="neg_date"></div>
-          <div class="fg"><label class="flbl">Price Offered (INR)</label><input class="finput" type="number" id="neg_price" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Price Offered</label><input class="finput" type="number" id="neg_price" placeholder="0"></div>
           <div class="fg"><label class="flbl">Follow-up Date</label><input class="finput" type="date" id="neg_followup"></div>
           <div class="fg ffull"><label class="flbl">Notes</label><input class="finput" id="neg_notes" placeholder="What was discussed…"></div>
           <div class="fg ffull" style="margin-top:6px;display:flex;gap:8px">
@@ -1061,7 +1061,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <div class="fgrid" style="padding:0 2px">
           <div class="fg"><label class="flbl">Quote Date</label><input class="finput" type="date" id="qt_date"></div>
           <div class="fg"><label class="flbl">Quote Number</label><input class="finput" id="qt_number" placeholder="e.g. Q-2025-047"></div>
-          <div class="fg"><label class="flbl">Quote Amount (INR)</label><input class="finput" type="number" id="qt_amount" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Quote Amount</label><input class="finput" type="number" id="qt_amount" placeholder="0"></div>
           <div class="fg"><label class="flbl">Valid Until</label><input class="finput" type="date" id="qt_valid_until"></div>
           <div class="fg ffull"><label class="flbl">Notes / Revision reason</label><input class="finput" id="qt_notes" placeholder="e.g. Revised scope, price negotiated down…"></div>
           <div class="fg ffull" style="margin-top:6px;display:flex;gap:8px">
@@ -1377,7 +1377,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <div class="fhead">Invoice</div>
         <div class="fg"><label class="flbl">Invoice Number(s)</label><input class="finput" id="f_inv_number" placeholder="e.g. SPIAIL252603A"></div>
         <div class="fg"><label class="flbl">Invoice Date</label><input class="finput" type="date" id="f_inv_date"></div>
-        <div class="fg"><label class="flbl">Invoice Amount (INR)</label><input class="finput" type="number" id="f_inv_amount" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Invoice Amount</label><input class="finput" type="number" id="f_inv_amount" placeholder="0"></div>
 
         <div class="fhead">Performance Bank Guarantee (PBG)</div>
         <div class="fg"><label class="flbl">PBG Required?</label>
@@ -1386,7 +1386,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
             <option value="true">Yes</option>
           </select>
         </div>
-        <div class="fg"><label class="flbl">PBG Amount (INR)</label><input class="finput" type="number" id="f_pbg_amount" placeholder="0"></div>
+        <div class="fg"><label class="flbl">PBG Amount</label><input class="finput" type="number" id="f_pbg_amount" placeholder="0"></div>
         <div class="fg"><label class="flbl">PBG Validity (months)</label><input class="finput" type="number" id="f_pbg_validity_months" value="12" placeholder="12"></div>
         <div class="fg"><label class="flbl">PBG Expiry Date</label><input class="finput" type="date" id="f_pbg_expiry_date"></div>
         <div class="fg"><label class="flbl">PBG Returned?</label>
@@ -1413,11 +1413,11 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <div class="fgrid">
         <div class="fhead">Payment Milestones</div>
         <div class="fg"><label class="flbl">Advance % of Contract</label><input class="finput" type="number" id="f_pm_advance_pct" placeholder="e.g. 20"></div>
-        <div class="fg"><label class="flbl">Advance Received (INR)</label><input class="finput" type="number" id="f_pm_advance_received" placeholder="0"></div>
-        <div class="fg"><label class="flbl">Against Invoice (INR)</label><input class="finput" type="number" id="f_pm_invoice_received" placeholder="0"></div>
-        <div class="fg"><label class="flbl">Against FAT (INR)</label><input class="finput" type="number" id="f_pm_fat_received" placeholder="0"></div>
-        <div class="fg"><label class="flbl">Against Dispatch (INR)</label><input class="finput" type="number" id="f_pm_dispatch_received" placeholder="0"></div>
-        <div class="fg"><label class="flbl">Against Delivery (INR)</label><input class="finput" type="number" id="f_pm_delivery_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Advance Received</label><input class="finput" type="number" id="f_pm_advance_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Invoice</label><input class="finput" type="number" id="f_pm_invoice_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against FAT</label><input class="finput" type="number" id="f_pm_fat_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Dispatch</label><input class="finput" type="number" id="f_pm_dispatch_received" placeholder="0"></div>
+        <div class="fg"><label class="flbl">Against Delivery</label><input class="finput" type="number" id="f_pm_delivery_received" placeholder="0"></div>
       </div>
     </div>
 
@@ -2350,7 +2350,7 @@ function renderDashboard() {
     const enqCards = [
       { cls:'k-teal',   ico:'💬', lbl:'Active Enquiries',  val:eq.active,               sub:'open pipeline' },
       { cls:'k-green',  ico:'🏆', lbl:'Win Rate',           val:eq.winRate+'%',          sub:eq.won+' won / '+eq.lost+' lost' },
-      { cls:'k-purple', ico:'💰', lbl:'Enq Pipeline',       val:'₹'+(eq.pipeline/100000).toFixed(1)+'L', sub:'excl. lost' },
+      { cls:'k-purple', ico:'💰', lbl:'Enq Pipeline',       val:fmtCr(eq.pipeline), sub:'excl. lost' },
       { cls:'k-amber',  ico:'📅', lbl:'Overdue Followups',  val:eq.followupsOverdue,     sub:'need attention' },
     ];
     kpiRowEl.innerHTML += enqCards.map(function(k) {
@@ -4166,6 +4166,7 @@ function convertFromNeg(enqId, negIdx) {
   if (neg.date && document.getElementById('conv_po_date')) {
     document.getElementById('conv_po_date').value = neg.date;
   }
+  if (document.getElementById('conv_currency')) document.getElementById('conv_currency').value = e.currency || 'INR';
   document.getElementById('convertModal').classList.add('open');
 }
 
