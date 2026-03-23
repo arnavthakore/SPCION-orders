@@ -993,6 +993,8 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <div class="fgrid" style="padding:0 2px">
           <div class="fg"><label class="flbl">Customer</label><input class="finput" id="eq_customer"></div>
           <div class="fg"><label class="flbl">Contact Person</label><input class="finput" id="eq_contact_person"></div>
+          <div class="fg"><label class="flbl">Contact Email</label><input class="finput" type="email" id="eq_contact_email"></div>
+          <div class="fg"><label class="flbl">Our Contact (SPICON)</label><input class="finput" id="eq_our_contact"></div>
           <div class="fg ffull"><label class="flbl">Equipment / Description</label><input class="finput" id="eq_description"></div>
           <div class="fg"><label class="flbl">Enquiry Date</label><input class="finput" type="date" id="eq_enquiry_date"></div>
           <div class="fg"><label class="flbl">Currency</label><select class="finput" id="eq_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
@@ -1086,6 +1088,8 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
     <div class="fgrid">
       <div class="fg"><label class="flbl">Customer *</label><input class="finput" id="enqf_customer" placeholder="e.g. Afcons - Mumbai Metro"></div>
       <div class="fg"><label class="flbl">Contact Person</label><input class="finput" id="enqf_contact_person" placeholder="e.g. Rajesh Kumar"></div>
+      <div class="fg"><label class="flbl">Contact Email</label><input class="finput" type="email" id="enqf_contact_email" placeholder="e.g. rajesh@company.com"></div>
+      <div class="fg"><label class="flbl">Our Contact (SPICON)</label><input class="finput" id="enqf_our_contact" placeholder="e.g. Arnav Thakore"></div>
       <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="enqf_description" placeholder="e.g. 12T Battery Locomotive"></div>
       <div class="fg"><label class="flbl">Enquiry Date *</label><input class="finput" type="date" id="enqf_enquiry_date"></div>
       <div class="fg"><label class="flbl">Currency</label><select class="finput" id="enqf_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
@@ -3556,10 +3560,10 @@ function exportEnquiries() {
     return true;
   });
   if (!rows.length) { toast('No enquiries to export', 'warn'); return; }
-  const headers = ['Customer','Contact Person','Description','Enquiry Date','Currency','Expected Value','Ex-Works','Incl GST','Order Type','Source','Status','Next Followup','Notes'];
+  const headers = ['Customer','Contact Person','Contact Email','Our Contact (SPICON)','Description','Enquiry Date','Currency','Expected Value','Ex-Works','Incl GST','Order Type','Source','Status','Next Followup','Notes'];
   const data = rows.map(function(e) {
     return [
-      e.customer||'', e.contact_person||'', e.description||'', e.enquiry_date||'',
+      e.customer||'', e.contact_person||'', e.contact_email||'', e.our_contact||'', e.description||'', e.enquiry_date||'',
       e.currency||'INR', e.expected_value||0, e.ex_works||0, e.incl_gst||0,
       e.order_type||'manufactured', e.source||'', ENQ_STATUS_LABELS[e.status]||e.status||'',
       e.next_followup||'', e.notes||''
@@ -3827,7 +3831,7 @@ function renderEnqTable() {
   ENQUIRY MODAL — NEW
 ============================*/
 function openNewEnqModal() {
-  ['enqf_customer','enqf_contact_person','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_currency'].forEach(id => {
+  ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_currency'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
@@ -3846,6 +3850,8 @@ async function saveNewEnquiry() {
   const payload = {
     customer,
     contact_person: document.getElementById('enqf_contact_person')?.value.trim() || null,
+    contact_email: document.getElementById('enqf_contact_email')?.value.trim() || null,
+    our_contact: document.getElementById('enqf_our_contact')?.value.trim() || null,
     description,
     enquiry_date,
     expected_value: parseFloat(document.getElementById('enqf_expected_value')?.value) || null,
@@ -3922,7 +3928,9 @@ function renderEnqDrawer(e) {
   const fmtVal = v => v ? fmtCr(Number(v), eCur) : '—';
   grid.innerHTML = [
     ['Customer', fmt(e.customer)],
-    ['Contact', fmt(e.contact_person)],
+    ['Contact Person', fmt(e.contact_person)],
+    ['Contact Email', e.contact_email ? `<a href="mailto:${e.contact_email}" style="color:var(--blue)">${e.contact_email}</a>` : '—'],
+    ['Our Contact (SPICON)', fmt(e.our_contact)],
     ['Enquiry Date', e.enquiry_date ? fmtDate(e.enquiry_date) : '—'],
     ['Currency', eCur],
     ['Expected Value', fmtVal(e.expected_value)],
@@ -3935,7 +3943,7 @@ function renderEnqDrawer(e) {
   ].map(([l,v]) => `<div class="irow"><div class="ilbl">${l}</div><div class="ival">${v}</div></div>`).join('');
 
   // Prefill edit fields
-  ['customer','contact_person','description','notes'].forEach(f => {
+  ['customer','contact_person','contact_email','our_contact','description','notes'].forEach(f => {
     const el = document.getElementById('eq_' + f); if (el) el.value = e[f] || '';
   });
   if (document.getElementById('eq_enquiry_date')) document.getElementById('eq_enquiry_date').value = e.enquiry_date || '';
@@ -4088,6 +4096,8 @@ async function saveEnqDetails() {
   const updates = {
     customer: document.getElementById('eq_customer')?.value.trim() || null,
     contact_person: document.getElementById('eq_contact_person')?.value.trim() || null,
+    contact_email: document.getElementById('eq_contact_email')?.value.trim() || null,
+    our_contact: document.getElementById('eq_our_contact')?.value.trim() || null,
     description: document.getElementById('eq_description')?.value.trim() || null,
     enquiry_date: document.getElementById('eq_enquiry_date')?.value || null,
     expected_value: parseFloat(document.getElementById('eq_expected_value')?.value) || null,
