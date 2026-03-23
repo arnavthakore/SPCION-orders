@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -856,7 +857,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
     <div><div class="pg-title">All Orders</div><div class="pg-sub" id="ordersSub">Loading…</div></div>
     <div class="pg-actions">
       <button class="btn btn-ghost btn-sm" onclick="clearFilter()">✕ Clear Filter</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export Excel</button>
       <button class="btn btn-blue btn-sm" id="btn-new-order2" onclick="openQuickAdd()">+ New Order</button>
     </div>
   </div>
@@ -928,6 +929,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   <div class="pg-hdr">
     <div><div class="pg-title">💬 Enquiries</div><div class="pg-sub" id="enqSub">Pre-sales pipeline</div></div>
     <div class="pg-actions">
+      <button class="btn btn-ghost btn-sm" onclick="exportEnquiries()">⬇ Export</button>
       <button class="btn btn-ghost btn-sm" onclick="loadEnquiries()">↻ Refresh</button>
       <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:1px solid var(--teal)" onclick="openNewEnqModal()">+ New Enquiry</button>
     </div>
@@ -2634,7 +2636,7 @@ async function doBulkStage() {
 function bulkExport() {
   const ids = selectedRows;
   const orders = allOrders.filter(o => ids.has(o.id));
-  downloadCSV(orders, 'SPICON_selected_export.csv');
+  downloadExcel(orders, 'SPICON_selected_export.xlsx');
 }
 
 /*============================
@@ -3524,8 +3526,7 @@ async function archiveByFY() {
 function exportFY(fy) {
   const orders = allOrders.filter(o => getOrderFY(o) === fy);
   if (orders.length === 0) { toast(`No orders found for FY ${fy}`, 'warn'); return; }
-  downloadCSV(orders, `SPICON_FY${fy.replace('-','_')}_export.csv`);
-  toast(`Exported ${orders.length} orders for FY ${fy}`, 'info');
+  downloadExcel(orders, `SPICON_FY${fy.replace('-','_')}_export.xlsx`);
 }
 
 /*============================
@@ -3533,21 +3534,55 @@ function exportFY(fy) {
 ============================*/
 function exportCSV() {
   const orders = getFilteredOrders();
-  downloadCSV(orders, 'SPICON_orders_export.csv');
+  downloadExcel(orders, 'SPICON_orders_export.xlsx');
 }
 function downloadCSV(orders, filename) {
-  const headers = ['SL','Customer','PO Number','Description','Status','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry'];
+  // Legacy CSV fallback (kept for compatibility)
+  downloadExcel(orders, filename.replace('.csv','.xlsx'));
+}
+function downloadExcel(orders, filename) {
+  const headers = ['SL','Customer','PO Number','Description','Status','Currency','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry','FY Tag'];
   const rows = orders.map(o => [
     o.sl||'', o.customer||'', o.po_number||'', o.description||'', o.status||'',
-    o.po_date||'', o.delivery_date||'', o.order_amount||'', o.inv_amount||'',
+    o.currency||'INR', o.po_date||'', o.delivery_date||'', o.order_amount||0, o.inv_amount||0,
     totalReceived(o), Math.max(0, pendingAmt(o)||0),
-    o.pbg_required?'Yes':'No', o.pbg_expiry_date||''
+    o.pbg_required?'Yes':'No', o.pbg_expiry_date||'', getOrderFY(o)||''
   ]);
-  const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-  a.download = filename;
-  a.click();
+  const wsData = [headers, ...rows];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = headers.map((h, ci) => ({ wch: Math.max(h.length, ...rows.slice(0,100).map(r => String(r[ci]||'').length)) + 2 }));
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+  XLSX.writeFile(wb, filename);
+  toast('Exported ' + orders.length + ' orders', 'info');
+}
+function exportEnquiries() {
+  const search = (document.getElementById('enqSearchBox')?.value || '').toLowerCase();
+  let rows = allEnquiries.filter(function(e) {
+    if (enqFilter && e.status !== enqFilter) return false;
+    if (search) {
+      const hay = [e.customer, e.description, e.contact_person].join(' ').toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  if (!rows.length) { toast('No enquiries to export', 'warn'); return; }
+  const headers = ['Customer','Contact Person','Description','Enquiry Date','Currency','Expected Value','Ex-Works','Incl GST','Order Type','Source','Status','Next Followup','Notes'];
+  const data = rows.map(function(e) {
+    return [
+      e.customer||'', e.contact_person||'', e.description||'', e.enquiry_date||'',
+      e.currency||'INR', e.expected_value||0, e.ex_works||0, e.incl_gst||0,
+      e.order_type||'manufactured', e.source||'', ENQ_STATUS_LABELS[e.status]||e.status||'',
+      e.next_followup||'', e.notes||''
+    ];
+  });
+  const wsData = [headers, ...data];
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = headers.map(function(h, ci) { return { wch: Math.max(h.length, ...data.slice(0,100).map(function(r) { return String(r[ci]||'').length; })) + 2 }; });
+  XLSX.utils.book_append_sheet(wb, ws, 'Enquiries');
+  XLSX.writeFile(wb, 'SPICON_enquiries_export.xlsx');
+  toast('Exported ' + rows.length + ' enquiries', 'info');
 }
 
 /*============================
