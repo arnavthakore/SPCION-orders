@@ -995,9 +995,10 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <div class="fg"><label class="flbl">Contact Person</label><input class="finput" id="eq_contact_person"></div>
           <div class="fg ffull"><label class="flbl">Equipment / Description</label><input class="finput" id="eq_description"></div>
           <div class="fg"><label class="flbl">Enquiry Date</label><input class="finput" type="date" id="eq_enquiry_date"></div>
-          <div class="fg"><label class="flbl">Expected Value (INR)</label><input class="finput" type="number" id="eq_expected_value" placeholder="0"></div>
-          <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="eq_ex_works" placeholder="0"></div>
-          <div class="fg"><label class="flbl">Value Incl GST (INR)</label><input class="finput" type="number" id="eq_incl_gst" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Currency</label><select class="finput" id="eq_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
+          <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="eq_expected_value" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Ex-Works Value</label><input class="finput" type="number" id="eq_ex_works" placeholder="0"></div>
+          <div class="fg"><label class="flbl">Value Incl GST</label><input class="finput" type="number" id="eq_incl_gst" placeholder="0"></div>
           <div class="fg"><label class="flbl">Order Type</label>
             <select class="finput" id="eq_order_type">
               <option value="manufactured">🔧 Manufactured</option>
@@ -1087,9 +1088,10 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <div class="fg"><label class="flbl">Contact Person</label><input class="finput" id="enqf_contact_person" placeholder="e.g. Rajesh Kumar"></div>
       <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="enqf_description" placeholder="e.g. 12T Battery Locomotive"></div>
       <div class="fg"><label class="flbl">Enquiry Date *</label><input class="finput" type="date" id="enqf_enquiry_date"></div>
-      <div class="fg"><label class="flbl">Expected Value (INR)</label><input class="finput" type="number" id="enqf_expected_value" placeholder="0"></div>
-      <div class="fg"><label class="flbl">Ex-Works Value (INR)</label><input class="finput" type="number" id="enqf_ex_works" placeholder="0"></div>
-      <div class="fg"><label class="flbl">Value Incl GST (INR)</label><input class="finput" type="number" id="enqf_incl_gst" placeholder="0"></div>
+      <div class="fg"><label class="flbl">Currency</label><select class="finput" id="enqf_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
+      <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="enqf_expected_value" placeholder="0"></div>
+      <div class="fg"><label class="flbl">Ex-Works Value</label><input class="finput" type="number" id="enqf_ex_works" placeholder="0"></div>
+      <div class="fg"><label class="flbl">Value Incl GST</label><input class="finput" type="number" id="enqf_incl_gst" placeholder="0"></div>
       <div class="fg"><label class="flbl">Order Type</label>
         <select class="finput" id="enqf_order_type">
           <option value="manufactured">🔧 Manufactured</option>
@@ -2144,10 +2146,10 @@ function updateActionList() {
 
 function applyCustomFilter(key) {
   showPage('orders', null);
-  if (key === 'no_invoice') {
-    chipFilter = key;
-    renderTable();
-  }
+  chipFilter = key;
+  activeSmartView = null;
+  activeFilter = null;
+  renderTable();
 }
 
 /*============================
@@ -2162,7 +2164,7 @@ function renderFYChecklist(allActive) {
   const prevOrders = allActive.filter(o => getOrderFY(o) === prevFY || getOrderFY(o) === '25-26');
   const items = [
     { ct: prevOrders.filter(o => !['Delivered','Payment Received'].includes(o.status)).length,
-      lbl: 'Orders Not Delivered', sub: `FY ${prevFY} unfinished`, view: null },
+      lbl: 'Orders Not Delivered', sub: `FY ${prevFY} unfinished`, filterFn: 'fy_not_delivered' },
     { ct: prevOrders.filter(o => payStatus(o) !== 'paid' && ['Dispatch Ready','Shipped','Delivered','Payment Received'].includes(o.status)).length,
       lbl: 'Payment Pending', sub: 'Dispatched but unpaid', view: 'pending_payment' },
     { ct: allActive.filter(o => o.pbg_required && !o.pbg_returned).length,
@@ -2472,6 +2474,9 @@ function getFilteredOrders() {
   // Custom chip filter
   if (chipFilter === 'no_invoice') {
     orders = orders.filter(o => !o.inv_number && ['QA/Testing','Dispatch Ready','Shipped','Delivered'].includes(o.status));
+  } else if (chipFilter === 'fy_not_delivered') {
+    const prevFY = previousFY();
+    orders = orders.filter(o => (getOrderFY(o) === prevFY || getOrderFY(o) === '25-26') && !['Delivered','Payment Received'].includes(o.status));
   }
 
   // Search
@@ -3777,7 +3782,7 @@ function renderEnqTable() {
   }
   tbody.innerHTML = rows.map((e, i) => {
     const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + (new Date(e.next_followup) < new Date() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
-    const val = e.expected_value ? '₹' + Number(e.expected_value).toLocaleString('en-IN') : '—';
+    const val = e.expected_value ? fmtCr(Number(e.expected_value), e.currency || 'INR') : '—';
     const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
       : e.converted_order_id ? '<span style="font-size:10px;color:var(--green);font-weight:700">✓ Converted</span>' : '';
@@ -3798,11 +3803,13 @@ function renderEnqTable() {
   ENQUIRY MODAL — NEW
 ============================*/
 function openNewEnqModal() {
-  ['enqf_customer','enqf_contact_person','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes'].forEach(id => {
+  ['enqf_customer','enqf_contact_person','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_currency'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
   if (dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+  const curEl = document.getElementById('enqf_currency');
+  if (curEl) curEl.value = 'INR';
   document.getElementById('enqModal').classList.add('open');
 }
 function closeEnqModal() { document.getElementById('enqModal').classList.remove('open'); }
@@ -3820,6 +3827,7 @@ async function saveNewEnquiry() {
     expected_value: parseFloat(document.getElementById('enqf_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('enqf_ex_works')?.value) || null,
     incl_gst: parseFloat(document.getElementById('enqf_incl_gst')?.value) || null,
+    currency: document.getElementById('enqf_currency')?.value || 'INR',
     order_type: document.getElementById('enqf_order_type')?.value || 'manufactured',
     source: document.getElementById('enqf_source')?.value || 'direct',
     notes: document.getElementById('enqf_notes')?.value.trim() || null,
@@ -3886,11 +3894,13 @@ function renderEnqDrawer(e) {
   // Details grid
   const grid = document.getElementById('enqDetailsGrid');
   const fmt = v => v || '—';
-  const fmtVal = v => v ? '₹' + Number(v).toLocaleString('en-IN') : '—';
+  const eCur = e.currency || 'INR';
+  const fmtVal = v => v ? fmtCr(Number(v), eCur) : '—';
   grid.innerHTML = [
     ['Customer', fmt(e.customer)],
     ['Contact', fmt(e.contact_person)],
     ['Enquiry Date', e.enquiry_date ? fmtDate(e.enquiry_date) : '—'],
+    ['Currency', eCur],
     ['Expected Value', fmtVal(e.expected_value)],
     ['Ex-Works Value', fmtVal(e.ex_works)],
     ['Value Incl GST', fmtVal(e.incl_gst)],
@@ -3908,6 +3918,7 @@ function renderEnqDrawer(e) {
   if (document.getElementById('eq_expected_value')) document.getElementById('eq_expected_value').value = e.expected_value || '';
   if (document.getElementById('eq_ex_works')) document.getElementById('eq_ex_works').value = e.ex_works || '';
   if (document.getElementById('eq_incl_gst')) document.getElementById('eq_incl_gst').value = e.incl_gst || '';
+  if (document.getElementById('eq_currency')) document.getElementById('eq_currency').value = e.currency || 'INR';
   if (document.getElementById('eq_order_type')) document.getElementById('eq_order_type').value = e.order_type || 'manufactured';
   if (document.getElementById('eq_source')) document.getElementById('eq_source').value = e.source || 'direct';
 
@@ -3934,13 +3945,14 @@ function renderNegLog(e) {
     return;
   }
   const showConvert = !e.converted_order_id;
+  const eCur = e.currency || 'INR';
   wrap.innerHTML = entries.slice().reverse().map((n, ri) => {
     const origIdx = entries.length - 1 - ri;
     return `
     <div class="log-entry">
       <div class="log-entry-hdr">
         <span class="log-entry-date">${n.date ? fmtDate(n.date) : '—'}</span>
-        ${n.price ? `<span class="log-entry-price">₹${Number(n.price).toLocaleString('en-IN')}</span>` : ''}
+        ${n.price ? `<span class="log-entry-price">${fmtCr(Number(n.price), eCur)}</span>` : ''}
       </div>
       ${n.notes ? `<div class="log-entry-notes">${n.notes}</div>` : ''}
       ${n.followup ? `<div class="log-entry-followup">📅 Follow-up: ${fmtDate(n.followup)}</div>` : ''}
@@ -3960,7 +3972,8 @@ function renderQuoteLog(e) {
   }
   wrap.innerHTML = entries.slice().reverse().map(function(q, i) {
     const numHtml = q.number ? ' · <span style="font-family:var(--mono)">' + q.number + '</span>' : '';
-    const amtHtml = q.amount ? '<span class="log-entry-price">₹' + Number(q.amount).toLocaleString('en-IN') + '</span>' : '';
+    const qCur = e.currency || 'INR';
+    const amtHtml = q.amount ? '<span class="log-entry-price">' + fmtCr(Number(q.amount), qCur) + '</span>' : '';
     const validHtml = q.valid_until ? '<div style="font-size:10.5px;color:var(--t3)">Valid until: ' + fmtDate(q.valid_until) + '</div>' : '';
     const notesHtml = q.notes ? '<div class="log-entry-notes">' + q.notes + '</div>' : '';
     return '<div class="log-entry">' +
@@ -4056,6 +4069,7 @@ async function saveEnqDetails() {
     expected_value: parseFloat(document.getElementById('eq_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('eq_ex_works')?.value) || null,
     incl_gst: parseFloat(document.getElementById('eq_incl_gst')?.value) || null,
+    currency: document.getElementById('eq_currency')?.value || 'INR',
     order_type: document.getElementById('eq_order_type')?.value || 'manufactured',
     source: document.getElementById('eq_source')?.value || 'direct',
     notes: document.getElementById('eq_notes')?.value.trim() || null
@@ -4140,6 +4154,7 @@ function openConvertModal(enqId) {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   if (document.getElementById('conv_order_amount')) document.getElementById('conv_order_amount').value = e.expected_value || '';
+  if (document.getElementById('conv_currency')) document.getElementById('conv_currency').value = e.currency || 'INR';
   document.getElementById('convertModal').classList.add('open');
 }
 
