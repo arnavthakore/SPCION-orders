@@ -341,6 +341,12 @@ td:first-child{padding-left:14px}
 .enq-chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
 .enq-chip{padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--white);color:var(--t3);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
 .enq-chip:hover{transform:translateY(-1px);box-shadow:var(--sh-xs)}
+/* Sortable table headers */
+th.sortable{cursor:pointer;user-select:none;position:relative;white-space:nowrap}
+th.sortable:hover{background:var(--bg2);color:var(--blue)}
+th.sortable::after{content:'⇅';margin-left:4px;font-size:10px;opacity:.3}
+th.sortable.sort-asc::after{content:'↑';opacity:.8;color:var(--blue)}
+th.sortable.sort-desc::after{content:'↓';opacity:.8;color:var(--blue)}
 .enq-chip .ec-ct{font-family:var(--mono);font-size:10px;background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
 .enq-chip.ec-on{color:#fff;border-color:transparent}
 .enq-chip.ec-on .ec-ct{background:rgba(255,255,255,.25)}
@@ -965,12 +971,12 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <thead>
         <tr>
           <th>#</th>
-          <th>Enq No.</th>
-          <th>Customer</th>
-          <th>Equipment</th>
-          <th>Enquiry Date</th>
-          <th>Expected Value</th>
-          <th>Status</th>
+          <th class="sortable" onclick="sortEnqBy('enq_number')">Enq No.</th>
+          <th class="sortable" onclick="sortEnqBy('customer')">Customer</th>
+          <th class="sortable" onclick="sortEnqBy('description')">Equipment</th>
+          <th class="sortable" onclick="sortEnqBy('enquiry_date')">Enquiry Date</th>
+          <th class="sortable" onclick="sortEnqBy('expected_value')">Expected Value</th>
+          <th class="sortable" onclick="sortEnqBy('status')">Status</th>
           <th>Remarks</th>
           <th>Follow-up</th>
           <th>Action</th>
@@ -3961,6 +3967,27 @@ function setEnqFilter(status) {
   renderEnqTable();
 }
 
+// Enquiry sort state
+let enqSortCol = 'enquiry_date';
+let enqSortDir = 'desc'; // 'asc' or 'desc'
+
+function sortEnqBy(col) {
+  if (enqSortCol === col) {
+    enqSortDir = enqSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    enqSortCol = col;
+    enqSortDir = (col === 'enquiry_date' || col === 'expected_value') ? 'desc' : 'asc';
+  }
+  renderEnqTable();
+  // Update header classes
+  document.querySelectorAll('#enqTable th.sortable').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+  });
+  const idx = { enq_number:1, customer:2, description:3, enquiry_date:4, expected_value:5, status:6 };
+  const th = document.querySelectorAll('#enqTable th.sortable')[Object.keys(idx).indexOf(col)];
+  if (th) th.classList.add(enqSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+}
+
 // Build a stable chronological ENQ number map by enquiry_date (oldest = ENQ-001)
 function buildEnqNumberMap() {
   const sorted = [...allEnquiries].sort((a,b) => (a.enquiry_date||a.created_at||'').localeCompare(b.enquiry_date||b.created_at||''));
@@ -3982,6 +4009,30 @@ function renderEnqTable() {
     }
     return true;
   });
+  // Sort rows
+  const enqNumMap = buildEnqNumberMap();
+  rows.sort((a, b) => {
+    let va, vb;
+    if (enqSortCol === 'enq_number') {
+      va = enqNumMap[a.id] || ''; vb = enqNumMap[b.id] || '';
+    } else if (enqSortCol === 'expected_value') {
+      va = a.expected_value || 0; vb = b.expected_value || 0;
+      return enqSortDir === 'asc' ? va - vb : vb - va;
+    } else if (enqSortCol === 'status') {
+      const order = { new:0, costing:1, specs_received:2, forwarded_partner:3, offer_from_partner:4, offer_sent:5, negotiating:6, quoted:7, won:8, lost:9 };
+      va = order[a.status] ?? 99; vb = order[b.status] ?? 99;
+      return enqSortDir === 'asc' ? va - vb : vb - va;
+    } else {
+      va = (a[enqSortCol] || '').toString().toLowerCase();
+      vb = (b[enqSortCol] || '').toString().toLowerCase();
+    }
+    if (typeof va === 'string') {
+      const cmp = va.localeCompare(vb);
+      return enqSortDir === 'asc' ? cmp : -cmp;
+    }
+    return 0;
+  });
+
   document.getElementById('enqTblInfo').textContent = `${rows.length} of ${allEnquiries.length} enquiries`;
 
   const tbody = document.getElementById('enqTbody');
@@ -3990,7 +4041,6 @@ function renderEnqTable() {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--t4);padding:32px">No enquiries found</td></tr>';
     return;
   }
-  const enqNumMap = buildEnqNumberMap();
   tbody.innerHTML = rows.map((e, i) => {
     const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + ((localDate(e.next_followup) || new Date(9999,0)) < todayLocal() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     const val = e.expected_value ? fmtCr(Number(e.expected_value), e.currency || 'INR') : '—';
