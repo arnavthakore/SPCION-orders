@@ -3835,28 +3835,27 @@ function enqBadge(status) {
 
 /*============================
   SLA / DEADLINE TRACKING
-  - Specs Received → must forward to partner within 7 days
-  - Offer Sent → must follow up every 10 days
+  - Specs Received → 7 days from enquiry_date to forward to partner
+  - Offer Sent → follow up every 10 days from last activity
 ============================*/
 function getEnqSLA(e) {
-  // Use status_changed_at if available, else fall back to updated_at
-  const changedAt = e.status_changed_at || e.updated_at || e.created_at;
-  if (!changedAt) return null;
   const now = new Date();
-  const changed = new Date(changedAt);
-  const daysSince = Math.floor((now - changed) / 86400000);
 
   if (e.status === 'specs_received') {
-    const deadline = 7;
-    const daysLeft = deadline - daysSince;
-    if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue to forward`, days: daysLeft };
-    if (daysLeft <= 2) return { type: 'warn', label: `${daysLeft}d left to forward`, days: daysLeft };
-    return { type: 'ok', label: `${daysLeft}d to forward`, days: daysLeft };
+    // Deadline = 7 days from enquiry date
+    const base = e.enquiry_date ? new Date(e.enquiry_date) : null;
+    if (!base) return null;
+    const deadlineDate = new Date(base.getTime() + 7 * 86400000);
+    const daysLeft = Math.floor((deadlineDate - now) / 86400000);
+    const deadlineFmt = fmtDate(deadlineDate.toISOString().slice(0,10));
+    if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
+    if (daysLeft <= 2) return { type: 'warn', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
+    return { type: 'ok', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
   }
 
   if (e.status === 'offer_sent') {
-    // Check days since last follow-up (negotiation log) or since status change
-    let lastActivity = changed;
+    // 10-day follow-up cycle from last activity (negotiation log or status change)
+    let lastActivity = e.status_changed_at ? new Date(e.status_changed_at) : (e.updated_at ? new Date(e.updated_at) : null);
     try {
       const log = JSON.parse(e.negotiation_log || '[]');
       if (log.length) {
@@ -3864,12 +3863,17 @@ function getEnqSLA(e) {
         if (lastEntry.date) lastActivity = new Date(lastEntry.date);
       }
     } catch {}
-    const daysSinceLast = Math.floor((now - lastActivity) / 86400000);
-    const cycle = 10;
-    const daysLeft = cycle - daysSinceLast;
-    if (daysLeft < 0) return { type: 'breach', label: `Follow-up ${Math.abs(daysLeft)}d overdue`, days: daysLeft };
-    if (daysLeft <= 3) return { type: 'warn', label: `Follow-up in ${daysLeft}d`, days: daysLeft };
-    return { type: 'ok', label: `Follow-up in ${daysLeft}d`, days: daysLeft };
+    if (!lastActivity) {
+      // Fall back to enquiry date
+      lastActivity = e.enquiry_date ? new Date(e.enquiry_date) : null;
+    }
+    if (!lastActivity) return null;
+    const deadlineDate = new Date(lastActivity.getTime() + 10 * 86400000);
+    const daysLeft = Math.floor((deadlineDate - now) / 86400000);
+    const deadlineFmt = fmtDate(deadlineDate.toISOString().slice(0,10));
+    if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
+    if (daysLeft <= 3) return { type: 'warn', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
+    return { type: 'ok', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
   }
 
   return null;
@@ -3881,6 +3885,14 @@ function slaChipHTML(e) {
   const cls = sla.type === 'breach' ? 'sla-breach' : sla.type === 'warn' ? 'sla-warn' : 'sla-ok';
   const ico = sla.type === 'breach' ? '🚨' : sla.type === 'warn' ? '⏳' : '✓';
   return `<span class="sla-chip ${cls}">${ico} ${sla.label}</span>`;
+}
+
+function slaFollowupHTML(e) {
+  const sla = getEnqSLA(e);
+  if (!sla) return '';
+  const cls = sla.type === 'breach' ? 'sla-breach' : sla.type === 'warn' ? 'sla-warn' : 'sla-ok';
+  const ico = sla.type === 'breach' ? '🚨' : sla.type === 'warn' ? '⏳' : '📅';
+  return `<div style="line-height:1.4"><span style="font-size:10.5px;font-family:var(--mono);color:${sla.type==='breach'?'var(--red)':sla.type==='warn'?'#f57f17':'var(--t2)'}">${sla.deadlineFmt}</span><br><span class="sla-chip ${cls}" style="margin-top:2px">${ico} ${sla.sub} · ${sla.label}</span></div>`;
 }
 
 function countSLABreaches() {
@@ -3964,9 +3976,9 @@ function renderEnqTable() {
       <td style="font-size:12px;max-width:180px">${e.description||'—'}</td>
       <td style="font-family:var(--mono);font-size:11px">${e.enquiry_date ? fmtDate(e.enquiry_date) : '—'}</td>
       <td style="font-family:var(--mono);font-size:12px;font-weight:600">${val}</td>
-      <td>${enqBadge(e.status)}${slaChipHTML(e) ? '<br>' + slaChipHTML(e) : ''}</td>
+      <td>${enqBadge(e.status)}</td>
       <td>${rmk}</td>
-      <td>${followup}</td>
+      <td>${slaFollowupHTML(e) || followup}</td>
       <td>${convertBtn}</td>
     </tr>`;
   }).join('');
@@ -4099,7 +4111,7 @@ function renderEnqDrawer(e) {
     ['Order Type', e.order_type === 'traded' ? '🏭 Traded' : '🔧 Manufactured'],
     ['Source', fmt(e.source)],
     ['Status', ENQ_STATUS_LABELS[e.status] || e.status],
-    ['SLA Deadline', slaChipHTML(e) || '<span style="color:var(--t4)">No active deadline</span>'],
+    ['SLA / Follow-up', slaFollowupHTML(e) || '<span style="color:var(--t4)">No active deadline</span>'],
     ['Notes', fmt(e.notes)],
     ['Remarks', fmt(e.remarks)],
   ].map(([l,v]) => `<div class="irow"><div class="ilbl">${l}</div><div class="ival">${v}</div></div>`).join('');
