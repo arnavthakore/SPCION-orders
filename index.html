@@ -337,6 +337,23 @@ td:first-child{padding-left:14px}
 .mt-panel{animation:fadeIn .15s ease}
 /* Enquiry status badges */
 .enq-badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 10px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}
+/* Enquiry filter chips */
+.enq-chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+.enq-chip{padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:600;cursor:pointer;border:1.5px solid var(--bdr);background:var(--white);color:var(--t3);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.enq-chip:hover{transform:translateY(-1px);box-shadow:var(--sh-xs)}
+.enq-chip .ec-ct{font-family:var(--mono);font-size:10px;background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
+.enq-chip.ec-on{color:#fff;border-color:transparent}
+.enq-chip.ec-on .ec-ct{background:rgba(255,255,255,.25)}
+.enq-chip.ec-all.ec-on{background:var(--t1);border-color:var(--t1)}
+.enq-chip.ec-new.ec-on{background:var(--blue);border-color:var(--blue)}
+.enq-chip.ec-costing.ec-on{background:var(--c-enq-costing);border-color:var(--c-enq-costing)}
+.enq-chip.ec-specs.ec-on{background:var(--c-enq-specs);border-color:var(--c-enq-specs)}
+.enq-chip.ec-fwd.ec-on{background:var(--c-enq-fwd);border-color:var(--c-enq-fwd)}
+.enq-chip.ec-partner.ec-on{background:var(--c-enq-partner);border-color:var(--c-enq-partner)}
+.enq-chip.ec-offer.ec-on{background:var(--c-enq-offer);border-color:var(--c-enq-offer)}
+.enq-chip.ec-neg.ec-on{background:var(--amber);border-color:var(--amber)}
+.enq-chip.ec-won.ec-on{background:var(--green);border-color:var(--green)}
+.enq-chip.ec-lost.ec-on{background:#c62828;border-color:#c62828}
 .enq-new{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-lt)}
 .enq-costing{background:var(--c-enq-costing-lt);color:var(--c-enq-costing);border:1px solid var(--c-enq-costing-lt)}
 .enq-specs_received{background:var(--c-enq-specs-lt);color:var(--c-enq-specs);border:1px solid var(--c-enq-specs-lt)}
@@ -3772,6 +3789,7 @@ async function loadEnquiries() {
     renderEnqTable();
     renderEnqStatusChips();
     updateEnqBadge();
+    renderDashboard();
   } catch(e) {
     toast('Enquiry load error: ' + e.message, 'err');
   }
@@ -3815,11 +3833,18 @@ function renderEnqStatusChips() {
   const counts = {};
   ENQ_CHIP_STAGES.forEach(s => counts[s] = 0);
   allEnquiries.forEach(e => { if (counts[e.status] !== undefined) counts[e.status]++; });
-  // Only show chips that have at least 1 enquiry, plus always show won/lost
   const alwaysShow = ['won','lost'];
   const visibleChips = ENQ_CHIP_STAGES.filter(s => counts[s] > 0 || alwaysShow.includes(s));
-  wrap.innerHTML = `<span class="chip ${!enqFilter ? 'on' : ''}" onclick="setEnqFilter(null)">All <span class="chip-ct">${allEnquiries.length}</span></span>` +
-    visibleChips.map(s => `<span class="chip ${enqFilter===s ? 'on' : ''}" onclick="setEnqFilter('${s}')">${ENQ_STATUS_LABELS[s]} <span class="chip-ct">${counts[s]}</span></span>`).join('');
+  const chipClassMap = {
+    new:'ec-new', costing:'ec-costing', specs_received:'ec-specs', forwarded_partner:'ec-fwd',
+    offer_from_partner:'ec-partner', offer_sent:'ec-offer', negotiating:'ec-neg', won:'ec-won', lost:'ec-lost'
+  };
+  wrap.innerHTML = `<div class="enq-chips">` +
+    `<span class="enq-chip ec-all ${!enqFilter ? 'ec-on' : ''}" onclick="setEnqFilter(null)">All <span class="ec-ct">${allEnquiries.length}</span></span>` +
+    visibleChips.map(s =>
+      `<span class="enq-chip ${chipClassMap[s]||''} ${enqFilter===s ? 'ec-on' : ''}" onclick="setEnqFilter('${s}')">${ENQ_STATUS_LABELS[s]} <span class="ec-ct">${counts[s]}</span></span>`
+    ).join('') +
+    `</div>`;
 }
 
 function setEnqFilter(status) {
