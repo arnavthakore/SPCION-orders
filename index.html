@@ -944,11 +944,13 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <thead>
         <tr>
           <th>#</th>
+          <th>Enq No.</th>
           <th>Customer</th>
           <th>Equipment</th>
           <th>Enquiry Date</th>
           <th>Expected Value</th>
           <th>Status</th>
+          <th>Remarks</th>
           <th>Follow-up</th>
           <th>Action</th>
         </tr>
@@ -996,6 +998,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <div class="fg"><label class="flbl">Contact Email</label><input class="finput" type="email" id="eq_contact_email"></div>
           <div class="fg"><label class="flbl">Our Contact (SPICON)</label><input class="finput" id="eq_our_contact"></div>
           <div class="fg ffull"><label class="flbl">Equipment / Description</label><input class="finput" id="eq_description"></div>
+          <div class="fg ffull"><label class="flbl">Mail Subject / Reference</label><input class="finput" id="eq_mail_subject"></div>
           <div class="fg"><label class="flbl">Enquiry Date</label><input class="finput" type="date" id="eq_enquiry_date"></div>
           <div class="fg"><label class="flbl">Currency</label><select class="finput" id="eq_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
           <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="eq_expected_value" placeholder="0"></div>
@@ -1017,6 +1020,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
             </select>
           </div>
           <div class="fg ffull"><label class="flbl">Notes</label><input class="finput" id="eq_notes" placeholder="Any initial notes…"></div>
+          <div class="fg ffull"><label class="flbl">Remarks</label><input class="finput" id="eq_remarks" placeholder="e.g. Offer submitted, Draft offer prepared…"></div>
           <div class="fg ffull" style="margin-top:6px">
             <button class="btn btn-blue" style="width:auto;padding:8px 20px" onclick="saveEnqDetails()">Save Changes</button>
           </div>
@@ -1091,6 +1095,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <div class="fg"><label class="flbl">Contact Email</label><input class="finput" type="email" id="enqf_contact_email" placeholder="e.g. rajesh@company.com"></div>
       <div class="fg"><label class="flbl">Our Contact (SPICON)</label><input class="finput" id="enqf_our_contact" placeholder="e.g. Arnav Thakore"></div>
       <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="enqf_description" placeholder="e.g. 12T Battery Locomotive"></div>
+      <div class="fg ffull"><label class="flbl">Mail Subject / Reference</label><input class="finput" id="enqf_mail_subject" placeholder="e.g. RFP_Patna Metro_ Segment accessories"></div>
       <div class="fg"><label class="flbl">Enquiry Date *</label><input class="finput" type="date" id="enqf_enquiry_date"></div>
       <div class="fg"><label class="flbl">Currency</label><select class="finput" id="enqf_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
       <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="enqf_expected_value" placeholder="0"></div>
@@ -1112,6 +1117,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         </select>
       </div>
       <div class="fg ffull"><label class="flbl">Initial Notes</label><input class="finput" id="enqf_notes" placeholder="Any initial notes…"></div>
+      <div class="fg ffull"><label class="flbl">Remarks</label><input class="finput" id="enqf_remarks" placeholder="e.g. Offer submitted, Draft offer prepared…"></div>
     </div>
   </div>
   <div class="modal-ft">
@@ -3560,13 +3566,12 @@ function exportEnquiries() {
     return true;
   });
   if (!rows.length) { toast('No enquiries to export', 'warn'); return; }
-  const headers = ['Customer','Contact Person','Contact Email','Our Contact (SPICON)','Description','Enquiry Date','Currency','Expected Value','Ex-Works','Incl GST','Order Type','Source','Status','Next Followup','Notes'];
-  const data = rows.map(function(e) {
+  const headers = ['S.No','Date','Customer Name','Requirement','Contact Person','Contact Email','Responsible Person (SPICON)','Mail Subject / Reference','Remarks'];
+  const data = rows.map(function(e, idx) {
     return [
-      e.customer||'', e.contact_person||'', e.contact_email||'', e.our_contact||'', e.description||'', e.enquiry_date||'',
-      e.currency||'INR', e.expected_value||0, e.ex_works||0, e.incl_gst||0,
-      e.order_type||'manufactured', e.source||'', ENQ_STATUS_LABELS[e.status]||e.status||'',
-      e.next_followup||'', e.notes||''
+      idx + 1, e.enquiry_date||'', e.customer||'', e.description||'',
+      e.contact_person||'', e.contact_email||'', e.our_contact||'',
+      e.mail_subject||'', e.remarks||''
     ];
   });
   const wsData = [headers, ...data];
@@ -3805,7 +3810,7 @@ function renderEnqTable() {
   const tbody = document.getElementById('enqTbody');
   if (!tbody) return;
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--t4);padding:32px">No enquiries found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--t4);padding:32px">No enquiries found</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map((e, i) => {
@@ -3814,13 +3819,17 @@ function renderEnqTable() {
     const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
       : e.converted_order_id ? '<span style="font-size:10px;color:var(--green);font-weight:700">✓ Converted</span>' : '';
+    const enqNo = e.enq_number || ('ENQ-' + String(i+1).padStart(3,'0'));
+    const rmk = e.remarks ? '<span style="font-size:10.5px;color:var(--t2);max-width:140px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + e.remarks + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     return `<tr onclick="openEnqDrawer('${e.id}')" style="cursor:pointer">
       <td style="color:var(--t4);font-size:11px">${i+1}</td>
+      <td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue);white-space:nowrap">${enqNo}</td>
       <td><div style="font-weight:600;font-size:12px">${e.customer||'—'}</div><div style="font-size:10.5px;color:var(--t4)">${e.contact_person||''}</div></td>
       <td style="font-size:12px;max-width:180px">${e.description||'—'}</td>
       <td style="font-family:var(--mono);font-size:11px">${e.enquiry_date ? fmtDate(e.enquiry_date) : '—'}</td>
       <td style="font-family:var(--mono);font-size:12px;font-weight:600">${val}</td>
       <td>${enqBadge(e.status)}</td>
+      <td>${rmk}</td>
       <td>${followup}</td>
       <td>${convertBtn}</td>
     </tr>`;
@@ -3831,7 +3840,7 @@ function renderEnqTable() {
   ENQUIRY MODAL — NEW
 ============================*/
 function openNewEnqModal() {
-  ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_currency'].forEach(id => {
+  ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_mail_subject','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_remarks','enqf_currency'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
@@ -3853,6 +3862,7 @@ async function saveNewEnquiry() {
     contact_email: document.getElementById('enqf_contact_email')?.value.trim() || null,
     our_contact: document.getElementById('enqf_our_contact')?.value.trim() || null,
     description,
+    mail_subject: document.getElementById('enqf_mail_subject')?.value.trim() || null,
     enquiry_date,
     expected_value: parseFloat(document.getElementById('enqf_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('enqf_ex_works')?.value) || null,
@@ -3861,6 +3871,8 @@ async function saveNewEnquiry() {
     order_type: document.getElementById('enqf_order_type')?.value || 'manufactured',
     source: document.getElementById('enqf_source')?.value || 'direct',
     notes: document.getElementById('enqf_notes')?.value.trim() || null,
+    remarks: document.getElementById('enqf_remarks')?.value.trim() || null,
+    enq_number: 'ENQ-' + String(allEnquiries.length + 1).padStart(3, '0'),
     status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new',
     negotiation_log: '[]',
     quote_log: '[]'
@@ -3926,12 +3938,15 @@ function renderEnqDrawer(e) {
   const fmt = v => v || '—';
   const eCur = e.currency || 'INR';
   const fmtVal = v => v ? fmtCr(Number(v), eCur) : '—';
+  const enqNo = e.enq_number || '—';
   grid.innerHTML = [
+    ['Enquiry No.', `<span style="font-family:var(--mono);font-weight:700;color:var(--blue)">${enqNo}</span>`],
     ['Customer', fmt(e.customer)],
     ['Contact Person', fmt(e.contact_person)],
     ['Contact Email', e.contact_email ? `<a href="mailto:${e.contact_email}" style="color:var(--blue)">${e.contact_email}</a>` : '—'],
     ['Our Contact (SPICON)', fmt(e.our_contact)],
     ['Enquiry Date', e.enquiry_date ? fmtDate(e.enquiry_date) : '—'],
+    ['Mail Subject / Reference', fmt(e.mail_subject)],
     ['Currency', eCur],
     ['Expected Value', fmtVal(e.expected_value)],
     ['Ex-Works Value', fmtVal(e.ex_works)],
@@ -3940,10 +3955,11 @@ function renderEnqDrawer(e) {
     ['Source', fmt(e.source)],
     ['Status', ENQ_STATUS_LABELS[e.status] || e.status],
     ['Notes', fmt(e.notes)],
+    ['Remarks', fmt(e.remarks)],
   ].map(([l,v]) => `<div class="irow"><div class="ilbl">${l}</div><div class="ival">${v}</div></div>`).join('');
 
   // Prefill edit fields
-  ['customer','contact_person','contact_email','our_contact','description','notes'].forEach(f => {
+  ['customer','contact_person','contact_email','our_contact','description','mail_subject','notes','remarks'].forEach(f => {
     const el = document.getElementById('eq_' + f); if (el) el.value = e[f] || '';
   });
   if (document.getElementById('eq_enquiry_date')) document.getElementById('eq_enquiry_date').value = e.enquiry_date || '';
@@ -4099,6 +4115,7 @@ async function saveEnqDetails() {
     contact_email: document.getElementById('eq_contact_email')?.value.trim() || null,
     our_contact: document.getElementById('eq_our_contact')?.value.trim() || null,
     description: document.getElementById('eq_description')?.value.trim() || null,
+    mail_subject: document.getElementById('eq_mail_subject')?.value.trim() || null,
     enquiry_date: document.getElementById('eq_enquiry_date')?.value || null,
     expected_value: parseFloat(document.getElementById('eq_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('eq_ex_works')?.value) || null,
@@ -4106,7 +4123,8 @@ async function saveEnqDetails() {
     currency: document.getElementById('eq_currency')?.value || 'INR',
     order_type: document.getElementById('eq_order_type')?.value || 'manufactured',
     source: document.getElementById('eq_source')?.value || 'direct',
-    notes: document.getElementById('eq_notes')?.value.trim() || null
+    notes: document.getElementById('eq_notes')?.value.trim() || null,
+    remarks: document.getElementById('eq_remarks')?.value.trim() || null
   };
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
