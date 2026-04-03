@@ -42,6 +42,7 @@
   --c-enq-quot:#1a56db;--c-enq-quot-lt:#eff4ff;
   --c-enq-won:#059669;--c-enq-won-lt:#ecfdf5;
   --c-enq-lost:#dc2626;--c-enq-lost-lt:#fef2f2;
+  --c-enq-hold:#78909c;--c-enq-hold-lt:#eceff1;
   --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;--display:'Fraunces',serif;
 }
 html{font-size:14px}
@@ -378,6 +379,8 @@ th.sortable.sort-desc::after{content:'↓';opacity:.8;color:var(--blue)}
 .enq-chip.ec-offer.ec-on{background:var(--c-enq-offer);border-color:var(--c-enq-offer)}
 .enq-chip.ec-neg.ec-on{background:var(--amber);border-color:var(--amber)}
 .enq-chip.ec-won.ec-on{background:var(--green);border-color:var(--green)}
+.enq-chip.ec-hold{border-color:#b0bec5;color:#546e7a}
+.enq-chip.ec-hold.ec-on{background:#546e7a;border-color:#546e7a}
 .enq-chip.ec-lost.ec-on{background:#c62828;border-color:#c62828}
 .enq-new{background:var(--blue-lt);color:var(--blue);border:1px solid var(--blue-lt)}
 .enq-costing{background:var(--c-enq-costing-lt);color:var(--c-enq-costing);border:1px solid var(--c-enq-costing-lt)}
@@ -389,6 +392,7 @@ th.sortable.sort-desc::after{content:'↓';opacity:.8;color:var(--blue)}
 .enq-quoted{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
 .enq-won{background:var(--green-lt);color:var(--green);border:1px solid var(--green-md)}
 .enq-lost{background:#fce4ec;color:#c62828;border:1px solid #ef9a9a}
+.enq-on_hold{background:var(--c-enq-hold-lt);color:var(--c-enq-hold);border:1px solid #b0bec5}
 /* Neg/Quote log entries */
 .log-entry{padding:10px 12px;border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:8px;background:var(--white)}
 .log-entry-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
@@ -3874,16 +3878,17 @@ function updateEnqBadge() {
 }
 
 // All possible enquiry statuses (superset)
-const ENQ_STATUSES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','quoted','won','lost'];
+const ENQ_STATUSES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','quoted','won','lost','on_hold'];
 const ENQ_STATUS_LABELS = {
   new:'New / Quotation Requested', costing:'Costing', specs_received:'Specs Received',
   forwarded_partner:'Forwarded to Partner', offer_from_partner:'Offer from Partner',
-  offer_sent:'Offer Sent', negotiating:'Negotiating', quoted:'Quoted', won:'Won', lost:'Lost'
+  offer_sent:'Offer Sent', negotiating:'Negotiating', quoted:'Quoted', won:'Won', lost:'Lost', on_hold:'On Hold'
 };
 const ENQ_STATUS_CLASS = {
   new:'enq-new', costing:'enq-costing', specs_received:'enq-specs_received',
   forwarded_partner:'enq-forwarded_partner', offer_from_partner:'enq-offer_from_partner',
-  offer_sent:'enq-offer_sent', negotiating:'enq-negotiating', quoted:'enq-quoted', won:'enq-won', lost:'enq-lost'
+  offer_sent:'enq-offer_sent', negotiating:'enq-negotiating', quoted:'enq-quoted', won:'enq-won', lost:'enq-lost',
+  on_hold:'enq-on_hold'
 };
 // Stage flows by order type
 const ENQ_FLOW_MANUFACTURED = ['new','costing','offer_sent','negotiating'];
@@ -3892,7 +3897,7 @@ function enqFlowFor(orderType) {
   return orderType === 'traded' ? ENQ_FLOW_TRADED : ENQ_FLOW_MANUFACTURED;
 }
 // All non-terminal stages for chip display (union of both flows)
-const ENQ_CHIP_STAGES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','won','lost'];
+const ENQ_CHIP_STAGES = ['new','costing','specs_received','forwarded_partner','offer_from_partner','offer_sent','negotiating','on_hold','won','lost'];
 
 function enqBadge(status) {
   return `<span class="enq-badge ${ENQ_STATUS_CLASS[status] || ''}">${ENQ_STATUS_LABELS[status] || status}</span>`;
@@ -4045,6 +4050,7 @@ async function removeStatusEntry(enqId, index) {
   (date helpers: localDate, todayLocal, dateToStr, addDays, diffDays defined above)
 ============================*/
 function getEnqSLA(e) {
+  if (e.status === 'on_hold') return null; // No SLA while on hold
   const now = todayLocal();
 
   if (e.status === 'specs_received') {
@@ -4121,7 +4127,7 @@ function renderEnqStatusChips() {
   const visibleChips = ENQ_CHIP_STAGES.filter(s => counts[s] > 0 || alwaysShow.includes(s));
   const chipClassMap = {
     new:'ec-new', costing:'ec-costing', specs_received:'ec-specs', forwarded_partner:'ec-fwd',
-    offer_from_partner:'ec-partner', offer_sent:'ec-offer', negotiating:'ec-neg', won:'ec-won', lost:'ec-lost'
+    offer_from_partner:'ec-partner', offer_sent:'ec-offer', negotiating:'ec-neg', on_hold:'ec-hold', won:'ec-won', lost:'ec-lost'
   };
   const slaCount = countSLABreaches();
   wrap.innerHTML = `<div class="enq-chips">` +
@@ -4191,7 +4197,7 @@ function renderEnqTable() {
       va = a.ex_works || 0; vb = b.ex_works || 0;
       return enqSortDir === 'asc' ? va - vb : vb - va;
     } else if (enqSortCol === 'status') {
-      const order = { new:0, costing:1, specs_received:2, forwarded_partner:3, offer_from_partner:4, offer_sent:5, negotiating:6, quoted:7, won:8, lost:9 };
+      const order = { new:0, costing:1, specs_received:2, forwarded_partner:3, offer_from_partner:4, offer_sent:5, negotiating:6, quoted:7, on_hold:8, won:9, lost:10 };
       va = order[a.status] ?? 99; vb = order[b.status] ?? 99;
       return enqSortDir === 'asc' ? va - vb : vb - va;
     } else {
@@ -4338,6 +4344,9 @@ function renderEnqDrawer(e) {
   }).join('<span style="color:var(--t4);font-size:12px">›</span>') +
   `<button class="enq-stage-btn won ${e.status==='won'?'active':''}" onclick="advanceEnqTo('won')">🎉 Won</button>` +
   `<button class="enq-stage-btn lost-btn ${e.status==='lost'?'active':''}" onclick="openLostModal()">✗ Lost</button>` +
+  (e.status === 'on_hold'
+    ? `<button class="enq-stage-btn" style="background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;font-weight:700" onclick="resumeEnqFromHold()">▶ Resume</button>`
+    : (!['won','lost'].includes(e.status) ? `<button class="enq-stage-btn" style="background:var(--c-enq-hold-lt);color:var(--c-enq-hold);border-color:#b0bec5" onclick="putEnqOnHold()">⏸ Hold</button>` : '')) +
   ((['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id) ? `<button class="convert-btn" onclick="openConvertModal('${e.id}')">Convert to Order →</button>` :
    e.converted_order_id ? '<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green)">✓ Converted to Order</span>' : '');
 
@@ -4568,6 +4577,49 @@ async function advanceEnqTo(status) {
     }).eq('id', selectedEnqId);
     if (error) throw error;
     toast('Status updated to ' + ENQ_STATUS_LABELS[status], 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === selectedEnqId);
+    if (fresh) renderEnqDrawer(fresh);
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+/*============================
+  ON HOLD / RESUME
+============================*/
+async function putEnqOnHold() {
+  if (!selectedEnqId) return;
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e || e.status === 'on_hold') return;
+  try {
+    const { error } = await SB.from('enquiries').update({
+      status: 'on_hold',
+      previous_status: e.status, // store so we can resume
+      status_changed_at: new Date().toISOString(),
+      status_history: appendStatusHistory(e, 'on_hold')
+    }).eq('id', selectedEnqId);
+    if (error) throw error;
+    toast('Enquiry put on hold', 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === selectedEnqId);
+    if (fresh) renderEnqDrawer(fresh);
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+async function resumeEnqFromHold() {
+  if (!selectedEnqId) return;
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e || e.status !== 'on_hold') return;
+  // Restore previous status, or fall back to 'new'
+  const prevStatus = e.previous_status || 'new';
+  try {
+    const { error } = await SB.from('enquiries').update({
+      status: prevStatus,
+      previous_status: null,
+      status_changed_at: new Date().toISOString(),
+      status_history: appendStatusHistory(e, prevStatus)
+    }).eq('id', selectedEnqId);
+    if (error) throw error;
+    toast('Resumed — back to ' + (ENQ_STATUS_LABELS[prevStatus] || prevStatus), 'ok');
     await loadEnquiries();
     const fresh = allEnquiries.find(x => x.id === selectedEnqId);
     if (fresh) renderEnqDrawer(fresh);
