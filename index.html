@@ -994,7 +994,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <th class="sortable" onclick="sortEnqBy('customer')">Customer</th>
           <th class="sortable" onclick="sortEnqBy('description')">Equipment</th>
           <th class="sortable" onclick="sortEnqBy('enquiry_date')">Enquiry Date</th>
-          <th class="sortable" onclick="sortEnqBy('expected_value')">Expected Value</th>
+          <th class="sortable" onclick="sortEnqBy('ex_works')">Ex-Works Value</th>
           <th class="sortable" onclick="sortEnqBy('status')">Status</th>
           <th>Remarks</th>
           <th>Follow-up</th>
@@ -1048,7 +1048,6 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <div class="fg ffull"><label class="flbl">Mail Subject / Reference</label><input class="finput" id="eq_mail_subject"></div>
           <div class="fg"><label class="flbl">Enquiry Date</label><input class="finput" type="date" id="eq_enquiry_date"></div>
           <div class="fg"><label class="flbl">Currency</label><select class="finput" id="eq_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
-          <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="eq_expected_value" placeholder="0"></div>
           <div class="fg"><label class="flbl">Ex-Works Value</label><input class="finput" type="number" id="eq_ex_works" placeholder="0"></div>
           <div class="fg"><label class="flbl">Value Incl GST</label><input class="finput" type="number" id="eq_incl_gst" placeholder="0"></div>
           <div class="fg"><label class="flbl">Order Type</label>
@@ -1153,7 +1152,6 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
       <div class="fg ffull"><label class="flbl">Mail Subject / Reference</label><input class="finput" id="enqf_mail_subject" placeholder="e.g. RFP_Patna Metro_ Segment accessories"></div>
       <div class="fg"><label class="flbl">Enquiry Date *</label><input class="finput" type="date" id="enqf_enquiry_date"></div>
       <div class="fg"><label class="flbl">Currency</label><select class="finput" id="enqf_currency"><option value="INR">INR (₹)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option><option value="GBP">GBP (£)</option><option value="AED">AED (د.إ)</option><option value="SAR">SAR (﷼)</option><option value="JPY">JPY (¥)</option><option value="CNY">CNY (¥)</option><option value="CHF">CHF</option><option value="SGD">SGD (S$)</option></select></div>
-      <div class="fg"><label class="flbl">Expected Value</label><input class="finput" type="number" id="enqf_expected_value" placeholder="0"></div>
       <div class="fg"><label class="flbl">Ex-Works Value</label><input class="finput" type="number" id="enqf_ex_works" placeholder="0"></div>
       <div class="fg"><label class="flbl">Value Incl GST</label><input class="finput" type="number" id="enqf_incl_gst" placeholder="0"></div>
       <div class="fg"><label class="flbl">Order Type</label>
@@ -4150,14 +4148,14 @@ function sortEnqBy(col) {
     enqSortDir = enqSortDir === 'asc' ? 'desc' : 'asc';
   } else {
     enqSortCol = col;
-    enqSortDir = (col === 'enquiry_date' || col === 'expected_value') ? 'desc' : 'asc';
+    enqSortDir = (col === 'enquiry_date' || col === 'ex_works') ? 'desc' : 'asc';
   }
   renderEnqTable();
   // Update header classes
   document.querySelectorAll('#enqTable th.sortable').forEach(th => {
     th.classList.remove('sort-asc','sort-desc');
   });
-  const idx = { enq_number:1, customer:2, description:3, enquiry_date:4, expected_value:5, status:6 };
+  const idx = { enq_number:1, customer:2, description:3, enquiry_date:4, ex_works:5, status:6 };
   const th = document.querySelectorAll('#enqTable th.sortable')[Object.keys(idx).indexOf(col)];
   if (th) th.classList.add(enqSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
 }
@@ -4189,8 +4187,8 @@ function renderEnqTable() {
     let va, vb;
     if (enqSortCol === 'enq_number') {
       va = enqNumMap[a.id] || ''; vb = enqNumMap[b.id] || '';
-    } else if (enqSortCol === 'expected_value') {
-      va = a.expected_value || 0; vb = b.expected_value || 0;
+    } else if (enqSortCol === 'ex_works') {
+      va = a.ex_works || 0; vb = b.ex_works || 0;
       return enqSortDir === 'asc' ? va - vb : vb - va;
     } else if (enqSortCol === 'status') {
       const order = { new:0, costing:1, specs_received:2, forwarded_partner:3, offer_from_partner:4, offer_sent:5, negotiating:6, quoted:7, won:8, lost:9 };
@@ -4217,7 +4215,7 @@ function renderEnqTable() {
   }
   tbody.innerHTML = rows.map((e, i) => {
     const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + ((localDate(e.next_followup) || new Date(9999,0)) < todayLocal() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
-    const val = e.expected_value ? fmtCr(Number(e.expected_value), e.currency || 'INR') : '—';
+    const val = e.ex_works ? fmtCr(Number(e.ex_works), e.currency || 'INR') : '—';
     const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
       : e.converted_order_id ? '<span style="font-size:10px;color:var(--green);font-weight:700">✓ Converted</span>' : '';
@@ -4242,7 +4240,7 @@ function renderEnqTable() {
   ENQUIRY MODAL — NEW
 ============================*/
 function openNewEnqModal() {
-  ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_mail_subject','enqf_expected_value','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_remarks','enqf_currency'].forEach(id => {
+  ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_mail_subject','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_remarks','enqf_currency'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
@@ -4266,7 +4264,6 @@ async function saveNewEnquiry() {
     description,
     mail_subject: document.getElementById('enqf_mail_subject')?.value.trim() || null,
     enquiry_date,
-    expected_value: parseFloat(document.getElementById('enqf_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('enqf_ex_works')?.value) || null,
     incl_gst: parseFloat(document.getElementById('enqf_incl_gst')?.value) || null,
     currency: document.getElementById('enqf_currency')?.value || 'INR',
@@ -4360,7 +4357,6 @@ function renderEnqDrawer(e) {
     ['Enquiry Date', e.enquiry_date ? fmtDate(e.enquiry_date) : '—'],
     ['Mail Subject / Reference', fmt(e.mail_subject)],
     ['Currency', eCur],
-    ['Expected Value', fmtVal(e.expected_value)],
     ['Ex-Works Value', fmtVal(e.ex_works)],
     ['Value Incl GST', fmtVal(e.incl_gst)],
     ['Order Type', e.order_type === 'traded' ? '🏭 Traded' : '🔧 Manufactured'],
@@ -4376,7 +4372,6 @@ function renderEnqDrawer(e) {
     const el = document.getElementById('eq_' + f); if (el) el.value = e[f] || '';
   });
   if (document.getElementById('eq_enquiry_date')) document.getElementById('eq_enquiry_date').value = e.enquiry_date || '';
-  if (document.getElementById('eq_expected_value')) document.getElementById('eq_expected_value').value = e.expected_value || '';
   if (document.getElementById('eq_ex_works')) document.getElementById('eq_ex_works').value = e.ex_works || '';
   if (document.getElementById('eq_incl_gst')) document.getElementById('eq_incl_gst').value = e.incl_gst || '';
   if (document.getElementById('eq_currency')) document.getElementById('eq_currency').value = e.currency || 'INR';
@@ -4542,7 +4537,6 @@ async function saveEnqDetails() {
     description: document.getElementById('eq_description')?.value.trim() || null,
     mail_subject: document.getElementById('eq_mail_subject')?.value.trim() || null,
     enquiry_date: document.getElementById('eq_enquiry_date')?.value || null,
-    expected_value: parseFloat(document.getElementById('eq_expected_value')?.value) || null,
     ex_works: parseFloat(document.getElementById('eq_ex_works')?.value) || null,
     incl_gst: parseFloat(document.getElementById('eq_incl_gst')?.value) || null,
     currency: document.getElementById('eq_currency')?.value || 'INR',
@@ -4624,7 +4618,7 @@ function convertFromNeg(enqId, negIdx) {
   });
   // Use neg price if available, else expected_value
   if (document.getElementById('conv_order_amount')) {
-    document.getElementById('conv_order_amount').value = neg.price || e.expected_value || '';
+    document.getElementById('conv_order_amount').value = neg.price || e.ex_works || '';
   }
   // Pre-fill date from negotiation entry
   if (neg.date && document.getElementById('conv_po_date')) {
@@ -4642,7 +4636,7 @@ function openConvertModal(enqId) {
   ['conv_po_number','conv_po_date','conv_delivery_date','conv_payment_terms'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  if (document.getElementById('conv_order_amount')) document.getElementById('conv_order_amount').value = e.expected_value || '';
+  if (document.getElementById('conv_order_amount')) document.getElementById('conv_order_amount').value = e.ex_works || '';
   if (document.getElementById('conv_currency')) document.getElementById('conv_currency').value = e.currency || 'INR';
   document.getElementById('convertModal').classList.add('open');
 }
@@ -4702,7 +4696,7 @@ function getEnqKPIs() {
   const won = allEnquiries.filter(e => e.status === 'won').length;
   const lost = allEnquiries.filter(e => e.status === 'lost').length;
   const total = allEnquiries.length;
-  const pipeline = allEnquiries.filter(e => e.status !== 'lost').reduce((s,e) => s + (e.expected_value || 0), 0);
+  const pipeline = allEnquiries.filter(e => e.status !== 'lost').reduce((s,e) => s + (e.ex_works || 0), 0);
   const winRate = total > 0 ? Math.round((won / (won + lost || 1)) * 100) : 0;
   const followups = allEnquiries.filter(e => e.next_followup && (localDate(e.next_followup) || new Date(9999,0)) <= todayLocal() && isEnqActive(e));
   const slaBreaches = allEnquiries.filter(e => {
