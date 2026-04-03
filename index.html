@@ -357,6 +357,11 @@ th.sortable.sort-desc::after{content:'↓';opacity:.8;color:var(--blue)}
 .tl-dot.tl-won{border-color:var(--green);background:var(--green-lt)}
 .tl-dot.tl-lost{border-color:var(--red);background:var(--red-lt)}
 .tl-body{flex:1;padding-top:3px}
+.tl-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tl-undo{font-size:10px;padding:2px 10px;border-radius:12px;border:1px solid var(--amber);background:#fff8e1;color:#f57f17;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.tl-undo:hover{background:#f57f17;color:#fff;border-color:#f57f17}
+.tl-remove{font-size:10px;width:20px;height:20px;border-radius:50%;border:1px solid var(--bdr);background:var(--white);color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;line-height:1}
+.tl-remove:hover{background:#fce4ec;color:#c62828;border-color:#ef9a9a}
 .tl-status{font-size:12px;font-weight:700;color:var(--t1)}
 .tl-date{font-size:11px;font-family:var(--mono);color:var(--t3)}
 .tl-dur{font-size:10px;color:var(--t4);margin-top:1px}
@@ -3936,9 +3941,11 @@ function renderTimeline(e) {
     }
     hist = reconstructed;
   }
+  const isStored = !!getStatusHistory(e).length; // true if real history exists (not reconstructed)
   el.innerHTML = hist.map((h, i) => {
     const next = hist[i + 1];
     const isLast = i === hist.length - 1;
+    const isFirst = i === 0;
     const label = ENQ_STATUS_LABELS[h.status] || h.status;
     // Duration in this status
     let durHtml = '';
@@ -3957,24 +3964,80 @@ function renderTimeline(e) {
     }
     // SLA indicator for relevant statuses
     let slaHtml = '';
-    if (isLast && h.status === 'specs_received') {
+    if (isLast && (h.status === 'specs_received' || h.status === 'offer_sent')) {
       const sla = getEnqSLA(e);
       if (sla) slaHtml = `<div class="tl-sla">${slaChipHTML(e)}</div>`;
-    } else if (isLast && h.status === 'offer_sent') {
-      const sla = getEnqSLA(e);
-      if (sla) slaHtml = `<div class="tl-sla">${slaChipHTML(e)}</div>`;
+    }
+    // Remove / Undo button (only for stored history, not first entry, and only if >1 entries)
+    let removeBtn = '';
+    if (isStored && !isFirst && hist.length > 1) {
+      if (isLast) {
+        removeBtn = `<button class="tl-undo" onclick="undoLastStatus('${e.id}');event.stopPropagation()" title="Undo this status change">↩ Undo</button>`;
+      } else {
+        removeBtn = `<button class="tl-remove" onclick="removeStatusEntry('${e.id}',${i});event.stopPropagation()" title="Remove this entry">✕</button>`;
+      }
     }
     const dotCls = isLast ? (h.status === 'won' ? 'tl-won' : h.status === 'lost' ? 'tl-lost' : 'tl-active') : '';
     const ico = h.status === 'won' ? '🏆' : h.status === 'lost' ? '✗' : isLast ? '●' : '✓';
     return `<div class="tl-item">
       <div class="tl-dot ${dotCls}">${ico}</div>
       <div class="tl-body">
-        <div class="tl-status">${label}</div>
+        <div class="tl-hdr"><div class="tl-status">${label}</div>${removeBtn}</div>
         <div class="tl-date">${fmtDate(h.date)}</div>
         ${durHtml}${slaHtml}
       </div>
     </div>`;
   }).join('');
+}
+
+// Undo last status change — reverts to previous status
+async function undoLastStatus(enqId) {
+  const e = allEnquiries.find(x => x.id === enqId);
+  if (!e) return;
+  const hist = getStatusHistory(e);
+  if (hist.length < 2) { toast('Cannot undo — this is the first status', 'err'); return; }
+  if (!confirm('Undo the last status change? This will revert to "' + (ENQ_STATUS_LABELS[hist[hist.length - 2].status] || hist[hist.length - 2].status) + '".')) return;
+  const removed = hist.pop();
+  const prevStatus = hist[hist.length - 1].status;
+  const prevDate = hist[hist.length - 1].date;
+  try {
+    const { error } = await SB.from('enquiries').update({
+      status: prevStatus,
+      status_changed_at: prevDate,
+      status_history: JSON.stringify(hist)
+    }).eq('id', enqId);
+    if (error) throw error;
+    toast('Reverted to ' + (ENQ_STATUS_LABELS[prevStatus] || prevStatus), 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === enqId);
+    if (fresh) renderEnqDrawer(fresh);
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+// Remove a specific (non-first, non-last) status entry from history
+async function removeStatusEntry(enqId, index) {
+  const e = allEnquiries.find(x => x.id === enqId);
+  if (!e) return;
+  const hist = getStatusHistory(e);
+  if (index <= 0 || index >= hist.length) return;
+  const entry = hist[index];
+  if (!confirm('Remove "' + (ENQ_STATUS_LABELS[entry.status] || entry.status) + '" (' + fmtDate(entry.date) + ') from timeline?')) return;
+  hist.splice(index, 1);
+  // If we removed the last entry, also update current status
+  const updates = { status_history: JSON.stringify(hist) };
+  if (index === hist.length) {
+    // We removed what was the last entry — revert status
+    updates.status = hist[hist.length - 1].status;
+    updates.status_changed_at = hist[hist.length - 1].date;
+  }
+  try {
+    const { error } = await SB.from('enquiries').update(updates).eq('id', enqId);
+    if (error) throw error;
+    toast('Entry removed from timeline', 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === enqId);
+    if (fresh) renderEnqDrawer(fresh);
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
 }
 
 /*============================
