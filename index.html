@@ -3919,6 +3919,14 @@ function setEnqFilter(status) {
   renderEnqTable();
 }
 
+// Build a stable chronological ENQ number map (oldest = ENQ-001)
+function buildEnqNumberMap() {
+  const sorted = [...allEnquiries].sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+  const map = {};
+  sorted.forEach((e, i) => { map[e.id] = e.enq_number || ('ENQ-' + String(i+1).padStart(3,'0')); });
+  return map;
+}
+
 function renderEnqTable() {
   const search = (document.getElementById('enqSearchBox')?.value || '').toLowerCase();
   let rows = allEnquiries.filter(e => {
@@ -3940,13 +3948,14 @@ function renderEnqTable() {
     tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--t4);padding:32px">No enquiries found</td></tr>';
     return;
   }
+  const enqNumMap = buildEnqNumberMap();
   tbody.innerHTML = rows.map((e, i) => {
     const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + (new Date(e.next_followup) < new Date() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     const val = e.expected_value ? fmtCr(Number(e.expected_value), e.currency || 'INR') : '—';
     const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
       : e.converted_order_id ? '<span style="font-size:10px;color:var(--green);font-weight:700">✓ Converted</span>' : '';
-    const enqNo = e.enq_number || ('ENQ-' + String(i+1).padStart(3,'0'));
+    const enqNo = enqNumMap[e.id] || ('ENQ-' + String(i+1).padStart(3,'0'));
     const rmk = e.remarks ? '<span style="font-size:10.5px;color:var(--t2);max-width:140px;display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + e.remarks + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     return `<tr onclick="openEnqDrawer('${e.id}')" style="cursor:pointer">
       <td style="color:var(--t4);font-size:11px">${i+1}</td>
@@ -3999,7 +4008,14 @@ async function saveNewEnquiry() {
     source: document.getElementById('enqf_source')?.value || 'direct',
     notes: document.getElementById('enqf_notes')?.value.trim() || null,
     remarks: document.getElementById('enqf_remarks')?.value.trim() || null,
-    enq_number: 'ENQ-' + String(allEnquiries.length + 1).padStart(3, '0'),
+    enq_number: (function() {
+      let maxNum = 0;
+      allEnquiries.forEach(e => {
+        const m = (e.enq_number || '').match(/ENQ-(\d+)/);
+        if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+      });
+      return 'ENQ-' + String(Math.max(maxNum + 1, allEnquiries.length + 1)).padStart(3, '0');
+    })(),
     status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new',
     status_changed_at: new Date().toISOString(),
     negotiation_log: '[]',
@@ -4066,7 +4082,8 @@ function renderEnqDrawer(e) {
   const fmt = v => v || '—';
   const eCur = e.currency || 'INR';
   const fmtVal = v => v ? fmtCr(Number(v), eCur) : '—';
-  const enqNo = e.enq_number || '—';
+  const enqNumMap = buildEnqNumberMap();
+  const enqNo = enqNumMap[e.id] || e.enq_number || '—';
   grid.innerHTML = [
     ['Enquiry No.', `<span style="font-family:var(--mono);font-weight:700;color:var(--blue)">${enqNo}</span>`],
     ['Customer', fmt(e.customer)],
