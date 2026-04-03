@@ -3931,11 +3931,11 @@ function setEnqFilter(status) {
   renderEnqTable();
 }
 
-// Build a stable chronological ENQ number map (oldest = ENQ-001)
+// Build a stable chronological ENQ number map by enquiry_date (oldest = ENQ-001)
 function buildEnqNumberMap() {
-  const sorted = [...allEnquiries].sort((a,b) => (a.created_at||'').localeCompare(b.created_at||''));
+  const sorted = [...allEnquiries].sort((a,b) => (a.enquiry_date||a.created_at||'').localeCompare(b.enquiry_date||b.created_at||''));
   const map = {};
-  sorted.forEach((e, i) => { map[e.id] = e.enq_number || ('ENQ-' + String(i+1).padStart(3,'0')); });
+  sorted.forEach((e, i) => { map[e.id] = 'ENQ-' + String(i+1).padStart(3,'0'); });
   return map;
 }
 
