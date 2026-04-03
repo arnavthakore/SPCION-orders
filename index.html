@@ -1961,13 +1961,46 @@ function setupRealtime() {
 }
 
 /*============================
+  UTILITY: DATE HELPERS (timezone-safe)
+============================*/
+// Parse "YYYY-MM-DD" or ISO timestamp → local midnight Date
+function localDate(str) {
+  if (!str) return null;
+  const s = String(str).slice(0,10);
+  const [y,m,d] = s.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+// Today as local midnight
+function todayLocal() {
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+// Local Date → "YYYY-MM-DD" string
+function dateToStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+// Add N days to a Date
+function addDays(d, n) {
+  const r = new Date(d); r.setDate(r.getDate() + n); return r;
+}
+// Difference in days (a − b)
+function diffDays(a, b) {
+  return Math.round((a - b) / 86400000);
+}
+
+/*============================
   UTILITY: DATES & AGING
 ============================*/
-function today() { return new Date().toISOString().slice(0,10); }
+function today() { return dateToStr(new Date()); }
 function daysDiff(dateStr) {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
-  const now = new Date(); now.setHours(0,0,0,0);
+  const d = localDate(dateStr);
+  if (!d) return null;
+  const now = todayLocal();
   return Math.round((now - d) / 86400000);
 }
 function daysUntil(dateStr) {
@@ -2069,8 +2102,8 @@ function getSmartViewOrders(viewKey) {
     case 'overdue':
       return active.filter(o => o.delivery_date && o.delivery_date < t && !['Delivered','Payment Received'].includes(o.status));
     case 'dispatch_week': {
-      const weekOut = new Date(); weekOut.setDate(weekOut.getDate() + 7);
-      const ws = weekOut.toISOString().slice(0,10);
+      const weekOut = addDays(todayLocal(), 7);
+      const ws = dateToStr(weekOut);
       return active.filter(o => o.delivery_date && o.delivery_date >= t && o.delivery_date <= ws);
     }
     case 'pending_payment':
@@ -2087,8 +2120,8 @@ function getSmartViewOrders(viewKey) {
         return age !== null && age >= 14 && !['Delivered','Payment Received','On Hold'].includes(o.status);
       });
     case 'pbg_expiring': {
-      const in30 = new Date(); in30.setDate(in30.getDate() + 30);
-      const in30s = in30.toISOString().slice(0,10);
+      const in30 = addDays(todayLocal(), 30);
+      const in30s = dateToStr(in30);
       return active.filter(o => o.pbg_required === true && o.pbg_expiry_date && o.pbg_expiry_date <= in30s && !o.pbg_returned);
     }
     default: return active;
@@ -2176,8 +2209,8 @@ function updateActionList() {
   const sv = smartViewCounts();
 
   // PBG expiring in 15 days
-  const in15 = new Date(); in15.setDate(in15.getDate() + 15);
-  const pbg15 = active.filter(o => o.pbg_required && o.pbg_expiry_date && o.pbg_expiry_date <= in15.toISOString().slice(0,10) && !o.pbg_returned).length;
+  const in15s = dateToStr(addDays(todayLocal(), 15));
+  const pbg15 = active.filter(o => o.pbg_required && o.pbg_expiry_date && o.pbg_expiry_date <= in15s && !o.pbg_returned).length;
 
   const actions = [
     { ct: sv.overdue,          lbl: 'Overdue Deliveries',     sub: 'Past delivery date',        cls: sv.overdue > 0 ? 'urgent' : '', view: 'overdue' },
@@ -2448,8 +2481,8 @@ function renderDashboard() {
   // PBG
   const pbgEl = document.getElementById('dpbg');
   if (pbgEl) {
-    const in30 = new Date(); in30.setDate(in30.getDate()+30);
-    const exp30 = pbgActive.filter(o => o.pbg_expiry_date && new Date(o.pbg_expiry_date) <= in30);
+    const in30 = addDays(todayLocal(), 30);
+    const exp30 = pbgActive.filter(o => o.pbg_expiry_date && (localDate(o.pbg_expiry_date) || new Date(9999,0)) <= in30);
     pbgEl.innerHTML = `
       <div class="pmrow"><div class="pmrow-l">Active PBGs</div><div class="pmrow-r">${pbgActive.length}</div></div>
       <div class="pmrow"><div class="pmrow-l">Expiring ≤30d</div><div class="pmrow-r" style="color:${exp30.length>0?'var(--red)':'var(--t1)'}">${exp30.length}</div></div>
@@ -2952,19 +2985,19 @@ function renderDrawer(o) {
   const isTraded = o.order_type === 'traded';
   let designTargetHtml = '';
   if (o.design_start) {
-    const tgt = new Date(o.design_start); tgt.setDate(tgt.getDate() + 15);
+    const tgt = addDays(localDate(o.design_start), 15);
     const tgtStr = tgt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
     let tgtBadge = '';
     if (o.design_done) {
-      const done = new Date(o.design_done);
+      const done = localDate(o.design_done);
       tgtBadge = done <= tgt
         ? '<span style="font-size:9.5px;background:var(--green-lt);color:var(--green);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">✓ On time</span>'
-        : '<span style="font-size:9.5px;background:var(--red-lt);color:var(--red);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">' + Math.ceil((done-tgt)/86400000) + 'd late</span>';
+        : '<span style="font-size:9.5px;background:var(--red-lt);color:var(--red);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">' + diffDays(done,tgt) + 'd late</span>';
     } else {
-      const today = new Date(); today.setHours(0,0,0,0);
-      tgtBadge = today > tgt
+      const td = todayLocal();
+      tgtBadge = td > tgt
         ? '<span style="font-size:9.5px;background:var(--red-lt);color:var(--red);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">Overdue</span>'
-        : '<span style="font-size:9.5px;background:var(--amber-lt);color:var(--amber);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">' + Math.ceil((tgt-today)/86400000) + 'd left</span>';
+        : '<span style="font-size:9.5px;background:var(--amber-lt);color:var(--amber);border-radius:8px;padding:1px 7px;margin-left:6px;font-weight:700">' + diffDays(tgt,td) + 'd left</span>';
     }
     designTargetHtml = '<div class="irow"><div class="ilbl">Design Target' + tgtBadge + '</div><div class="ival mono green">' + tgtStr + '</div></div>';
   }
@@ -3493,7 +3526,7 @@ async function saveOrder() {
         const eId = window._convertingFromEnqId;
         const enq = allEnquiries.find(x => x.id === eId);
         const acts = Array.isArray(enq?.activity) ? [...enq.activity] : [];
-        acts.push({ date: new Date().toISOString().slice(0,10), notes: 'Converted to order', price: null, followup: null });
+        acts.push({ date: today(), notes: 'Converted to order', price: null, followup: null });
         await SB.from('enquiries').update({ stage: 'won', order_id: inserted.id, activity: acts }).eq('id', eId);
         window._convertingFromEnqId = null;
         toast('Order created & linked to enquiry!', 'ok');
@@ -3837,40 +3870,37 @@ function enqBadge(status) {
   SLA / DEADLINE TRACKING
   - Specs Received → 7 days from enquiry_date to forward to partner
   - Offer Sent → follow up every 10 days from last activity
+  (date helpers: localDate, todayLocal, dateToStr, addDays, diffDays defined above)
 ============================*/
 function getEnqSLA(e) {
-  const now = new Date();
+  const now = todayLocal();
 
   if (e.status === 'specs_received') {
-    // Deadline = 7 days from enquiry date
-    const base = e.enquiry_date ? new Date(e.enquiry_date) : null;
+    const base = localDate(e.enquiry_date);
     if (!base) return null;
-    const deadlineDate = new Date(base.getTime() + 7 * 86400000);
-    const daysLeft = Math.floor((deadlineDate - now) / 86400000);
-    const deadlineFmt = fmtDate(deadlineDate.toISOString().slice(0,10));
+    const deadlineDate = addDays(base, 7);
+    const daysLeft = diffDays(deadlineDate, now);
+    const deadlineFmt = fmtDate(dateToStr(deadlineDate));
     if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
     if (daysLeft <= 2) return { type: 'warn', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
     return { type: 'ok', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Forward to partner' };
   }
 
   if (e.status === 'offer_sent') {
-    // 10-day follow-up cycle from last activity (negotiation log or status change)
-    let lastActivity = e.status_changed_at ? new Date(e.status_changed_at) : (e.updated_at ? new Date(e.updated_at) : null);
+    // 10-day follow-up cycle from last activity
+    let lastAct = null;
     try {
       const log = JSON.parse(e.negotiation_log || '[]');
       if (log.length) {
         const lastEntry = log[log.length - 1];
-        if (lastEntry.date) lastActivity = new Date(lastEntry.date);
+        if (lastEntry.date) lastAct = localDate(lastEntry.date);
       }
     } catch {}
-    if (!lastActivity) {
-      // Fall back to enquiry date
-      lastActivity = e.enquiry_date ? new Date(e.enquiry_date) : null;
-    }
-    if (!lastActivity) return null;
-    const deadlineDate = new Date(lastActivity.getTime() + 10 * 86400000);
-    const daysLeft = Math.floor((deadlineDate - now) / 86400000);
-    const deadlineFmt = fmtDate(deadlineDate.toISOString().slice(0,10));
+    if (!lastAct) lastAct = localDate(e.status_changed_at) || localDate(e.updated_at) || localDate(e.enquiry_date);
+    if (!lastAct) return null;
+    const deadlineDate = addDays(lastAct, 10);
+    const daysLeft = diffDays(deadlineDate, now);
+    const deadlineFmt = fmtDate(dateToStr(deadlineDate));
     if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
     if (daysLeft <= 3) return { type: 'warn', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
     return { type: 'ok', label: `${daysLeft}d left`, deadlineDate, deadlineFmt, sub: 'Follow-up due' };
@@ -3962,7 +3992,7 @@ function renderEnqTable() {
   }
   const enqNumMap = buildEnqNumberMap();
   tbody.innerHTML = rows.map((e, i) => {
-    const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + (new Date(e.next_followup) < new Date() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
+    const followup = e.next_followup ? '<span style="font-size:10.5px;color:' + ((localDate(e.next_followup) || new Date(9999,0)) < todayLocal() ? 'var(--red)' : 'var(--amber)') + ';font-family:var(--mono)">' + fmtDate(e.next_followup) + '</span>' : '<span style="color:var(--t4);font-size:11px">—</span>';
     const val = e.expected_value ? fmtCr(Number(e.expected_value), e.currency || 'INR') : '—';
     const convertBtn = ['offer_sent','negotiating','quoted','won'].includes(e.status) && !e.converted_order_id
       ? `<button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;font-size:10px;padding:4px 10px" onclick="openConvertModal('${e.id}');event.stopPropagation()">Convert →</button>`
@@ -3992,7 +4022,7 @@ function openNewEnqModal() {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const dateEl = document.getElementById('enqf_enquiry_date');
-  if (dateEl) dateEl.value = new Date().toISOString().slice(0,10);
+  if (dateEl) dateEl.value = today();
   const curEl = document.getElementById('enqf_currency');
   if (curEl) curEl.value = 'INR';
   document.getElementById('enqModal').classList.add('open');
@@ -4195,14 +4225,14 @@ function addNegEntry() {
   const f = document.getElementById('negAddForm');
   if (f) { f.style.display = ''; }
   const dateEl = document.getElementById('neg_date');
-  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  if (dateEl && !dateEl.value) dateEl.value = today();
 }
 
 function addQuoteEntry() {
   const f = document.getElementById('quoteAddForm');
   if (f) { f.style.display = ''; }
   const dateEl = document.getElementById('qt_date');
-  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().slice(0,10);
+  if (dateEl && !dateEl.value) dateEl.value = today();
 }
 
 async function saveNegEntry() {
@@ -4211,7 +4241,7 @@ async function saveNegEntry() {
   let entries = [];
   try { entries = JSON.parse(e.negotiation_log || '[]'); } catch {}
   const entry = {
-    date: document.getElementById('neg_date')?.value || new Date().toISOString().slice(0,10),
+    date: document.getElementById('neg_date')?.value || today(),
     price: parseFloat(document.getElementById('neg_price')?.value) || null,
     followup: document.getElementById('neg_followup')?.value || null,
     notes: document.getElementById('neg_notes')?.value.trim() || null
@@ -4241,7 +4271,7 @@ async function saveQuoteEntry() {
   let entries = [];
   try { entries = JSON.parse(e.quote_log || '[]'); } catch {}
   const entry = {
-    date: document.getElementById('qt_date')?.value || new Date().toISOString().slice(0,10),
+    date: document.getElementById('qt_date')?.value || today(),
     number: document.getElementById('qt_number')?.value.trim() || null,
     amount: parseFloat(document.getElementById('qt_amount')?.value) || null,
     valid_until: document.getElementById('qt_valid_until')?.value || null,
@@ -4421,7 +4451,7 @@ function getEnqKPIs() {
   const total = allEnquiries.length;
   const pipeline = allEnquiries.filter(e => e.status !== 'lost').reduce((s,e) => s + (e.expected_value || 0), 0);
   const winRate = total > 0 ? Math.round((won / (won + lost || 1)) * 100) : 0;
-  const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && isEnqActive(e));
+  const followups = allEnquiries.filter(e => e.next_followup && (localDate(e.next_followup) || new Date(9999,0)) <= todayLocal() && isEnqActive(e));
   const slaBreaches = allEnquiries.filter(e => {
     if (!isEnqActive(e)) return false;
     const sla = getEnqSLA(e);
