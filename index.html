@@ -347,6 +347,20 @@ th.sortable:hover{background:var(--bg2);color:var(--blue)}
 th.sortable::after{content:'⇅';margin-left:4px;font-size:10px;opacity:.3}
 th.sortable.sort-asc::after{content:'↑';opacity:.8;color:var(--blue)}
 th.sortable.sort-desc::after{content:'↓';opacity:.8;color:var(--blue)}
+/* Status timeline */
+.tl-item{display:flex;gap:12px;position:relative;padding:0 0 20px 0}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{content:'';position:absolute;left:13px;top:26px;bottom:0;width:2px;background:var(--bdr)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:2px solid var(--bdr);background:var(--white);z-index:1}
+.tl-dot.tl-active{border-color:var(--blue);background:var(--blue-lt)}
+.tl-dot.tl-won{border-color:var(--green);background:var(--green-lt)}
+.tl-dot.tl-lost{border-color:var(--red);background:var(--red-lt)}
+.tl-body{flex:1;padding-top:3px}
+.tl-status{font-size:12px;font-weight:700;color:var(--t1)}
+.tl-date{font-size:11px;font-family:var(--mono);color:var(--t3)}
+.tl-dur{font-size:10px;color:var(--t4);margin-top:1px}
+.tl-sla{margin-top:3px}
 .enq-chip .ec-ct{font-family:var(--mono);font-size:10px;background:rgba(0,0,0,.08);border-radius:10px;padding:1px 6px;min-width:18px;text-align:center}
 .enq-chip.ec-on{color:#fff;border-color:transparent}
 .enq-chip.ec-on .ec-ct{background:rgba(255,255,255,.25)}
@@ -1006,6 +1020,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   <div id="enqStageBar" style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
   <div class="dtabs" id="enqDrawerTabs">
     <div class="dtab on"  id="edt-details"    onclick="switchEnqTab('details')">📋 Details</div>
+    <div class="dtab"     id="edt-timeline"   onclick="switchEnqTab('timeline')">📅 Timeline</div>
     <div class="dtab"     id="edt-negotiation" onclick="switchEnqTab('negotiation')">🤝 Negotiation</div>
     <div class="dtab"     id="edt-quotes"     onclick="switchEnqTab('quotes')">📄 Quotes</div>
   </div>
@@ -1052,6 +1067,14 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
             <button class="btn btn-blue" style="width:auto;padding:8px 20px" onclick="saveEnqDetails()">Save Changes</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE TAB -->
+    <div id="enq-tab-timeline" style="display:none">
+      <div class="dsec">
+        <div class="dsec-t">Status Change History</div>
+        <div id="enqTimeline" style="padding:4px 0"></div>
       </div>
     </div>
 
@@ -3873,6 +3896,78 @@ function enqBadge(status) {
 }
 
 /*============================
+  STATUS HISTORY TRACKING
+  Stores [{status, date, by?}] JSON array in enquiry.status_history
+============================*/
+function getStatusHistory(e) {
+  try { return JSON.parse(e.status_history || '[]'); } catch { return []; }
+}
+function appendStatusHistory(e, newStatus) {
+  const hist = getStatusHistory(e);
+  hist.push({ status: newStatus, date: today() });
+  return JSON.stringify(hist);
+}
+// Get date when enquiry entered a specific status (from history)
+function getStatusDate(e, status) {
+  const hist = getStatusHistory(e);
+  // Find the LAST time this status was entered
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (hist[i].status === status) return hist[i].date;
+  }
+  return null;
+}
+
+function renderTimeline(e) {
+  const el = document.getElementById('enqTimeline');
+  if (!el) return;
+  const hist = getStatusHistory(e);
+  if (!hist.length) {
+    // Build from what we know if no history yet
+    el.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:8px">No status history recorded yet. Future status changes will be tracked here.</div>';
+    return;
+  }
+  el.innerHTML = hist.map((h, i) => {
+    const next = hist[i + 1];
+    const isLast = i === hist.length - 1;
+    const label = ENQ_STATUS_LABELS[h.status] || h.status;
+    // Duration in this status
+    let durHtml = '';
+    if (next) {
+      const d1 = localDate(h.date), d2 = localDate(next.date);
+      if (d1 && d2) {
+        const days = diffDays(d2, d1);
+        durHtml = `<div class="tl-dur">⏱ ${days} day${days !== 1 ? 's' : ''} in this status</div>`;
+      }
+    } else if (isLast && !['won','lost'].includes(h.status)) {
+      const d1 = localDate(h.date);
+      if (d1) {
+        const days = diffDays(todayLocal(), d1);
+        durHtml = `<div class="tl-dur">⏱ ${days} day${days !== 1 ? 's' : ''} so far (current)</div>`;
+      }
+    }
+    // SLA indicator for relevant statuses
+    let slaHtml = '';
+    if (isLast && h.status === 'specs_received') {
+      const sla = getEnqSLA(e);
+      if (sla) slaHtml = `<div class="tl-sla">${slaChipHTML(e)}</div>`;
+    } else if (isLast && h.status === 'offer_sent') {
+      const sla = getEnqSLA(e);
+      if (sla) slaHtml = `<div class="tl-sla">${slaChipHTML(e)}</div>`;
+    }
+    const dotCls = isLast ? (h.status === 'won' ? 'tl-won' : h.status === 'lost' ? 'tl-lost' : 'tl-active') : '';
+    const ico = h.status === 'won' ? '🏆' : h.status === 'lost' ? '✗' : isLast ? '●' : '✓';
+    return `<div class="tl-item">
+      <div class="tl-dot ${dotCls}">${ico}</div>
+      <div class="tl-body">
+        <div class="tl-status">${label}</div>
+        <div class="tl-date">${fmtDate(h.date)}</div>
+        ${durHtml}${slaHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/*============================
   SLA / DEADLINE TRACKING
   - Specs Received → 7 days from enquiry_date to forward to partner
   - Offer Sent → follow up every 10 days from last activity
@@ -3882,7 +3977,9 @@ function getEnqSLA(e) {
   const now = todayLocal();
 
   if (e.status === 'specs_received') {
-    const base = localDate(e.enquiry_date);
+    // Use status history date if available, else enquiry_date
+    const histDate = getStatusDate(e, 'specs_received');
+    const base = localDate(histDate) || localDate(e.enquiry_date);
     if (!base) return null;
     const deadlineDate = addDays(base, 7);
     const daysLeft = diffDays(deadlineDate, now);
@@ -3902,7 +3999,11 @@ function getEnqSLA(e) {
         if (lastEntry.date) lastAct = localDate(lastEntry.date);
       }
     } catch {}
-    if (!lastAct) lastAct = localDate(e.status_changed_at) || localDate(e.updated_at) || localDate(e.enquiry_date);
+    // Use status history date for offer_sent if no negotiation log
+    if (!lastAct) {
+      const histDate = getStatusDate(e, 'offer_sent');
+      lastAct = localDate(histDate) || localDate(e.status_changed_at) || localDate(e.updated_at) || localDate(e.enquiry_date);
+    }
     if (!lastAct) return null;
     const deadlineDate = addDays(lastAct, 10);
     const daysLeft = diffDays(deadlineDate, now);
@@ -4110,6 +4211,7 @@ async function saveNewEnquiry() {
     })(),
     status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new',
     status_changed_at: new Date().toISOString(),
+    status_history: JSON.stringify([{ status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new', date: today() }]),
     negotiation_log: '[]',
     quote_log: '[]'
   };
@@ -4142,7 +4244,7 @@ function closeEnqDrawer() {
 }
 
 function switchEnqTab(tab) {
-  ['details','negotiation','quotes'].forEach(t => {
+  ['details','timeline','negotiation','quotes'].forEach(t => {
     const panel = document.getElementById('enq-tab-' + t);
     const tabEl = document.getElementById('edt-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -4208,6 +4310,8 @@ function renderEnqDrawer(e) {
   if (document.getElementById('eq_order_type')) document.getElementById('eq_order_type').value = e.order_type || 'manufactured';
   if (document.getElementById('eq_source')) document.getElementById('eq_source').value = e.source || 'direct';
 
+  // Render timeline
+  renderTimeline(e);
   // Render neg log
   renderNegLog(e);
   // Render quote log
@@ -4297,11 +4401,16 @@ async function saveNegEntry() {
     notes: document.getElementById('neg_notes')?.value.trim() || null
   };
   entries.push(entry);
+  const newStatus = (!['negotiating','quoted','won','lost'].includes(e.status)) ? 'negotiating' : e.status;
   const updates = {
     negotiation_log: JSON.stringify(entries),
     next_followup: entry.followup || e.next_followup,
-    status: (!['negotiating','quoted','won','lost'].includes(e.status)) ? 'negotiating' : e.status
+    status: newStatus
   };
+  if (newStatus !== e.status) {
+    updates.status_changed_at = new Date().toISOString();
+    updates.status_history = appendStatusHistory(e, newStatus);
+  }
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
     if (error) throw error;
@@ -4328,10 +4437,15 @@ async function saveQuoteEntry() {
     notes: document.getElementById('qt_notes')?.value.trim() || null
   };
   entries.push(entry);
+  const newQStatus = !['quoted','won','lost'].includes(e.status) ? 'quoted' : e.status;
   const updates = {
     quote_log: JSON.stringify(entries),
-    status: !['quoted','won','lost'].includes(e.status) ? 'quoted' : e.status
+    status: newQStatus
   };
+  if (newQStatus !== e.status) {
+    updates.status_changed_at = new Date().toISOString();
+    updates.status_history = appendStatusHistory(e, newQStatus);
+  }
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
     if (error) throw error;
@@ -4377,8 +4491,14 @@ async function saveEnqDetails() {
 async function advanceEnqTo(status) {
   if (!selectedEnqId) return;
   if (status === 'lost') { openLostModal(); return; }
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e) return;
   try {
-    const { error } = await SB.from('enquiries').update({ status, status_changed_at: new Date().toISOString() }).eq('id', selectedEnqId);
+    const { error } = await SB.from('enquiries').update({
+      status,
+      status_changed_at: new Date().toISOString(),
+      status_history: appendStatusHistory(e, status)
+    }).eq('id', selectedEnqId);
     if (error) throw error;
     toast('Status updated to ' + ENQ_STATUS_LABELS[status], 'ok');
     await loadEnquiries();
@@ -4397,7 +4517,12 @@ async function confirmMarkLost() {
   const reason = document.getElementById('lost_reason')?.value;
   const competitor = document.getElementById('lost_competitor')?.value.trim() || null;
   const notes = document.getElementById('lost_notes')?.value.trim() || null;
-  const updates = { status: 'lost', lost_reason: reason, lost_competitor: competitor, lost_notes: notes };
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  const updates = {
+    status: 'lost', lost_reason: reason, lost_competitor: competitor, lost_notes: notes,
+    status_changed_at: new Date().toISOString(),
+    status_history: e ? appendStatusHistory(e, 'lost') : null
+  };
   try {
     const { error } = await SB.from('enquiries').update(updates).eq('id', selectedEnqId);
     if (error) throw error;
@@ -4476,7 +4601,12 @@ async function confirmConvertToOrder() {
     const { data: inserted, error: oErr } = await SB.from('orders').insert(orderPayload).select().single();
     if (oErr) throw oErr;
     // Update enquiry as converted
-    const { error: eErr } = await SB.from('enquiries').update({ status: 'won', converted_order_id: inserted.id }).eq('id', selectedEnqId);
+    const convEnq = allEnquiries.find(x => x.id === selectedEnqId);
+    const { error: eErr } = await SB.from('enquiries').update({
+      status: 'won', converted_order_id: inserted.id,
+      status_changed_at: new Date().toISOString(),
+      status_history: convEnq ? appendStatusHistory(convEnq, 'won') : null
+    }).eq('id', selectedEnqId);
     if (eErr) throw eErr;
     document.getElementById('convertModal').classList.remove('open');
     closeEnqDrawer();
