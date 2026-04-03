@@ -3920,11 +3920,21 @@ function getStatusDate(e, status) {
 function renderTimeline(e) {
   const el = document.getElementById('enqTimeline');
   if (!el) return;
-  const hist = getStatusHistory(e);
+  let hist = getStatusHistory(e);
   if (!hist.length) {
-    // Build from what we know if no history yet
-    el.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:8px">No status history recorded yet. Future status changes will be tracked here.</div>';
-    return;
+    // Reconstruct a basic timeline from available data for older enquiries
+    const reconstructed = [];
+    if (e.enquiry_date) reconstructed.push({ status: 'new', date: e.enquiry_date });
+    // If current status is different from 'new', add it
+    if (e.status && e.status !== 'new') {
+      const changeDate = e.status_changed_at ? e.status_changed_at.slice(0,10) : (e.updated_at ? e.updated_at.slice(0,10) : e.enquiry_date);
+      reconstructed.push({ status: e.status, date: changeDate });
+    }
+    if (!reconstructed.length) {
+      el.innerHTML = '<div style="color:var(--t4);font-size:12px;padding:8px">No status history recorded yet. Future changes will be tracked here.</div>';
+      return;
+    }
+    hist = reconstructed;
   }
   el.innerHTML = hist.map((h, i) => {
     const next = hist[i + 1];
