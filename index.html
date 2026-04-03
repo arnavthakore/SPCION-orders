@@ -371,6 +371,12 @@ td:first-child{padding-left:14px}
 .log-entry-price{font-size:12px;font-weight:700;color:var(--green);font-family:var(--mono)}
 .log-entry-notes{font-size:11.5px;color:var(--t2)}
 .log-entry-followup{font-size:10.5px;color:var(--amber);margin-top:3px}
+/* SLA deadline chips */
+.sla-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap}
+.sla-ok{background:#e8f5e9;color:#2e7d32}
+.sla-warn{background:#fff8e1;color:#f57f17}
+.sla-breach{background:#fce4ec;color:#c62828;animation:slaPulse 2s infinite}
+@keyframes slaPulse{0%,100%{opacity:1}50%{opacity:.7}}
 /* Stage advance bar for enquiries */
 .enq-stage-btn{padding:6px 14px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg2);color:var(--t3);transition:all .15s}
 .enq-stage-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
@@ -2411,7 +2417,7 @@ function renderDashboard() {
       { cls:'k-teal',   ico:'💬', lbl:'Active Enquiries',  val:eq.active,               sub:'open pipeline' },
       { cls:'k-green',  ico:'🏆', lbl:'Win Rate',           val:eq.winRate+'%',          sub:eq.won+' won / '+eq.lost+' lost' },
       { cls:'k-purple', ico:'💰', lbl:'Enq Pipeline',       val:fmtCr(eq.pipeline), sub:'excl. lost' },
-      { cls:'k-amber',  ico:'📅', lbl:'Overdue Followups',  val:eq.followupsOverdue,     sub:'need attention' },
+      { cls:'k-amber',  ico:'⏰', lbl:'Action Required',     val:eq.followupsOverdue,     sub:'overdue SLAs & follow-ups' },
     ];
     kpiRowEl.innerHTML += enqCards.map(function(k) {
       var onclick = "showPage('enquiries',document.getElementById('nav-enquiries'))";
@@ -3827,6 +3833,64 @@ function enqBadge(status) {
   return `<span class="enq-badge ${ENQ_STATUS_CLASS[status] || ''}">${ENQ_STATUS_LABELS[status] || status}</span>`;
 }
 
+/*============================
+  SLA / DEADLINE TRACKING
+  - Specs Received → must forward to partner within 7 days
+  - Offer Sent → must follow up every 10 days
+============================*/
+function getEnqSLA(e) {
+  // Use status_changed_at if available, else fall back to updated_at
+  const changedAt = e.status_changed_at || e.updated_at || e.created_at;
+  if (!changedAt) return null;
+  const now = new Date();
+  const changed = new Date(changedAt);
+  const daysSince = Math.floor((now - changed) / 86400000);
+
+  if (e.status === 'specs_received') {
+    const deadline = 7;
+    const daysLeft = deadline - daysSince;
+    if (daysLeft < 0) return { type: 'breach', label: `${Math.abs(daysLeft)}d overdue to forward`, days: daysLeft };
+    if (daysLeft <= 2) return { type: 'warn', label: `${daysLeft}d left to forward`, days: daysLeft };
+    return { type: 'ok', label: `${daysLeft}d to forward`, days: daysLeft };
+  }
+
+  if (e.status === 'offer_sent') {
+    // Check days since last follow-up (negotiation log) or since status change
+    let lastActivity = changed;
+    try {
+      const log = JSON.parse(e.negotiation_log || '[]');
+      if (log.length) {
+        const lastEntry = log[log.length - 1];
+        if (lastEntry.date) lastActivity = new Date(lastEntry.date);
+      }
+    } catch {}
+    const daysSinceLast = Math.floor((now - lastActivity) / 86400000);
+    const cycle = 10;
+    const daysLeft = cycle - daysSinceLast;
+    if (daysLeft < 0) return { type: 'breach', label: `Follow-up ${Math.abs(daysLeft)}d overdue`, days: daysLeft };
+    if (daysLeft <= 3) return { type: 'warn', label: `Follow-up in ${daysLeft}d`, days: daysLeft };
+    return { type: 'ok', label: `Follow-up in ${daysLeft}d`, days: daysLeft };
+  }
+
+  return null;
+}
+
+function slaChipHTML(e) {
+  const sla = getEnqSLA(e);
+  if (!sla) return '';
+  const cls = sla.type === 'breach' ? 'sla-breach' : sla.type === 'warn' ? 'sla-warn' : 'sla-ok';
+  const ico = sla.type === 'breach' ? '🚨' : sla.type === 'warn' ? '⏳' : '✓';
+  return `<span class="sla-chip ${cls}">${ico} ${sla.label}</span>`;
+}
+
+function countSLABreaches() {
+  return allEnquiries.filter(e => {
+    if (['won','lost'].includes(e.status)) return false;
+    const sla = getEnqSLA(e);
+    return sla && (sla.type === 'breach' || sla.type === 'warn');
+  }).length;
+}
+
 function renderEnqStatusChips() {
   const wrap = document.getElementById('enqStatusChips');
   if (!wrap) return;
@@ -3839,8 +3903,10 @@ function renderEnqStatusChips() {
     new:'ec-new', costing:'ec-costing', specs_received:'ec-specs', forwarded_partner:'ec-fwd',
     offer_from_partner:'ec-partner', offer_sent:'ec-offer', negotiating:'ec-neg', won:'ec-won', lost:'ec-lost'
   };
+  const slaCount = countSLABreaches();
   wrap.innerHTML = `<div class="enq-chips">` +
     `<span class="enq-chip ec-all ${!enqFilter ? 'ec-on' : ''}" onclick="setEnqFilter(null)">All <span class="ec-ct">${allEnquiries.length}</span></span>` +
+    (slaCount > 0 ? `<span class="enq-chip ${enqFilter==='__sla' ? 'ec-on' : ''}" style="background:${enqFilter==='__sla'?'#c62828':'#fce4ec'};color:${enqFilter==='__sla'?'#fff':'#c62828'};border-color:${enqFilter==='__sla'?'#c62828':'#ef9a9a'}" onclick="setEnqFilter('__sla')">⏰ Action Required <span class="ec-ct">${slaCount}</span></span>` : '') +
     visibleChips.map(s =>
       `<span class="enq-chip ${chipClassMap[s]||''} ${enqFilter===s ? 'ec-on' : ''}" onclick="setEnqFilter('${s}')">${ENQ_STATUS_LABELS[s]} <span class="ec-ct">${counts[s]}</span></span>`
     ).join('') +
@@ -3856,7 +3922,10 @@ function setEnqFilter(status) {
 function renderEnqTable() {
   const search = (document.getElementById('enqSearchBox')?.value || '').toLowerCase();
   let rows = allEnquiries.filter(e => {
-    if (enqFilter && e.status !== enqFilter) return false;
+    if (enqFilter === '__sla') {
+      const sla = getEnqSLA(e);
+      if (!sla || (sla.type !== 'breach' && sla.type !== 'warn')) return false;
+    } else if (enqFilter && e.status !== enqFilter) return false;
     if (search) {
       const hay = [e.customer, e.description, e.contact_person].join(' ').toLowerCase();
       if (!hay.includes(search)) return false;
@@ -3886,7 +3955,7 @@ function renderEnqTable() {
       <td style="font-size:12px;max-width:180px">${e.description||'—'}</td>
       <td style="font-family:var(--mono);font-size:11px">${e.enquiry_date ? fmtDate(e.enquiry_date) : '—'}</td>
       <td style="font-family:var(--mono);font-size:12px;font-weight:600">${val}</td>
-      <td>${enqBadge(e.status)}</td>
+      <td>${enqBadge(e.status)}${slaChipHTML(e) ? '<br>' + slaChipHTML(e) : ''}</td>
       <td>${rmk}</td>
       <td>${followup}</td>
       <td>${convertBtn}</td>
@@ -3932,6 +4001,7 @@ async function saveNewEnquiry() {
     remarks: document.getElementById('enqf_remarks')?.value.trim() || null,
     enq_number: 'ENQ-' + String(allEnquiries.length + 1).padStart(3, '0'),
     status: (document.getElementById('enqf_order_type')?.value === 'traded') ? 'specs_received' : 'new',
+    status_changed_at: new Date().toISOString(),
     negotiation_log: '[]',
     quote_log: '[]'
   };
@@ -4012,6 +4082,7 @@ function renderEnqDrawer(e) {
     ['Order Type', e.order_type === 'traded' ? '🏭 Traded' : '🔧 Manufactured'],
     ['Source', fmt(e.source)],
     ['Status', ENQ_STATUS_LABELS[e.status] || e.status],
+    ['SLA Deadline', slaChipHTML(e) || '<span style="color:var(--t4)">No active deadline</span>'],
     ['Notes', fmt(e.notes)],
     ['Remarks', fmt(e.remarks)],
   ].map(([l,v]) => `<div class="irow"><div class="ilbl">${l}</div><div class="ival">${v}</div></div>`).join('');
@@ -4198,7 +4269,7 @@ async function advanceEnqTo(status) {
   if (!selectedEnqId) return;
   if (status === 'lost') { openLostModal(); return; }
   try {
-    const { error } = await SB.from('enquiries').update({ status }).eq('id', selectedEnqId);
+    const { error } = await SB.from('enquiries').update({ status, status_changed_at: new Date().toISOString() }).eq('id', selectedEnqId);
     if (error) throw error;
     toast('Status updated to ' + ENQ_STATUS_LABELS[status], 'ok');
     await loadEnquiries();
@@ -4322,7 +4393,13 @@ function getEnqKPIs() {
   const pipeline = allEnquiries.filter(e => e.status !== 'lost').reduce((s,e) => s + (e.expected_value || 0), 0);
   const winRate = total > 0 ? Math.round((won / (won + lost || 1)) * 100) : 0;
   const followups = allEnquiries.filter(e => e.next_followup && new Date(e.next_followup) <= new Date() && isEnqActive(e));
-  return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: followups.length };
+  const slaBreaches = allEnquiries.filter(e => {
+    if (!isEnqActive(e)) return false;
+    const sla = getEnqSLA(e);
+    return sla && sla.type === 'breach';
+  });
+  const actionNeeded = new Set([...followups.map(e=>e.id), ...slaBreaches.map(e=>e.id)]).size;
+  return { active: active.length, won, lost, pipeline, winRate, followupsOverdue: actionNeeded };
 }
 function renderEnqPipeline() {
   // no-op — pipeline is rendered via status chips
