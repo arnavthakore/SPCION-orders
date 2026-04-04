@@ -932,7 +932,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <th onclick="sortBy('sl')" class="sorted">#</th>
           <th onclick="sortBy('customer')">Customer</th>
           <th onclick="sortBy('po_number')">PO No.</th>
-          <th onclick="sortBy('description')">Description</th>
+          <th onclick="sortBy('description')">Subject / Items</th>
           <th onclick="sortBy('status')">Stage</th>
           <th onclick="sortBy('stage_age')">Stage Age</th>
           <th onclick="sortBy('delivery_date')">Delivery / Delay</th>
@@ -1342,6 +1342,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   </div>
   <div class="dtabs">
     <div class="dtab on"  onclick="switchTab('overview',this)">📋 Overview</div>
+    <div class="dtab"     onclick="switchTab('items',this)">📦 Items <span id="ordItemsBadge" style="background:var(--blue);color:#fff;border-radius:10px;padding:0px 6px;font-size:9px;font-weight:700;display:none"></span></div>
     <div class="dtab"     onclick="switchTab('production',this)">⚙ Production</div>
     <div class="dtab"     onclick="switchTab('shipment',this)">🚛 Shipments <span id="shipment-badge" style="background:var(--blue);color:#fff;border-radius:10px;padding:0px 6px;font-size:9px;font-weight:700;display:none">0</span></div>
     <div class="dtab"     onclick="switchTab('payment',this)">💰 Payment</div>
@@ -1350,6 +1351,60 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   </div>
   <div class="d-body">
     <div class="dpanel on" id="dp-overview"></div>
+    <!-- ORDER LINE ITEMS TAB -->
+    <div class="dpanel" id="dp-items">
+      <div class="dsec">
+        <div class="dsec-t" style="display:flex;justify-content:space-between;align-items:center">
+          Equipment / Line Items
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;font-size:11px" onclick="showAddOrderItemForm()">+ Add Item</button>
+        </div>
+        <div style="font-size:11px;color:var(--t3);padding:4px 0 10px;line-height:1.5;border-bottom:1px solid var(--bdr);margin-bottom:8px" id="ordItemsHint">Add individual equipment items with quantity, value, and production stage tracking.</div>
+        <div id="ordItemsAddForm" style="display:none;padding:10px 0;border-bottom:1px solid var(--bdr);margin-bottom:10px">
+          <div class="fgrid">
+            <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="oli_description" placeholder="e.g. Ventilation Fan 75kW, Battery Locomotive 12T"></div>
+            <div class="fg"><label class="flbl">Quantity</label><input class="finput" type="number" id="oli_qty" placeholder="1" min="1"></div>
+            <div class="fg"><label class="flbl">Unit</label><input class="finput" id="oli_unit" placeholder="e.g. Nos, Sets, Lots"></div>
+            <div class="fg"><label class="flbl">Value</label><input class="finput" type="number" id="oli_value" placeholder="0"></div>
+            <div class="fg"><label class="flbl">Production Stage</label>
+              <select class="finput" id="oli_stage">
+                <option value="Design">Design / Engg</option>
+                <option value="Raw Material">Raw Material</option>
+                <option value="Fabrication">Fabrication</option>
+                <option value="Assembly">Assembly</option>
+                <option value="QA/Testing">QA / Testing</option>
+                <option value="Dispatch Ready">Dispatch Ready</option>
+                <option value="Shipped">Shipped</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Payment Received">Payment Received</option>
+              </select>
+            </div>
+            <div class="fg ffull" style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-blue btn-sm" style="padding:6px 16px" onclick="saveOrderLineItem()">Save Item</button>
+              <button class="btn btn-ghost btn-sm" style="padding:6px 16px" onclick="hideAddOrderItemForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <table style="width:100%;font-size:12px;margin-top:4px">
+          <thead>
+            <tr style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)">
+              <th style="padding:6px 8px">#</th>
+              <th style="padding:6px 8px">Equipment</th>
+              <th style="padding:6px 8px">Qty</th>
+              <th style="padding:6px 8px">Value</th>
+              <th style="padding:6px 8px">Stage</th>
+              <th style="padding:6px 8px"></th>
+            </tr>
+          </thead>
+          <tbody id="ordItemsTbody"></tbody>
+          <tfoot id="ordItemsTfoot"></tfoot>
+        </table>
+        <div id="ordItemsEmpty" style="text-align:center;color:var(--t4);padding:24px 16px;font-size:12px;line-height:1.6">
+          <div style="font-size:20px;margin-bottom:6px">📦</div>
+          <div style="font-weight:600;color:var(--t3);margin-bottom:4px">No equipment items added yet</div>
+          <div>Click <strong>"+ Add Item"</strong> to add individual equipment with quantity and value</div>
+        </div>
+      </div>
+    </div>
     <div class="dpanel"    id="dp-production"></div>
     <div class="dpanel"    id="dp-shipment"></div>
     <div class="dpanel"    id="dp-payment"></div>
@@ -1373,8 +1428,8 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <input class="finput" id="qa_customer" placeholder="e.g. Afcons Infrastructure" autocomplete="off">
       </div>
       <div class="fg">
-        <label class="flbl">Description <span style="color:var(--red)">*</span></label>
-        <input class="finput" id="qa_description" placeholder="e.g. Tunnel Ventilation System — Package B">
+        <label class="flbl">Order Subject <span style="color:var(--red)">*</span></label>
+        <input class="finput" id="qa_description" placeholder="e.g. Supply of Tunnel Ventilation System — Package B">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="fg">
@@ -1459,7 +1514,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         <div class="fg"><label class="flbl">PO Number</label><input class="finput" id="f_po_number" placeholder="e.g. 4500635234"></div>
         <div class="fg"><label class="flbl">PO Date</label><input class="finput" type="date" id="f_po_date"></div>
         <div class="fg"><label class="flbl">Delivery Date / Schedule</label><input class="finput" id="f_delivery_date" placeholder="e.g. 15-03-2026 or 8 weeks from PO"></div>
-        <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="f_description" placeholder="e.g. 12T Locomotive Spares"></div>
+        <div class="fg ffull"><label class="flbl">Order Subject *</label><input class="finput" id="f_description" placeholder="e.g. Supply of Mining Equipment, Tunnel Ventilation System"></div>
         <div class="fg"><label class="flbl">Order Type</label>
           <select class="finput" id="f_order_type" onchange="onOrderTypeChange()">
             <option value="manufactured">🔧 Manufactured</option>
@@ -2723,7 +2778,17 @@ function renderTable() {
       <td class="td-sl">${o.sl||'—'}</td>
       <td class="td-cust" title="${o.customer||''}"><span style="display:inline-flex;align-items:center;gap:5px">${(()=>{const cf=['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];const fp=cf.filter(f=>o[f]!==null&&o[f]!==undefined&&o[f]!=='').length;const p=Math.round(fp/cf.length*100);return `<span class="comp-dot ${p>=80?'comp-green':p>=40?'comp-amber':'comp-red'}" title="Completeness: ${p}%"></span>`;})()} ${o.customer||'—'}</span></td>
       <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
-      <td class="td-desc" title="${o.description||''}">${o.description||'—'}</td>
+      <td class="td-desc" title="${o.description||''}">${(function(){
+        const subj = o.description || '—';
+        let olitems = []; try { olitems = JSON.parse(o.order_line_items||'[]'); } catch {}
+        if (!olitems.length) return '<div style="font-weight:500">'+subj+'</div>';
+        const names = olitems.slice(0,3).map(it => it.description||'Item').join(', ');
+        const more = olitems.length > 3 ? ' +' + (olitems.length-3) + ' more' : '';
+        return '<div style="font-weight:600;margin-bottom:2px">'+subj+'</div>'
+          + '<div style="font-size:10.5px;color:var(--t3);line-height:1.4">'
+          + '<span style="color:var(--blue);font-weight:600">'+olitems.length+' item'+(olitems.length>1?'s':'')+'</span> · '
+          + names + more + '</div>';
+      })()}</td>
       <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
       <td>${ageChip(age, '')}</td>
       <td>${delayChip(o)}</td>
@@ -2953,7 +3018,7 @@ async function saveQuickOrder() {
   const customer = document.getElementById('qa_customer')?.value?.trim();
   const description = document.getElementById('qa_description')?.value?.trim();
   if (!customer) { toast('Customer name is required', 'err'); document.getElementById('qa_customer').focus(); return; }
-  if (!description) { toast('Description is required', 'err'); document.getElementById('qa_description').focus(); return; }
+  if (!description) { toast('Order subject is required', 'err'); document.getElementById('qa_description').focus(); return; }
   const data = {
     customer,
     description,
@@ -2999,12 +3064,14 @@ function closeDrawer() {
 }
 function switchTab(tab, el) {
   curTab = tab;
-  document.querySelectorAll('.dtab').forEach(t => t.classList.remove('on'));
+  const tabs = document.querySelectorAll('#drawer .dtabs .dtab');
+  tabs.forEach(t => t.classList.remove('on'));
   if (el) el.classList.add('on');
-  else document.querySelectorAll('.dtab').forEach((t,i) => {
-    if (['overview','production','shipment','payment','pbg','log'][i] === tab) t.classList.add('on');
-  });
-  document.querySelectorAll('.dpanel').forEach(p => p.classList.remove('on'));
+  else {
+    const tabOrder = ['overview','items','production','shipment','payment','pbg','log'];
+    tabs.forEach((t,i) => { if (tabOrder[i] === tab) t.classList.add('on'); });
+  }
+  document.querySelectorAll('#drawer .dpanel').forEach(p => p.classList.remove('on'));
   document.getElementById('dp-' + tab)?.classList.add('on');
 }
 
@@ -3023,6 +3090,8 @@ function parseShipmentLog(o) {
 function renderDrawer(o) {
   const si = stageInfo(o.status);
   const idx = stageIdx(o.status);
+  const ordItems = getOrderLineItems(o);
+  const ordItemSub = ordItems.length ? ' · ' + ordItems.length + ' item' + (ordItems.length > 1 ? 's' : '') : '';
   document.getElementById('dTitle').textContent = (o.customer || 'Order') + (o.po_number ? ' · ' + o.po_number : '');
 
   // ── STAGE STEPPER (order-type aware) ──
@@ -3062,7 +3131,15 @@ function renderDrawer(o) {
         ${ieRow(o.id,'delivery_date','Delivery Date',fmtDate(o.delivery_date)+(delay!==null?' · '+(delay>0?'<span style="color:var(--red)">+'+delay+'d overdue</span>':'<span style="color:var(--green)">'+Math.abs(delay)+'d left</span>'):''),'date',delay!==null&&delay>0?'red':'',(o.delivery_date||''))}
         ${ieRow(o.id,'ex_works','Ex Works',o.ex_works,'text')}
         ${['management','finance'].includes(currentRole) ? ieRow(o.id,'order_amount','Order Amount',fmtCr(o.order_amount,o.currency)+' '+((o.currency||'INR')),'number','',(o.order_amount||'')) : ''}
-        <div class="irow full">${ieRowInner(o.id,'description','Description',o.description,'text')}</div>
+        <div class="irow full">${ieRowInner(o.id,'description','Order Subject',o.description,'text')}</div>
+        <div class="irow full"><div class="ilbl">Equipment Items</div><div class="ival">${(function(){
+          if (!ordItems.length) return '<span style="color:var(--t4)">No items — use Items tab to add</span>';
+          return '<div style="display:flex;flex-direction:column;gap:3px">' + ordItems.map((it,i) => {
+            const si2 = stageInfo(it.stage);
+            return '<div style="font-size:11.5px"><span style="color:var(--blue);font-weight:600">'+(i+1)+'.</span> '+(it.description||'—')+(it.qty?' <span style="color:var(--t3)">×'+it.qty+'</span>':'')+(it.value?' — <span style="font-family:var(--mono);font-weight:600">'+fmtCr(Number(it.value),o.currency||'INR')+'</span>':'')
+              +' <span class="badge '+((si2||{}).cls||'')+'" style="font-size:9px;padding:1px 6px">'+(si2?.label||it.stage||'—')+'</span></div>';
+          }).join('') + '</div>';
+        })()}</div></div>
         <div class="irow full">${ieRowInner(o.id,'notes','Notes',o.notes,'text')}</div>
         <div class="irow"><div class="ilbl">Financial Year</div><div class="ival"><span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${getOrderFY(o)}</span></div></div>
         <div class="irow"><div class="ilbl">Carry Forward</div><div class="ival">${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge">↕ Yes — spans two FYs</span>':'<span style="color:var(--t4);font-size:12px">No</span>'}</div></div>
@@ -3211,6 +3288,12 @@ function renderDrawer(o) {
       <button class="btn btn-ghost btn-sm" onclick="openShipmentModal()" style="margin-top:12px;width:100%">+ Add Shipment</button>
     </div>
   `;
+
+  // ── ORDER LINE ITEMS ──
+  renderOrderLineItems(o);
+  // Hide hint text if items exist
+  const ordHint = document.getElementById('ordItemsHint');
+  if (ordHint) ordHint.style.display = getOrderLineItems(o).length ? 'none' : '';
 
   // ── ACTIVITY LOG ──
   renderActivityLog(o);
@@ -3734,13 +3817,20 @@ function downloadCSV(orders, filename) {
   downloadExcel(orders, filename.replace('.csv','.xlsx'));
 }
 function downloadExcel(orders, filename) {
-  const headers = ['SL','Customer','PO Number','Description','Status','Currency','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry','FY Tag'];
-  const rows = orders.map(o => [
-    o.sl||'', o.customer||'', o.po_number||'', o.description||'', o.status||'',
-    o.currency||'INR', o.po_date||'', o.delivery_date||'', o.order_amount||0, o.inv_amount||0,
-    totalReceived(o), Math.max(0, pendingAmt(o)||0),
-    o.pbg_required?'Yes':'No', o.pbg_expiry_date||'', getOrderFY(o)||''
-  ]);
+  const headers = ['SL','Customer','PO Number','Order Subject','Equipment Items','Status','Currency','PO Date','Delivery Date','Order Amount','Invoice Amount','Total Received','Pending Amount','PBG Required','PBG Expiry','FY Tag'];
+  const rows = orders.map(o => {
+    let itemsSummary = '';
+    try {
+      const li = JSON.parse(o.order_line_items||'[]');
+      if (li.length) itemsSummary = li.map((it,i) => (i+1)+'. '+(it.description||'Item')+' ×'+(it.qty||1)).join('; ');
+    } catch {}
+    return [
+      o.sl||'', o.customer||'', o.po_number||'', o.description||'', itemsSummary, o.status||'',
+      o.currency||'INR', o.po_date||'', o.delivery_date||'', o.order_amount||0, o.inv_amount||0,
+      totalReceived(o), Math.max(0, pendingAmt(o)||0),
+      o.pbg_required?'Yes':'No', o.pbg_expiry_date||'', getOrderFY(o)||''
+    ];
+  });
   const wsData = [headers, ...rows];
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(wsData);
@@ -4462,6 +4552,148 @@ async function deleteLineItem(idx) {
     await loadEnquiries();
     const fresh = allEnquiries.find(x => x.id === selectedEnqId);
     if (fresh) { renderEnqDrawer(fresh); switchEnqTab('items'); }
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+/*============================
+  ORDER LINE ITEMS — CRUD
+============================*/
+function getOrderLineItems(o) {
+  try { return JSON.parse(o.order_line_items || '[]'); } catch { return []; }
+}
+
+let editingOrderItemIdx = -1;
+
+function renderOrderLineItems(o) {
+  const items = getOrderLineItems(o);
+  const tbody = document.getElementById('ordItemsTbody');
+  const tfoot = document.getElementById('ordItemsTfoot');
+  const empty = document.getElementById('ordItemsEmpty');
+  const badge = document.getElementById('ordItemsBadge');
+  if (!tbody) return;
+  if (badge) {
+    badge.textContent = items.length || '';
+    badge.style.display = items.length ? '' : 'none';
+  }
+
+  if (!items.length) {
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  const cur = o.currency || 'INR';
+  const stageLabels = {};
+  STAGES.forEach(s => { stageLabels[s.key] = s.label; });
+
+  tbody.innerHTML = items.map((it, i) => {
+    const stLabel = stageLabels[it.stage] || it.stage || '—';
+    const si = stageInfo(it.stage);
+    return `<tr style="border-bottom:1px solid var(--bdr)">
+      <td style="padding:8px;color:var(--t4);font-size:11px">${i+1}</td>
+      <td style="padding:8px;font-weight:600;max-width:200px">${it.description || '—'}<span style="font-size:10px;color:var(--t4);margin-left:4px">${it.unit ? '('+it.unit+')' : ''}</span></td>
+      <td style="padding:8px;font-family:var(--mono);text-align:center">${it.qty || '—'}</td>
+      <td style="padding:8px;font-family:var(--mono);font-weight:600">${it.value ? fmtCr(Number(it.value), cur) : '—'}</td>
+      <td style="padding:8px"><span class="badge ${si?.cls||''}" style="font-size:10px;padding:2px 8px">${stLabel}</span></td>
+      <td style="padding:8px;white-space:nowrap">
+        <button style="border:none;background:none;cursor:pointer;font-size:12px;padding:2px 4px" onclick="editOrderLineItem(${i})" title="Edit">✏️</button>
+        <button style="border:none;background:none;cursor:pointer;font-size:12px;padding:2px 4px" onclick="deleteOrderLineItem(${i})" title="Delete">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  const totalQty = items.reduce((s, it) => s + (Number(it.qty) || 0), 0);
+  tfoot.innerHTML = `<tr style="font-weight:700;border-top:2px solid var(--bdr)">
+    <td style="padding:8px"></td>
+    <td style="padding:8px;font-size:11px;color:var(--t2)">Total (${items.length} item${items.length !== 1 ? 's' : ''})</td>
+    <td style="padding:8px;text-align:center;font-family:var(--mono)">${totalQty}</td>
+    <td style="padding:8px;font-family:var(--mono);color:var(--blue)">${fmtCr(totalVal, cur)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+}
+
+function showAddOrderItemForm() {
+  editingOrderItemIdx = -1;
+  ['oli_description','oli_qty','oli_unit','oli_value'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const st = document.getElementById('oli_stage'); if (st) st.value = 'Design';
+  const qty = document.getElementById('oli_qty'); if (qty) qty.value = '1';
+  document.getElementById('ordItemsAddForm').style.display = '';
+  document.getElementById('oli_description').focus();
+}
+function hideAddOrderItemForm() {
+  document.getElementById('ordItemsAddForm').style.display = 'none';
+  editingOrderItemIdx = -1;
+}
+
+function editOrderLineItem(idx) {
+  const o = allOrders.find(x => x.id === selectedId);
+  if (!o) return;
+  const items = getOrderLineItems(o);
+  const it = items[idx];
+  if (!it) return;
+  editingOrderItemIdx = idx;
+  document.getElementById('oli_description').value = it.description || '';
+  document.getElementById('oli_qty').value = it.qty || '';
+  document.getElementById('oli_unit').value = it.unit || '';
+  document.getElementById('oli_value').value = it.value || '';
+  document.getElementById('oli_stage').value = it.stage || 'Design';
+  document.getElementById('ordItemsAddForm').style.display = '';
+}
+
+async function saveOrderLineItem() {
+  const o = allOrders.find(x => x.id === selectedId);
+  if (!o) return;
+  const desc = document.getElementById('oli_description')?.value.trim();
+  if (!desc) { toast('Equipment description is required', 'err'); return; }
+  const item = {
+    id: editingOrderItemIdx >= 0 ? getOrderLineItems(o)[editingOrderItemIdx]?.id : Date.now().toString(36),
+    description: desc,
+    qty: parseInt(document.getElementById('oli_qty')?.value) || 1,
+    unit: document.getElementById('oli_unit')?.value.trim() || 'Nos',
+    value: parseFloat(document.getElementById('oli_value')?.value) || 0,
+    stage: document.getElementById('oli_stage')?.value || 'Design'
+  };
+  const items = getOrderLineItems(o);
+  if (editingOrderItemIdx >= 0 && editingOrderItemIdx < items.length) {
+    items[editingOrderItemIdx] = item;
+  } else {
+    items.push(item);
+  }
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  try {
+    const { error } = await SB.from('orders').update({
+      order_line_items: JSON.stringify(items),
+      order_amount: totalVal
+    }).eq('id', selectedId);
+    if (error) throw error;
+    hideAddOrderItemForm();
+    toast(editingOrderItemIdx >= 0 ? 'Item updated' : 'Item added', 'ok');
+    await loadData();
+    const fresh = allOrders.find(x => x.id === selectedId);
+    if (fresh) { renderDrawer(fresh); switchTab('items'); }
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+async function deleteOrderLineItem(idx) {
+  const o = allOrders.find(x => x.id === selectedId);
+  if (!o) return;
+  const items = getOrderLineItems(o);
+  if (!items[idx]) return;
+  if (!confirm('Remove "' + (items[idx].description || 'this item') + '" from the order?')) return;
+  items.splice(idx, 1);
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  try {
+    const { error } = await SB.from('orders').update({
+      order_line_items: JSON.stringify(items),
+      order_amount: totalVal
+    }).eq('id', selectedId);
+    if (error) throw error;
+    toast('Item removed', 'ok');
+    await loadData();
+    const fresh = allOrders.find(x => x.id === selectedId);
+    if (fresh) { renderDrawer(fresh); switchTab('items'); }
   } catch(err) { toast('Error: ' + err.message, 'err'); }
 }
 
