@@ -887,6 +887,11 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
     <div class="action-grid" id="actionGrid"></div>
   </div>
   <div class="kpi-row" id="kpiRow"></div>
+  <!-- Recent Order Activity -->
+  <div class="dp" id="recentActivityPanel" style="margin-bottom:14px">
+    <div class="dp-head"><span class="dp-title">📊 Order Status at a Glance</span><span class="dp-sub">most recently updated orders</span></div>
+    <div class="dp-body" id="recentActivity" style="padding:0"></div>
+  </div>
   <div class="dash-row">
     <div class="dp"><div class="dp-head"><span class="dp-title">Customer Split</span><span class="dp-sub" id="dcustSub">by order value</span></div><div class="dp-body" id="dcust"></div></div>
     <div class="dp"><div class="dp-head"><span class="dp-title">Production Pipeline</span><span class="dp-sub" id="dpipeSub">active orders</span></div><div class="dp-body" id="dpipe"></div></div>
@@ -936,6 +941,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
           <th onclick="sortBy('status')">Stage</th>
           <th onclick="sortBy('stage_age')">Stage Age</th>
           <th onclick="sortBy('delivery_date')">Delivery / Delay</th>
+          <th onclick="sortBy('updated_at')">Last Updated</th>
           <th class="finance-only" onclick="sortBy('order_amount')">Order Amt</th>
           <th class="finance-only" onclick="sortBy('pending_amt')">Pending</th>
           <th onclick="sortBy('pay_status')">Payment</th>
@@ -1713,7 +1719,8 @@ let fyChecklistDismissed = false;
 ============================*/
 function getFYFromDate(dateStr) {
   if (!dateStr) return null;
-  const d = new Date(dateStr);
+  const d = localDate(dateStr);
+  if (!d) return null;
   const y = d.getFullYear(); const m = d.getMonth(); // 0=Jan
   // Indian FY: Apr 1 – Mar 31
   if (m >= 3) return `${String(y).slice(2)}-${String(y+1).slice(2)}`; // Apr–Dec
@@ -1756,10 +1763,17 @@ function isYearEndMonth() {
 function initFYDropdown() {
   const dd = document.getElementById('fyDropdown');
   if (!dd) return;
-  const opts = fyOptions();
+  // Collect all FYs that actually have orders + always include previous/current/next
+  const baseFYs = new Set(fyOptions());
+  allOrders.filter(o => !o.archived).forEach(o => {
+    const fy = getOrderFY(o);
+    if (fy) baseFYs.add(fy);
+  });
+  const opts = [...baseFYs].sort();
   dd.innerHTML = opts.map(fy => {
     const isCurrent = fy === currentFY();
-    return `<option value="${fy}" ${isCurrent ? 'selected' : ''}>FY ${fy}${isCurrent ? ' (Current)' : ''}</option>`;
+    const ct = allOrders.filter(o => !o.archived && getOrderFY(o) === fy).length;
+    return `<option value="${fy}" ${isCurrent ? 'selected' : ''}>FY ${fy}${isCurrent ? ' (Current)' : ''} · ${ct} orders</option>`;
   }).join('');
   activeFY = currentFY();
   const hdrLbl = document.getElementById('hdrFYLabel');
@@ -2326,14 +2340,18 @@ function updateSidebarBadges() {
 
   if (sv.overdue > 0) document.getElementById('nb-overdue').className = 'nbadge red';
 
-  // FY sidebar items — dynamic
+  // FY sidebar items — dynamic, include all FYs with orders
   const fyCF   = active.filter(o => o.carry_forward === true || o.carry_forward === 'true').length;
   const sidebarFYWrap = document.getElementById('sidebarFYItems');
   if (sidebarFYWrap) {
-    sidebarFYWrap.innerHTML = fyOptions().map(fy => {
-      const ct = active.filter(o => getOrderFY(o) === fy).length;
+    const allFYs = new Set(fyOptions());
+    active.forEach(o => { const fy = getOrderFY(o); if (fy) allFYs.add(fy); });
+    const sortedFYs = [...allFYs].sort();
+    sidebarFYWrap.innerHTML = sortedFYs.map(fy => {
+      const cfCheck = o => o.carry_forward === true || o.carry_forward === 'true';
+      const ct = active.filter(o => getOrderFY(o) === fy || (cfCheck(o) && fy === currentFY())).length;
       const isCur = fy === currentFY();
-      return `<div class="nitem" onclick="navF('fy','${fy}',this)"><span class="ni">📅</span>${fyLongLabel(fy)}<span class="nbadge">${ct}</span></div>`;
+      return `<div class="nitem" onclick="navF('fy','${fy}',this)"><span class="ni">📅</span>${fyLongLabel(fy)}${isCur?' <span style="font-size:9px;color:var(--blue)">(Current)</span>':''}<span class="nbadge">${ct}</span></div>`;
     }).join('');
   }
   const nbCF   = document.getElementById('nb-fy-cf');
@@ -2501,7 +2519,9 @@ function renderFYPayBreakdown(allActive) {
 
 function renderDashboard() {
   const allActive = allOrders.filter(o => !o.archived);
-  const active = allActive.filter(o => getOrderFY(o) === activeFY);
+  // Include carry-forward orders in the active FY view (they span two FYs)
+  const isCF = o => o.carry_forward === true || o.carry_forward === 'true';
+  const active = allActive.filter(o => getOrderFY(o) === activeFY || (isCF(o) && !['Delivered','Payment Received'].includes(o.status)));
   const t = today();
   const fyLabel = `FY ${activeFY}`;
 
@@ -2635,6 +2655,42 @@ function renderDashboard() {
     `;
   }
   document.getElementById('dashSub').textContent = `FY ${activeFY} · ${active.length} orders · Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+
+  // ── RECENT ORDER ACTIVITY (top 8 most recently updated) ──
+  const recentEl = document.getElementById('recentActivity');
+  if (recentEl) {
+    const recent = [...allActive].sort((a,b) => (b.updated_at||b.created_at||'').localeCompare(a.updated_at||a.created_at||'')).slice(0,8);
+    if (!recent.length) {
+      recentEl.innerHTML = '<div style="padding:14px;color:var(--t4);font-size:12px">No orders yet</div>';
+    } else {
+      recentEl.innerHTML = `<table style="width:100%;font-size:12px;border-collapse:collapse">
+        <thead><tr style="font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);border-bottom:1px solid var(--bdr)">
+          <th style="padding:8px 10px;text-align:left">Customer</th>
+          <th style="padding:8px 10px;text-align:left">PO / Subject</th>
+          <th style="padding:8px 10px;text-align:left">Stage</th>
+          <th style="padding:8px 10px;text-align:left">Delivery</th>
+          <th style="padding:8px 10px;text-align:right" class="finance-only">Value</th>
+          <th style="padding:8px 10px;text-align:right">Updated</th>
+        </tr></thead>
+        <tbody>${recent.map(o => {
+          const si = stageInfo(o.status);
+          const delay = deliveryDelay(o);
+          const delayStr = delay === null ? '—' : delay > 0 ? '<span style="color:var(--red);font-weight:600">+'+delay+'d</span>' : '<span style="color:var(--green)">'+Math.abs(delay)+'d left</span>';
+          const ud = o.updated_at || o.created_at || '';
+          const ago = ud ? diffDays(todayLocal(), localDate(ud.slice(0,10)) || todayLocal()) : 0;
+          const agoStr = ago <= 0 ? '<span style="color:var(--green);font-weight:600">Today</span>' : ago <= 3 ? '<span style="color:var(--green)">'+ago+'d</span>' : ago <= 7 ? ago+'d' : '<span style="color:var(--red)">'+ago+'d</span>';
+          return `<tr onclick="openDrawer('${o.id}');showPage('orders',null)" style="cursor:pointer;border-bottom:1px solid var(--bdr)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+            <td style="padding:8px 10px;font-weight:600">${o.customer||'—'}</td>
+            <td style="padding:8px 10px"><span style="font-family:var(--mono);font-size:11px">${o.po_number||'—'}</span><br><span style="font-size:10.5px;color:var(--t3)">${(o.description||'').slice(0,40)}</span></td>
+            <td style="padding:8px 10px"><span class="badge ${si.cls}" style="font-size:10px"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
+            <td style="padding:8px 10px;font-size:11px">${o.delivery_date ? fmtDate(o.delivery_date) + ' ' + delayStr : '—'}</td>
+            <td style="padding:8px 10px;text-align:right;font-family:var(--mono);font-weight:600" class="finance-only">${o.order_amount ? fmtCr(o.order_amount, o.currency) : '—'}</td>
+            <td style="padding:8px 10px;text-align:right;font-size:11px">${agoStr}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+  }
 }
 
 /*============================
@@ -2792,12 +2848,25 @@ function renderTable() {
       <td><span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span></td>
       <td>${ageChip(age, '')}</td>
       <td>${delayChip(o)}</td>
+      <td>${(function(){
+        const ud = o.updated_at || o.created_at;
+        if (!ud) return '<span style="color:var(--t4);font-size:11px">—</span>';
+        const d = localDate(ud.slice(0,10));
+        if (!d) return '<span style="color:var(--t4);font-size:11px">—</span>';
+        const ago = diffDays(todayLocal(), d);
+        const fmtD = fmtDate(ud.slice(0,10));
+        if (ago <= 1) return '<span style="font-size:10.5px;color:var(--green);font-weight:600">Today</span>';
+        if (ago <= 3) return '<span style="font-size:10.5px;color:var(--green)">' + ago + 'd ago</span>';
+        if (ago <= 7) return '<span style="font-size:10.5px;color:var(--t2)">' + ago + 'd ago</span>';
+        if (ago <= 14) return '<span style="font-size:10.5px;color:var(--amber)">' + ago + 'd ago</span>';
+        return '<span style="font-size:10.5px;color:var(--red);font-weight:600">' + ago + 'd ago</span>';
+      })()}</td>
       ${isFinance ? `<td class="td-mono finance-only">${fmtCr(o.order_amount,o.currency)}</td>` : ''}
       ${isFinance ? `<td class="finance-only">${pendDisplay}</td>` : ''}
       <td>${psBadge}</td>
       <td class="td-actions">${qaBtn}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--t4);font-size:12px">No orders match current filter.</td></tr>`;
+  }).join('') || `<tr><td colspan="13" style="text-align:center;padding:32px;color:var(--t4);font-size:12px">No orders match current filter.</td></tr>`;
 
   updateBulkBar();
   renderCardView(orders);
