@@ -3539,10 +3539,15 @@ async function saveOrder() {
 
   // Strip null/empty fields so Supabase won't error on columns that may not exist yet
   // Skip supplier fields + raw_material_received if DB column type is wrong (date instead of numeric/text)
-  const PROBLEM_FIELDS = ['supplier_delivery_commitment','supplier_dispatch_date','supplier_payment_date','supplier_payment_amount'];
+  // Supplier fields — save separately so missing columns don't break the main save
+  const SUPPLIER_FIELDS = ['supplier_name','supplier_po_number','supplier_po_date','supplier_delivery_commitment','supplier_inv_number','supplier_inv_amount','supplier_dispatch_date','supplier_payment_date','supplier_payment_amount'];
   const cleanData = {};
+  const supplierData = {};
   Object.keys(data).forEach(k => {
-    if (data[k] !== null && data[k] !== '' && !PROBLEM_FIELDS.includes(k)) {
+    if (data[k] === null || data[k] === '') return;
+    if (SUPPLIER_FIELDS.includes(k)) {
+      supplierData[k] = data[k];
+    } else {
       cleanData[k] = data[k];
     }
   });
@@ -3551,11 +3556,21 @@ async function saveOrder() {
     if (editId) {
       const { error } = await SB.from('orders').update(cleanData).eq('id', editId);
       if (error) throw error;
+      // Try saving supplier fields separately (columns may not exist yet)
+      if (Object.keys(supplierData).length) {
+        const { error: sErr } = await SB.from('orders').update(supplierData).eq('id', editId);
+        if (sErr) console.warn('Supplier fields not saved (columns may need to be added):', sErr.message);
+      }
       await addRemarkEntry(editId, 'Order details updated', currentRole);
       toast('Order updated', 'info');
     } else {
       const { data: inserted, error } = await SB.from('orders').insert(cleanData).select().single();
       if (error) throw error;
+      // Try saving supplier fields separately
+      if (Object.keys(supplierData).length && inserted) {
+        const { error: sErr } = await SB.from('orders').update(supplierData).eq('id', inserted.id);
+        if (sErr) console.warn('Supplier fields not saved (columns may need to be added):', sErr.message);
+      }
       await addRemarkEntry(inserted.id, 'Order created', currentRole);
       // Link back to enquiry if this was a conversion
       if (window._convertingFromEnqId) {
