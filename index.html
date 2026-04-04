@@ -845,7 +845,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   <div class="ndiv"></div>
   <div class="nav-sec-title">Financial Year</div>
   <div id="sidebarFYItems"></div>
-  <div class="nitem" id="nav-fy-cf" onclick="navF('fy','carry',this)"><span class="ni">↕</span>Carry Forward<span class="nbadge" id="nb-fy-cf">0</span></div>
+  <div class="nitem" onclick="smartView('pending_delivery',null)"><span class="ni">📦</span>Pending Delivery<span class="nbadge" id="nb-pendel">0</span></div>
 
   <div class="ndiv"></div>
   <div class="nav-sec-title">Customers</div>
@@ -1579,13 +1579,6 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
         </div>
 
         <div class="fhead">Financial Year</div>
-        <div class="fg">
-          <label class="flbl">Carry Forward?</label>
-          <select class="finput" id="f_carry_forward">
-            <option value="false">No — completes within same FY</option>
-            <option value="true">Yes — spans two financial years</option>
-          </select>
-        </div>
       </div>
     </div>
 
@@ -1717,6 +1710,22 @@ let fyChecklistDismissed = false;
 /*============================
   FY HELPERS
 ============================*/
+function normalizeFY(fy) {
+  // Fix malformed FY tags like "025-026" → "25-26", "2025-2026" → "25-26", "2526" → "25-26"
+  if (!fy || typeof fy !== 'string') return fy;
+  fy = fy.trim();
+  // Handle "025-026" or "0025-0026" (extra leading zeros)
+  const dashMatch = fy.match(/^0*(\d{2,4})-0*(\d{2,4})$/);
+  if (dashMatch) {
+    let a = dashMatch[1], b = dashMatch[2];
+    if (a.length === 4) a = a.slice(2);
+    if (b.length === 4) b = b.slice(2);
+    return a.padStart(2,'0') + '-' + b.padStart(2,'0');
+  }
+  // Handle "2526" format
+  if (/^\d{4}$/.test(fy)) return fy.slice(0,2) + '-' + fy.slice(2);
+  return fy;
+}
 function getFYFromDate(dateStr) {
   if (!dateStr) return null;
   const d = localDate(dateStr);
@@ -1750,7 +1759,8 @@ function fyLongLabel(fy) {
   return `FY 20${String(a).padStart(2,'0')}–${String(b).padStart(2,'0')}`;
 }
 function getOrderFY(o) {
-  return o.fy_tag || getFYFromDate(o.po_date) || currentFY();
+  const raw = o.fy_tag || getFYFromDate(o.po_date) || currentFY();
+  return normalizeFY(raw);
 }
 function isNewFYMonth() {
   // April, May, June = new FY started recently
@@ -1763,17 +1773,21 @@ function isYearEndMonth() {
 function initFYDropdown() {
   const dd = document.getElementById('fyDropdown');
   if (!dd) return;
-  // Collect all FYs that actually have orders + always include previous/current/next
-  const baseFYs = new Set(fyOptions());
+  // Collect all FYs from actual orders + current FY
+  const fySet = new Set([currentFY()]);
   allOrders.filter(o => !o.archived).forEach(o => {
     const fy = getOrderFY(o);
-    if (fy) baseFYs.add(fy);
+    if (fy) fySet.add(fy);
   });
-  const opts = [...baseFYs].sort();
-  dd.innerHTML = opts.map(fy => {
+  const opts = [...fySet].sort();
+  dd.innerHTML = opts.filter(fy => {
+    // Always show current FY, skip others with 0 orders
+    if (fy === currentFY()) return true;
+    return allOrders.some(o => !o.archived && getOrderFY(o) === fy);
+  }).map(fy => {
     const isCurrent = fy === currentFY();
     const ct = allOrders.filter(o => !o.archived && getOrderFY(o) === fy).length;
-    return `<option value="${fy}" ${isCurrent ? 'selected' : ''}>FY ${fy}${isCurrent ? ' (Current)' : ''} · ${ct} orders</option>`;
+    return `<option value="${fy}" ${isCurrent ? 'selected' : ''}>FY 20${fy}${isCurrent ? ' (Current)' : ''} — ${ct} order${ct!==1?'s':''}</option>`;
   }).join('');
   activeFY = currentFY();
   const hdrLbl = document.getElementById('hdrFYLabel');
@@ -1786,7 +1800,7 @@ function setActiveFY(fy) {
   const hdrLbl = document.getElementById('hdrFYLabel');
   if (hdrLbl) hdrLbl.textContent = 'FY ' + fy;
   renderDashboard();
-  document.getElementById('dashSub').textContent = `Showing FY ${activeFY} · ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('dashSub').textContent = `Showing FY 20${activeFY} · ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
 }
 
 /*============================
@@ -2278,6 +2292,8 @@ function getSmartViewOrders(viewKey) {
         const age = stageAgeDays(o);
         return age !== null && age >= 14 && !['Delivered','Payment Received','On Hold'].includes(o.status);
       });
+    case 'pending_delivery':
+      return active.filter(o => !['Delivered','Payment Received'].includes(o.status));
     case 'pbg_expiring': {
       const in30 = addDays(todayLocal(), 30);
       const in30s = dateToStr(in30);
@@ -2341,22 +2357,21 @@ function updateSidebarBadges() {
   if (sv.overdue > 0) document.getElementById('nb-overdue').className = 'nbadge red';
 
   // FY sidebar items — dynamic, include all FYs with orders
-  const fyCF   = active.filter(o => o.carry_forward === true || o.carry_forward === 'true').length;
   const sidebarFYWrap = document.getElementById('sidebarFYItems');
   if (sidebarFYWrap) {
-    const allFYs = new Set(fyOptions());
+    const allFYs = new Set([currentFY()]);
     active.forEach(o => { const fy = getOrderFY(o); if (fy) allFYs.add(fy); });
     const sortedFYs = [...allFYs].sort();
     sidebarFYWrap.innerHTML = sortedFYs.map(fy => {
-      const cfCheck = o => o.carry_forward === true || o.carry_forward === 'true';
-      const ct = active.filter(o => getOrderFY(o) === fy || (cfCheck(o) && fy === currentFY())).length;
+      const ct = active.filter(o => getOrderFY(o) === fy).length;
       const isCur = fy === currentFY();
-      return `<div class="nitem" onclick="navF('fy','${fy}',this)"><span class="ni">📅</span>${fyLongLabel(fy)}${isCur?' <span style="font-size:9px;color:var(--blue)">(Current)</span>':''}<span class="nbadge">${ct}</span></div>`;
+      return `<div class="nitem" onclick="navF('fy','${fy}',this)"><span class="ni">📅</span>FY 20${fy}${isCur?' <span style="font-size:9px;color:var(--blue)">(Current)</span>':''}<span class="nbadge">${ct}</span></div>`;
     }).join('');
   }
-  const nbCF   = document.getElementById('nb-fy-cf');
-  if (nbCF)   nbCF.textContent   = fyCF;
-  if (fyCF > 0 && nbCF) nbCF.className = 'nbadge red';
+  // Pending delivery badge
+  const pendDelCt = active.filter(o => !['Delivered','Payment Received'].includes(o.status)).length;
+  const nbPendel = document.getElementById('nb-pendel');
+  if (nbPendel) { nbPendel.textContent = pendDelCt; if (pendDelCt > 0) nbPendel.className = 'nbadge red'; }
 }
 
 function updateHeaderKpis() {
@@ -2426,8 +2441,6 @@ function renderFYChecklist(allActive) {
       lbl: 'Still in Production', sub: 'Consider carry-forward flag', view: null },
     { ct: prevOrders.filter(o => !o.inv_number && ['QA/Testing','Dispatch Ready','Shipped','Delivered'].includes(o.status)).length,
       lbl: 'Invoice Not Raised', sub: 'No invoice number set', view: null, filterFn: 'no_invoice' },
-    { ct: prevOrders.filter(o => o.carry_forward === true || o.carry_forward === 'true').length,
-      lbl: 'Carry Forward Tagged', sub: 'Ready for new FY', resolved: true },
   ];
   const total = items.slice(0,5).reduce((s,i) => s+i.ct, 0);
   el.innerHTML = `
@@ -2460,8 +2473,8 @@ function renderFYNewCounter(allActive) {
     <div class="fy-new-counter" onclick="navF('fy','${newFY}',null)">
       <div class="fy-nc-badge">${newCount}</div>
       <div class="fy-nc-text">
-        <div class="fy-nc-title">🎉 FY ${newFY} has started — ${newCount} order${newCount!==1?'s':''} so far</div>
-        <div class="fy-nc-sub">Click to view all FY ${newFY} orders</div>
+        <div class="fy-nc-title">🎉 FY 20${newFY} has started — ${newCount} order${newCount!==1?'s':''} so far</div>
+        <div class="fy-nc-sub">Click to view all FY 20${newFY} orders</div>
       </div>
       <div class="fy-nc-arrow">→</div>
     </div>`;
@@ -2489,24 +2502,25 @@ function renderInvPrefixBanner() {
 function renderFYPayBreakdown(allActive) {
   const el = document.getElementById('fyPayBody');
   if (!el) return;
-  const fys = fyOptions();
+  // Only show FYs that actually have orders
+  const fySet = new Set([currentFY()]);
+  allActive.forEach(o => { const fy = getOrderFY(o); if (fy) fySet.add(fy); });
+  const fys = [...fySet].sort();
   const rows = fys.map(fy => {
     const fyOrds = allActive.filter(o => getOrderFY(o) === fy);
     const amt    = fyOrds.reduce((s,o) => s+(o.order_amount||0), 0);
     const rec    = fyOrds.reduce((s,o) => s+totalReceived(o), 0);
     const pend   = Math.max(0, amt - rec);
-    const cf     = fyOrds.filter(o => o.carry_forward===true||o.carry_forward==='true').length;
-    return { fy, amt, rec, pend, cf, ct: fyOrds.length };
+    return { fy, amt, rec, pend, ct: fyOrds.length };
   });
   el.innerHTML = `
     <div class="fy-pay-grid">
       ${rows.map(r => `
         <div class="fy-pay-card" style="border-top:3px solid ${r.fy===currentFY()?'var(--green)':'var(--blue)'}">
-          <div class="fy-pay-label">FY ${r.fy} · ${r.ct} orders</div>
+          <div class="fy-pay-label">FY 20${r.fy} · ${r.ct} orders</div>
           <div class="fy-pay-val">${fmtCr(r.amt)}</div>
           <div class="fy-pay-sub">Collected: <span style="color:var(--green);font-weight:600">${fmtCr(r.rec)}</span></div>
           <div class="fy-pay-sub">Outstanding: <span style="color:var(--red);font-weight:600">${fmtCr(r.pend)}</span></div>
-          ${r.cf>0?`<div class="fy-pay-sub" style="margin-top:4px"><span class="cf-badge">↕ ${r.cf} carry-forward</span></div>`:''}
         </div>`).join('')}
       <div class="fy-pay-card" style="border-top:3px solid var(--teal)">
         <div class="fy-pay-label">Combined Total</div>
@@ -2519,11 +2533,9 @@ function renderFYPayBreakdown(allActive) {
 
 function renderDashboard() {
   const allActive = allOrders.filter(o => !o.archived);
-  // Include carry-forward orders in the active FY view (they span two FYs)
-  const isCF = o => o.carry_forward === true || o.carry_forward === 'true';
-  const active = allActive.filter(o => getOrderFY(o) === activeFY || (isCF(o) && !['Delivered','Payment Received'].includes(o.status)));
+  const active = allActive.filter(o => getOrderFY(o) === activeFY);
   const t = today();
-  const fyLabel = `FY ${activeFY}`;
+  const fyLabel = `FY 20${activeFY}`;
 
   const dcustSub = document.getElementById('dcustSub');
   const dpipeSub = document.getElementById('dpipeSub');
@@ -2543,14 +2555,15 @@ function renderDashboard() {
   const overdue    = active.filter(o => o.delivery_date && o.delivery_date < t && !['Delivered','Payment Received'].includes(o.status));
   const onHold     = active.filter(o => o.status === 'On Hold');
   const pbgActive  = active.filter(o => o.pbg_required && !o.pbg_returned);
-  const cfOrders   = allActive.filter(o => o.carry_forward === true || o.carry_forward === 'true');
+  const pendingDel = active.filter(o => !['Delivered','Payment Received'].includes(o.status));
+  const completed  = active.filter(o => ['Delivered','Payment Received'].includes(o.status));
 
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi k-blue" onclick="navF('fy','${activeFY}',null)">
       <div class="kpi-ico" style="background:var(--blue-lt)">📋</div>
-      <div class="kpi-lbl">Orders · ${fyLabel}</div>
+      <div class="kpi-lbl">Total Orders · ${fyLabel}</div>
       <div class="kpi-val">${active.length}</div>
-      <div class="kpi-sub">${allActive.length} total active</div>
+      <div class="kpi-sub">${completed.length} completed · ${pendingDel.length} in progress</div>
     </div>
     <div class="kpi k-blue finance-only" onclick="navF('fy','${activeFY}',null)">
       <div class="kpi-ico" style="background:var(--blue-lt)">📊</div>
@@ -2570,17 +2583,17 @@ function renderDashboard() {
       <div class="kpi-val">${fmtCr(totalPend)}</div>
       <div class="kpi-sub">Balance to collect ↗</div>
     </div>
+    <div class="kpi ${pendingDel.length>0?'k-amber':'k-green'}" onclick="smartView('pending_delivery',null)">
+      <div class="kpi-ico" style="background:${pendingDel.length>0?'var(--amber-lt)':'var(--green-lt)'}">📦</div>
+      <div class="kpi-lbl">Pending Delivery</div>
+      <div class="kpi-val" style="color:${pendingDel.length>0?'var(--amber)':'var(--green)'}">${pendingDel.length}</div>
+      <div class="kpi-sub">Not yet delivered ↗</div>
+    </div>
     <div class="kpi k-red" onclick="smartView('overdue',null)">
       <div class="kpi-ico" style="background:var(--red-lt)">🔴</div>
       <div class="kpi-lbl">Overdue</div>
       <div class="kpi-val" style="color:${overdue.length>0?'var(--red)':'var(--t1)'}">${overdue.length}</div>
       <div class="kpi-sub">Past delivery date ↗</div>
-    </div>
-    <div class="kpi k-amber" onclick="navF('fy','carry',null)">
-      <div class="kpi-ico" style="background:var(--amber-lt)">↕</div>
-      <div class="kpi-lbl">Carry Forward</div>
-      <div class="kpi-val" style="color:${cfOrders.length>0?'var(--amber)':'var(--t1)'}">${cfOrders.length}</div>
-      <div class="kpi-sub">Spans two FYs ↗</div>
     </div>
   `;
   // Customer split (FY filtered)
@@ -2654,7 +2667,7 @@ function renderDashboard() {
       <div class="pmrow"><div class="pmrow-l">Returned</div><div class="pmrow-r">${active.filter(o=>o.pbg_returned).length}</div></div>
     `;
   }
-  document.getElementById('dashSub').textContent = `FY ${activeFY} · ${active.length} orders · Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('dashSub').textContent = `FY 20${activeFY} · ${active.length} orders · Updated ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}`;
 
   // ── RECENT ORDER ACTIVITY (top 8 most recently updated) ──
   const recentEl = document.getElementById('recentActivity');
@@ -2757,8 +2770,7 @@ function getFilteredOrders() {
     }
     else if (type === 'cust') orders = orders.filter(o => o.customer && o.customer.toLowerCase().includes(value.toLowerCase()));
     else if (type === 'fy') {
-      if (value === 'carry') orders = orders.filter(o => o.carry_forward === true || o.carry_forward === 'true');
-      else orders = orders.filter(o => getOrderFY(o) === value);
+      orders = orders.filter(o => getOrderFY(o) === value);
     }
   }
 
@@ -2826,14 +2838,13 @@ function renderTable() {
     const prvS = prevStage(o.status, o.order_type);
     const qaBtn = `<div class="stage-shift-btns">${prvS ? `<button class="qa-btn qa-prev" onclick="event.stopPropagation();quickAdvance('${o.id}','${prvS}')" title="Back to ${prvS}">← ${shortStageName(prvS)}</button>` : ''}${ns ? `<button class="qa-btn qa-next" onclick="event.stopPropagation();quickAdvance('${o.id}','${ns}')" title="Advance to ${ns}">→ ${shortStageName(ns)}</button>` : ''}</div>`;
 
-    const isCF = o.carry_forward === true || o.carry_forward === 'true';
     const fyT = getOrderFY(o);
     const isSelected = selectedRows.has(o.id);
-    return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}${isCF?' cf-row':''}">
+    return `<tr onclick="openDrawer('${o.id}')" class="${isSelected?'selected-row':''}">
       <td onclick="event.stopPropagation()"><input type="checkbox" class="row-check" ${isSelected?'checked':''} onchange="toggleRowSelect('${o.id}',this)"></td>
       <td class="td-sl">${o.sl||'—'}</td>
       <td class="td-cust" title="${o.customer||''}"><span style="display:inline-flex;align-items:center;gap:5px">${(()=>{const cf=['po_number','po_date','delivery_date','order_amount','inv_number','payment_terms'];const fp=cf.filter(f=>o[f]!==null&&o[f]!==undefined&&o[f]!=='').length;const p=Math.round(fp/cf.length*100);return `<span class="comp-dot ${p>=80?'comp-green':p>=40?'comp-amber':'comp-red'}" title="Completeness: ${p}%"></span>`;})()} ${o.customer||'—'}</span></td>
-      <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">${fyT}</span>`:''} ${isCF?'<span class="cf-badge">↕ CF</span>':''}</span></td>
+      <td class="td-po">${o.po_number||'—'}<br><span style="display:inline-flex;gap:4px;margin-top:2px">${fyT?`<span class="fy-tag ${fyT===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${fyT}</span>`:''}</span></td>
       <td class="td-desc" title="${o.description||''}">${(function(){
         const subj = o.description || '—';
         let olitems = []; try { olitems = JSON.parse(o.order_line_items||'[]'); } catch {}
@@ -3210,8 +3221,7 @@ function renderDrawer(o) {
           }).join('') + '</div>';
         })()}</div></div>
         <div class="irow full">${ieRowInner(o.id,'notes','Notes',o.notes,'text')}</div>
-        <div class="irow"><div class="ilbl">Financial Year</div><div class="ival"><span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${getOrderFY(o)}</span></div></div>
-        <div class="irow"><div class="ilbl">Carry Forward</div><div class="ival">${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge">↕ Yes — spans two FYs</span>':'<span style="color:var(--t4);font-size:12px">No</span>'}</div></div>
+        <div class="irow"><div class="ilbl">Financial Year</div><div class="ival"><span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY 20${getOrderFY(o)}</span></div></div>
       </div>
     </div>
     ${o.archived ? '<div style="margin-top:8px"><span class="archived-tag">🗄 Archived</span></div>' : ''}
@@ -3994,7 +4004,7 @@ function renderCardView(orders) {
       <div class="oc-top">
         <div>
           <div class="oc-cust">${o.customer||'—'}</div>
-          <div class="oc-po">${o.po_number||'—'} <span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">${getOrderFY(o)}</span>${(o.carry_forward===true||o.carry_forward==='true')?'<span class="cf-badge" style="margin-left:3px">↕ CF</span>':''}</div>
+          <div class="oc-po">${o.po_number||'—'} <span class="fy-tag ${getOrderFY(o)===currentFY()?'fy-tag-new':'fy-tag-old'}">FY ${getOrderFY(o)}</span></div>
         </div>
         <span class="badge ${si.cls}"><span class="bdot ${si.dot}"></span>${si.label}</span>
       </div>
