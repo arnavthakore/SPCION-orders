@@ -1029,6 +1029,7 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
   <div id="enqStageBar" style="padding:12px 18px;border-bottom:1px solid var(--bdr);display:flex;gap:8px;align-items:center;flex-wrap:wrap"></div>
   <div class="dtabs" id="enqDrawerTabs">
     <div class="dtab on"  id="edt-details"    onclick="switchEnqTab('details')">📋 Details</div>
+    <div class="dtab"     id="edt-items"      onclick="switchEnqTab('items')">📦 Items <span id="enqItemsBadge" style="font-size:10px;background:var(--blue);color:#fff;border-radius:10px;padding:1px 6px;margin-left:3px"></span></div>
     <div class="dtab"     id="edt-timeline"   onclick="switchEnqTab('timeline')">📅 Timeline</div>
     <div class="dtab"     id="edt-negotiation" onclick="switchEnqTab('negotiation')">🤝 Negotiation</div>
     <div class="dtab"     id="edt-quotes"     onclick="switchEnqTab('quotes')">📄 Quotes</div>
@@ -1075,6 +1076,54 @@ body:not(.role-management) .mgmt-delete-btn{display:none!important}
             <button class="btn btn-blue" style="width:auto;padding:8px 20px" onclick="saveEnqDetails()">Save Changes</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- LINE ITEMS TAB -->
+    <div id="enq-tab-items" style="display:none">
+      <div class="dsec">
+        <div class="dsec-t" style="display:flex;justify-content:space-between;align-items:center">
+          Line Items
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff;border:none;padding:5px 14px;font-size:11px" onclick="showAddItemForm()">+ Add Item</button>
+        </div>
+        <div id="enqItemsAddForm" style="display:none;padding:10px 0;border-bottom:1px solid var(--bdr);margin-bottom:10px">
+          <div class="fgrid">
+            <div class="fg ffull"><label class="flbl">Equipment / Description *</label><input class="finput" id="li_description" placeholder="e.g. Ventilation Fan 75kW"></div>
+            <div class="fg"><label class="flbl">Quantity</label><input class="finput" type="number" id="li_qty" placeholder="1" min="1"></div>
+            <div class="fg"><label class="flbl">Unit</label><input class="finput" id="li_unit" placeholder="e.g. Nos, Sets, Lots"></div>
+            <div class="fg"><label class="flbl">Ex-Works Value</label><input class="finput" type="number" id="li_value" placeholder="0"></div>
+            <div class="fg"><label class="flbl">Status</label>
+              <select class="finput" id="li_status">
+                <option value="new">New</option>
+                <option value="costing">Costing</option>
+                <option value="specs_received">Specs Received</option>
+                <option value="offer_sent">Offer Sent</option>
+                <option value="quoted">Quoted</option>
+                <option value="won">Won</option>
+                <option value="lost">Lost</option>
+              </select>
+            </div>
+            <div class="fg ffull" style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-blue btn-sm" style="padding:6px 16px" onclick="saveLineItem()">Save Item</button>
+              <button class="btn btn-ghost btn-sm" style="padding:6px 16px" onclick="hideAddItemForm()">Cancel</button>
+            </div>
+          </div>
+        </div>
+        <table id="enqItemsTable" style="width:100%;font-size:12px;margin-top:4px">
+          <thead>
+            <tr style="text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)">
+              <th style="padding:6px 8px">#</th>
+              <th style="padding:6px 8px">Equipment</th>
+              <th style="padding:6px 8px">Qty</th>
+              <th style="padding:6px 8px">Value</th>
+              <th style="padding:6px 8px">Status</th>
+              <th style="padding:6px 8px"></th>
+            </tr>
+          </thead>
+          <tbody id="enqItemsTbody"></tbody>
+          <tfoot id="enqItemsTfoot"></tfoot>
+        </table>
+        <div id="enqItemsEmpty" style="text-align:center;color:var(--t4);padding:20px;font-size:12px">No line items yet. Click "+ Add Item" to add equipment items.</div>
       </div>
     </div>
 
@@ -4246,7 +4295,7 @@ function renderEnqTable() {
       <td style="color:var(--t4);font-size:11px">${i+1}</td>
       <td style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--blue);white-space:nowrap">${enqNo}</td>
       <td><div style="font-weight:600;font-size:12px">${e.customer||'—'}</div><div style="font-size:10.5px;color:var(--t4)">${e.contact_person||''}</div></td>
-      <td style="font-size:12px;max-width:180px">${e.description||'—'}</td>
+      <td style="font-size:12px;max-width:180px">${e.description||'—'}${(function(){ try { const li = JSON.parse(e.line_items||'[]'); return li.length > 0 ? '<br><span style="font-size:10px;color:var(--blue);font-weight:600">📦 '+li.length+' item'+(li.length>1?'s':'')+' </span>' : ''; } catch { return ''; } })()}</td>
       <td style="font-family:var(--mono);font-size:11px">${e.enquiry_date ? fmtDate(e.enquiry_date) : '—'}</td>
       <td style="font-family:var(--mono);font-size:12px;font-weight:600">${val}</td>
       <td>${enqBadge(e.status)}</td>
@@ -4260,6 +4309,144 @@ function renderEnqTable() {
 /*============================
   ENQUIRY MODAL — NEW
 ============================*/
+/*============================
+  LINE ITEMS CRUD
+  Stored as JSON array in enquiry.line_items
+  Each: {id, description, qty, unit, value, status}
+============================*/
+function getLineItems(e) {
+  try { return JSON.parse(e.line_items || '[]'); } catch { return []; }
+}
+
+function renderLineItems(e) {
+  const items = getLineItems(e);
+  const tbody = document.getElementById('enqItemsTbody');
+  const tfoot = document.getElementById('enqItemsTfoot');
+  const empty = document.getElementById('enqItemsEmpty');
+  const badge = document.getElementById('enqItemsBadge');
+  if (!tbody) return;
+  if (badge) badge.textContent = items.length || '';
+
+  if (!items.length) {
+    tbody.innerHTML = '';
+    tfoot.innerHTML = '';
+    if (empty) empty.style.display = '';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  const cur = e.currency || 'INR';
+  tbody.innerHTML = items.map((it, i) => {
+    const stLabel = ENQ_STATUS_LABELS[it.status] || it.status || '—';
+    const stCls = ENQ_STATUS_CLASS[it.status] || '';
+    return `<tr style="border-bottom:1px solid var(--bdr)">
+      <td style="padding:8px;color:var(--t4)">${i+1}</td>
+      <td style="padding:8px;font-weight:600">${it.description || '—'}<span style="font-size:10px;color:var(--t4);margin-left:4px">${it.unit ? '('+it.unit+')' : ''}</span></td>
+      <td style="padding:8px;font-family:var(--mono);text-align:center">${it.qty || '—'}</td>
+      <td style="padding:8px;font-family:var(--mono);font-weight:600">${it.value ? fmtCr(Number(it.value), cur) : '—'}</td>
+      <td style="padding:8px"><span class="enq-badge ${stCls}" style="font-size:10px">${stLabel}</span></td>
+      <td style="padding:8px;white-space:nowrap">
+        <button style="border:none;background:none;cursor:pointer;font-size:12px;padding:2px 4px" onclick="editLineItem(${i})" title="Edit">✏️</button>
+        <button style="border:none;background:none;cursor:pointer;font-size:12px;padding:2px 4px" onclick="deleteLineItem(${i})" title="Delete">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  // Total row
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  tfoot.innerHTML = `<tr style="font-weight:700;border-top:2px solid var(--bdr)">
+    <td style="padding:8px"></td>
+    <td style="padding:8px;font-size:11px;color:var(--t2)">Total (${items.length} item${items.length !== 1 ? 's' : ''})</td>
+    <td style="padding:8px;text-align:center;font-family:var(--mono)">${items.reduce((s, it) => s + (Number(it.qty) || 0), 0)}</td>
+    <td style="padding:8px;font-family:var(--mono);color:var(--blue)">${fmtCr(totalVal, cur)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+}
+
+let editingItemIdx = -1; // -1 = adding new, >=0 = editing
+
+function showAddItemForm() {
+  editingItemIdx = -1;
+  ['li_description','li_qty','li_unit','li_value'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const st = document.getElementById('li_status'); if (st) st.value = 'new';
+  const qty = document.getElementById('li_qty'); if (qty) qty.value = '1';
+  document.getElementById('enqItemsAddForm').style.display = '';
+}
+
+function hideAddItemForm() {
+  document.getElementById('enqItemsAddForm').style.display = 'none';
+  editingItemIdx = -1;
+}
+
+function editLineItem(idx) {
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e) return;
+  const items = getLineItems(e);
+  const it = items[idx];
+  if (!it) return;
+  editingItemIdx = idx;
+  document.getElementById('li_description').value = it.description || '';
+  document.getElementById('li_qty').value = it.qty || '';
+  document.getElementById('li_unit').value = it.unit || '';
+  document.getElementById('li_value').value = it.value || '';
+  document.getElementById('li_status').value = it.status || 'new';
+  document.getElementById('enqItemsAddForm').style.display = '';
+}
+
+async function saveLineItem() {
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e) return;
+  const desc = document.getElementById('li_description')?.value.trim();
+  if (!desc) { toast('Equipment description is required', 'err'); return; }
+  const item = {
+    id: editingItemIdx >= 0 ? getLineItems(e)[editingItemIdx]?.id : Date.now().toString(36),
+    description: desc,
+    qty: parseInt(document.getElementById('li_qty')?.value) || 1,
+    unit: document.getElementById('li_unit')?.value.trim() || 'Nos',
+    value: parseFloat(document.getElementById('li_value')?.value) || 0,
+    status: document.getElementById('li_status')?.value || 'new'
+  };
+  const items = getLineItems(e);
+  if (editingItemIdx >= 0 && editingItemIdx < items.length) {
+    items[editingItemIdx] = item;
+  } else {
+    items.push(item);
+  }
+  // Update total ex_works from line items sum
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  try {
+    const { error } = await SB.from('enquiries').update({
+      line_items: JSON.stringify(items),
+      ex_works: totalVal
+    }).eq('id', selectedEnqId);
+    if (error) throw error;
+    hideAddItemForm();
+    toast(editingItemIdx >= 0 ? 'Item updated' : 'Item added', 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === selectedEnqId);
+    if (fresh) { renderEnqDrawer(fresh); switchEnqTab('items'); }
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
+async function deleteLineItem(idx) {
+  const e = allEnquiries.find(x => x.id === selectedEnqId);
+  if (!e) return;
+  const items = getLineItems(e);
+  if (!items[idx]) return;
+  if (!confirm('Remove "' + (items[idx].description || 'this item') + '" from the enquiry?')) return;
+  items.splice(idx, 1);
+  const totalVal = items.reduce((s, it) => s + (Number(it.value) || 0), 0);
+  try {
+    const { error } = await SB.from('enquiries').update({
+      line_items: JSON.stringify(items),
+      ex_works: totalVal
+    }).eq('id', selectedEnqId);
+    if (error) throw error;
+    toast('Item removed', 'ok');
+    await loadEnquiries();
+    const fresh = allEnquiries.find(x => x.id === selectedEnqId);
+    if (fresh) { renderEnqDrawer(fresh); switchEnqTab('items'); }
+  } catch(err) { toast('Error: ' + err.message, 'err'); }
+}
+
 function openNewEnqModal() {
   ['enqf_customer','enqf_contact_person','enqf_contact_email','enqf_our_contact','enqf_description','enqf_mail_subject','enqf_ex_works','enqf_incl_gst','enqf_notes','enqf_remarks','enqf_currency'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
@@ -4335,7 +4522,7 @@ function closeEnqDrawer() {
 }
 
 function switchEnqTab(tab) {
-  ['details','timeline','negotiation','quotes'].forEach(t => {
+  ['details','items','timeline','negotiation','quotes'].forEach(t => {
     const panel = document.getElementById('enq-tab-' + t);
     const tabEl = document.getElementById('edt-' + t);
     if (panel) panel.style.display = t === tab ? '' : 'none';
@@ -4404,6 +4591,8 @@ function renderEnqDrawer(e) {
 
   // Render timeline
   renderTimeline(e);
+  // Render line items
+  renderLineItems(e);
   // Render neg log
   renderNegLog(e);
   // Render quote log
